@@ -46,12 +46,12 @@ const args = mri(process.argv.slice(2), {
 // Help message
 if (args.help) {
   console.log(`
-md-review - Review and annotate Markdown files with comments
+md-review-plus - Review and annotate Markdown files with comments
 
 Usage:
-  md-review [options]              Start in dev mode (browse all markdown files)
-  md-review <file> [options]       Preview a specific markdown file (.md or .markdown)
-  md-review <directory> [options]  Browse markdown files in a specific directory
+  md-review-plus [options]              Start in dev mode (browse all markdown files)
+  md-review-plus <file> [options]       Preview a specific markdown file (.md or .markdown)
+  md-review-plus <directory> [options]  Browse markdown files in a specific directory
 
 Options:
   -p, --port <port>      Server port (default: 3030)
@@ -60,10 +60,10 @@ Options:
   -v, --version          Show version number
 
 Examples:
-  md-review                        Start dev mode in current directory
-  md-review docs                   Browse markdown files in docs directory
-  md-review README.md              Preview README.md
-  md-review docs/guide.md --port 8080
+  md-review-plus                        Start dev mode in current directory
+  md-review-plus docs                   Browse markdown files in docs directory
+  md-review-plus README.md              Preview README.md
+  md-review-plus docs/guide.md --port 8080
 `);
   process.exit(0);
 }
@@ -112,7 +112,7 @@ if (file) {
   console.log(`Directory: ${process.cwd()}`);
 }
 
-console.log('Starting md-review...');
+console.log('Starting md-review-plus...');
 console.log(`   Port: ${port}`);
 
 // Start server
