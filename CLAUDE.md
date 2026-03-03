@@ -6,41 +6,41 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # Development (runs server + Vite concurrently)
-pnpm dev
+bun dev
 
 # Build
-pnpm build
+bun run build
 
 # Run tests
-pnpm test              # Run tests once
-pnpm test:watch        # Watch mode
-pnpm test:coverage     # With coverage
+bun test              # Run tests once
+bun run test:watch    # Watch mode
+bun run test:coverage # With coverage
 
 # Linting and formatting
-pnpm lint              # ESLint + Stylelint
-pnpm lint:fix          # Auto-fix lint issues
-pnpm fmt               # Prettier format
-pnpm fmt:check         # Check formatting
+bun run lint          # ESLint + Stylelint
+bun run lint:fix      # Auto-fix lint issues
+bun run fmt           # Prettier format
+bun run fmt:check     # Check formatting
 ```
 
 ## Architecture
 
-This is a CLI tool for reviewing Markdown files with inline comments in the browser.
+This is a CLI tool for reviewing Markdown files with inline comments in the browser. Fork of [md-review](https://github.com/ryo-manba/md-review) with section-level review workflow and structured feedback output.
 
 ### Two Runtime Modes
 
-1. **CLI Mode** (`md-review <file>`): Single file preview using `CliModeApp`
-2. **Dev Mode** (`md-review` or `md-review <dir>`): File browser with tree view using `DevModeApp`
+1. **CLI Mode** (`md-review-plus <file>`): Single file preview using `CliModeApp`
+2. **Dev Mode** (`md-review-plus` or `md-review-plus <dir>`): File browser with tree view using `DevModeApp`
 
 Mode detection happens in `App.tsx` via `/api/files` endpoint availability.
 
 ### Server/Client Split
 
-- **`server/index.js`**: Hono-based Node.js server
+- **`server/index.ts`**: Hono-based server (runs on Bun)
   - Serves static files from `dist/`
   - API endpoints: `/api/markdown`, `/api/files`, `/api/watch` (SSE)
   - File watching via chokidar for hot reload
-- **`bin/md-review.js`**: CLI entry point, spawns server process
+- **`bin/md-review-plus.js`**: CLI entry point, spawns server process
 - **`src/`**: React frontend (Vite)
 
 ### Key Components
