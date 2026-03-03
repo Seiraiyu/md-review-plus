@@ -1,20 +1,34 @@
-// server/index.js
+// server/index.ts
 import { Hono } from 'hono';
+import type { Context } from 'hono';
 import { serve } from '@hono/node-server';
+import type { ServerType } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { readFile, readdir } from 'fs/promises';
 import { basename, join, relative, resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { watch } from 'chokidar';
+import type { Dirent } from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const packageRoot = resolve(__dirname, '..');
 const distDir = resolve(packageRoot, 'dist');
 
+interface MarkdownFileEntry {
+  name: string;
+  path: string;
+  dir: string;
+}
+
+interface SSEClient {
+  controller: ReadableStreamDefaultController;
+  encoder: TextEncoder;
+}
+
 // Port validation function
-function validatePort(value) {
-  const port = parseInt(value, 10);
+function validatePort(value: string | number): number {
+  const port = parseInt(String(value), 10);
   if (!Number.isInteger(port) || port < 1 || port > 65535) {
     throw new Error(`Invalid port: ${value}`);
   }
@@ -22,11 +36,11 @@ function validatePort(value) {
 }
 
 // Try to start server on port, incrementing if busy
-async function startServer(app, port, maxRetries = 10) {
+async function startServer(app: Hono, port: number, maxRetries: number = 10): Promise<number> {
   for (let i = 0; i < maxRetries; i++) {
     const tryPort = port + i;
     try {
-      await new Promise((resolve, reject) => {
+      await new Promise<ServerType>((resolve, reject) => {
         const server = serve({
           fetch: app.fetch,
           port: tryPort,
@@ -35,8 +49,8 @@ async function startServer(app, port, maxRetries = 10) {
         server.once('error', reject);
       });
       return tryPort;
-    } catch (err) {
-      if (err.code === 'EADDRINUSE') {
+    } catch (err: unknown) {
+      if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'EADDRINUSE') {
         console.log(`Port ${tryPort} is in use, trying ${tryPort + 1}...`);
         continue;
       }
@@ -47,22 +61,22 @@ async function startServer(app, port, maxRetries = 10) {
 }
 
 const app = new Hono();
-const PORT = validatePort(process.env.API_PORT || 3030);
-const MARKDOWN_FILE_PATH = process.env.MARKDOWN_FILE_PATH;
-const BASE_DIR = process.env.BASE_DIR || process.cwd();
+const PORT = validatePort(process.env.API_PORT || '3030');
+const MARKDOWN_FILE_PATH: string | undefined = process.env.MARKDOWN_FILE_PATH;
+const BASE_DIR: string = process.env.BASE_DIR || process.cwd();
 
 // Store SSE clients
-const sseClients = new Set();
+const sseClients = new Set<SSEClient>();
 
 // Check if file has markdown extension
-function isMarkdownFile(filename) {
+function isMarkdownFile(filename: string): boolean {
   return filename.endsWith('.md') || filename.endsWith('.markdown');
 }
 
 // Helper function to scan markdown files recursively
-async function scanMarkdownFiles(dir, baseDir = dir) {
-  const files = [];
-  const entries = await readdir(dir, { withFileTypes: true });
+async function scanMarkdownFiles(dir: string, baseDir: string = dir): Promise<MarkdownFileEntry[]> {
+  const files: MarkdownFileEntry[] = [];
+  const entries: Dirent[] = await readdir(dir, { withFileTypes: true });
 
   for (const entry of entries) {
     const fullPath = join(dir, entry.name);
@@ -89,15 +103,15 @@ async function scanMarkdownFiles(dir, baseDir = dir) {
 }
 
 // SSE endpoint for file change notifications
-app.get('/api/watch', (c) => {
+app.get('/api/watch', (c: Context) => {
   const stream = new ReadableStream({
-    start(controller) {
+    start(controller: ReadableStreamDefaultController) {
       // Send initial connection message
       const encoder = new TextEncoder();
       controller.enqueue(encoder.encode('data: {"type":"connected"}\n\n'));
 
       // Store client
-      const client = { controller, encoder };
+      const client: SSEClient = { controller, encoder };
       sseClients.add(client);
 
       // Cleanup on disconnect
@@ -117,12 +131,12 @@ app.get('/api/watch', (c) => {
 });
 
 // Health check
-app.get('/api/health', (c) => {
+app.get('/api/health', (c: Context) => {
   return c.json({ status: 'ok' });
 });
 
 // Get list of all markdown files
-app.get('/api/files', async (c) => {
+app.get('/api/files', async (c: Context) => {
   if (MARKDOWN_FILE_PATH) {
     const name = basename(MARKDOWN_FILE_PATH);
     return c.json({
@@ -135,8 +149,9 @@ app.get('/api/files', async (c) => {
   try {
     const files = await scanMarkdownFiles(BASE_DIR);
     return c.json({ files, baseDir: BASE_DIR });
-  } catch (err) {
-    console.error('Error scanning markdown files:', err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Error scanning markdown files:', message);
     return c.json(
       {
         error: 'Failed to scan markdown files',
@@ -147,7 +162,7 @@ app.get('/api/files', async (c) => {
 });
 
 // Get markdown file API (CLI mode)
-app.get('/api/markdown', async (c) => {
+app.get('/api/markdown', async (c: Context) => {
   if (!MARKDOWN_FILE_PATH) {
     return c.json(
       {
@@ -161,8 +176,9 @@ app.get('/api/markdown', async (c) => {
     const data = await readFile(MARKDOWN_FILE_PATH, 'utf-8');
     const filename = basename(MARKDOWN_FILE_PATH);
     return c.json({ content: data, filename });
-  } catch (err) {
-    console.error('Error reading markdown:', err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Error reading markdown:', message);
     return c.json(
       {
         error: 'Failed to read markdown file',
@@ -173,7 +189,7 @@ app.get('/api/markdown', async (c) => {
 });
 
 // Get specific markdown file by path (Dev mode)
-app.get('/api/markdown/:path{.+}', async (c) => {
+app.get('/api/markdown/:path{.+}', async (c: Context) => {
   const requestedPath = c.req.param('path');
 
   try {
@@ -192,8 +208,9 @@ app.get('/api/markdown/:path{.+}', async (c) => {
     const data = await readFile(fullPath, 'utf-8');
     const filename = basename(fullPath);
     return c.json({ content: data, filename, path: requestedPath });
-  } catch (err) {
-    console.error('Error reading markdown:', err.message);
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('Error reading markdown:', message);
     return c.json(
       {
         error: 'Failed to read markdown file',
@@ -207,7 +224,7 @@ app.get('/api/markdown/:path{.+}', async (c) => {
 app.use('/*', serveStatic({ root: relative(process.cwd(), distDir) || '.' }));
 
 // Fallback to index.html for SPA routing
-app.get('*', async (c) => {
+app.get('*', async (c: Context) => {
   try {
     const indexPath = resolve(distDir, 'index.html');
     const html = await readFile(indexPath, 'utf-8');
@@ -217,11 +234,11 @@ app.get('*', async (c) => {
   }
 });
 
-const SERVER_READY_MESSAGE = 'md-review server started';
+const SERVER_READY_MESSAGE = 'md-review-plus server started';
 
 // Setup file watcher
-const watchTarget = MARKDOWN_FILE_PATH || BASE_DIR;
-const watchBase = MARKDOWN_FILE_PATH ? dirname(MARKDOWN_FILE_PATH) : BASE_DIR;
+const watchTarget: string = MARKDOWN_FILE_PATH || BASE_DIR;
+const watchBase: string = MARKDOWN_FILE_PATH ? dirname(MARKDOWN_FILE_PATH) : BASE_DIR;
 const watcher = watch(watchTarget, {
   ignored: MARKDOWN_FILE_PATH ? undefined : /(^|[/\\])\..|(node_modules|dist)/,
   persistent: true,
@@ -232,7 +249,7 @@ const watcher = watch(watchTarget, {
   },
 });
 
-watcher.on('change', (path) => {
+watcher.on('change', (path: string) => {
   // Only notify for markdown files
   if (isMarkdownFile(path)) {
     const relativePath = relative(watchBase, path);
@@ -244,7 +261,7 @@ watcher.on('change', (path) => {
       path: relativePath,
     });
 
-    sseClients.forEach((client) => {
+    sseClients.forEach((client: SSEClient) => {
       try {
         client.controller.enqueue(client.encoder.encode(`data: ${message}\n\n`));
       } catch {
@@ -255,7 +272,7 @@ watcher.on('change', (path) => {
   }
 });
 
-watcher.on('add', (path) => {
+watcher.on('add', (path: string) => {
   if (isMarkdownFile(path)) {
     const relativePath = relative(watchBase, path);
     console.log(`File added: ${relativePath}`);
@@ -265,7 +282,7 @@ watcher.on('add', (path) => {
       path: relativePath,
     });
 
-    sseClients.forEach((client) => {
+    sseClients.forEach((client: SSEClient) => {
       try {
         client.controller.enqueue(client.encoder.encode(`data: ${message}\n\n`));
       } catch {
@@ -276,12 +293,12 @@ watcher.on('add', (path) => {
 });
 
 startServer(app, PORT)
-  .then((actualPort) => {
+  .then((actualPort: number) => {
     console.log(`API Server running on http://localhost:${actualPort}`);
     console.log(`Watching for file changes in: ${watchTarget}`);
     console.log(SERVER_READY_MESSAGE);
   })
-  .catch((err) => {
+  .catch((err: Error) => {
     console.error('Failed to start server:', err.message);
     process.exit(1);
   });

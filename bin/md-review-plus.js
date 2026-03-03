@@ -12,7 +12,7 @@ const packageRoot = resolve(__dirname, '..');
 
 const pkg = JSON.parse(readFileSync(resolve(packageRoot, 'package.json'), 'utf-8'));
 
-const SERVER_READY_MESSAGE = 'md-review server started';
+const SERVER_READY_MESSAGE = 'md-review-plus server started';
 
 // Port validation function
 function validatePort(value, name) {
@@ -116,7 +116,7 @@ console.log('Starting md-review-plus...');
 console.log(`   Port: ${port}`);
 
 // Start server
-const serverProcess = spawn('node', ['server/index.js'], {
+const serverProcess = spawn('bun', ['run', 'server/index.ts'], {
   cwd: packageRoot,
   stdio: ['inherit', 'pipe', 'inherit'],
   env: process.env,

@@ -24,7 +24,7 @@
     "client": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "server": "node server/index.js",
+    "server": "bun run server/index.ts",
     "lint": "concurrently 'bun run lint:js' 'bun run lint:css'",
     "lint:fix": "concurrently 'bun run lint:js:fix' 'bun run lint:css:fix'",
     "lint:js": "eslint .",
