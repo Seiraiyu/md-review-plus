@@ -5,15 +5,17 @@ Section-level approval, structured feedback output, and Claude Code integration.
 
 ## Features
 
-- Display Markdown in its original format
-- **Section-level review**: Approve or reject individual `##` sections with comments
-- **Structured feedback output**: Copy or submit formatted review feedback
+- **Card-based section review**: Each `##` section renders as a card with Approve/Reject buttons and a comment textarea
+- **Sticky top bar**: Progress indicator, Approve All, Clear All, and Submit/Copy buttons always visible
+- **Visual feedback**: Approved sections turn green, rejected sections turn red
+- **Structured feedback output**: Copy or submit formatted review feedback including all section and line comments
 - **Review mode** (`--review`): Blocks until human submits, outputs feedback to stdout — ideal for AI agent loops
 - **Claude Code skill**: Install as a skill so Claude Code can request human reviews
-- Add comments to specific lines via text selection
+- **Inline line comments**: Select text to add comments to specific lines
+- **Full-width layout**: Cards fill the available viewport width
+- **Dark mode support**: Follows system preferences
+- **Hot reload**: Live updates when markdown files change
 - Select files from tree view (directory mode)
-- Dark mode support (follows system preferences)
-- Hot reload when markdown files change
 
 ## Install
 
@@ -23,13 +25,17 @@ npm install -g md-review-plus
 
 ### Claude Code Skill
 
-To install the Claude Code skill definition:
+To install the Claude Code skill definition for the current project:
 
 ```sh
 md-review-plus install --skills
 ```
 
-This copies the skill to `~/.claude/skills/` so Claude Code can use it to request human reviews.
+To install globally:
+
+```sh
+md-review-plus install --skills --global
+```
 
 ## Usage
 
@@ -46,6 +52,7 @@ md-review-plus <file> --review        # Review mode: blocks until submit, output
 -p, --port <port>      Server port (default: 3030)
     --review           Enable review mode (blocks until submit)
     --no-open          Do not open browser automatically
+    --global           Install skills globally (~/.claude/skills/)
 -h, --help             Show this help message
 -v, --version          Show version number
 ```
@@ -77,6 +84,11 @@ Please update the document with the following changes:
 
 **Section Name**: Rejected
   → Reviewer's comment about what to change
+
+## Section Comments
+
+**Another Section**
+  → Comment on an approved or pending section
 
 ## Line Comments
 
