@@ -220,6 +220,101 @@ app.get('/api/markdown/:path{.+}', async (c: Context) => {
   }
 });
 
+// Review mode endpoint
+app.get('/api/review-mode', (c: Context) => {
+  return c.json({ reviewMode: process.env.REVIEW_MODE === 'true' });
+});
+
+// Submit review feedback endpoint
+interface SubmitBody {
+  sections: Array<{
+    heading: string;
+    status: 'approved' | 'rejected' | 'pending';
+    comment: string;
+  }>;
+  lineComments: Array<{
+    file: string;
+    startLine: number;
+    endLine: number;
+    selectedText: string;
+    comment: string;
+  }>;
+  filename: string;
+}
+
+function formatFeedback(body: SubmitBody): string {
+  const { sections, lineComments, filename } = body;
+  const rejected = sections.filter((s) => s.status === 'rejected');
+  const approved = sections.filter((s) => s.status === 'approved');
+
+  const isAllApproved =
+    sections.length > 0 && approved.length === sections.length && lineComments.length === 0;
+
+  if (isAllApproved) {
+    return 'All sections approved. No changes needed.';
+  }
+
+  const parts: string[] = [];
+  parts.push('Please update the document with the following changes:');
+
+  if (rejected.length > 0) {
+    parts.push('');
+    parts.push('## Needs Changes');
+    for (const section of rejected) {
+      parts.push('');
+      parts.push(`**${section.heading}**: Rejected`);
+      if (section.comment) {
+        parts.push(`  → ${section.comment}`);
+      }
+    }
+  }
+
+  if (lineComments.length > 0) {
+    parts.push('');
+    parts.push('## Line Comments');
+    for (const comment of lineComments) {
+      parts.push('');
+      const lineRef =
+        comment.startLine === comment.endLine
+          ? `${filename}:L${comment.startLine}`
+          : `${filename}:L${comment.startLine}-L${comment.endLine}`;
+      parts.push(lineRef);
+      parts.push(`"${comment.selectedText}"`);
+      parts.push(`→ ${comment.comment}`);
+    }
+  }
+
+  if (approved.length > 0) {
+    parts.push('');
+    parts.push('## Approved');
+    for (const section of approved) {
+      parts.push(`- ${section.heading}`);
+    }
+  }
+
+  return parts.join('\n');
+}
+
+app.post('/api/submit', async (c: Context) => {
+  const body = await c.req.json<SubmitBody>();
+  const feedback = formatFeedback(body);
+
+  // Print feedback to stdout (this is what the CLI captures)
+  console.log(feedback);
+
+  // Respond to client first
+  const response = c.json({ ok: true });
+
+  // If in review mode, schedule shutdown
+  if (process.env.REVIEW_MODE === 'true') {
+    setTimeout(() => {
+      process.exit(0);
+    }, 100);
+  }
+
+  return response;
+});
+
 // Serve static files from dist directory (for production/CLI mode)
 app.use('/*', serveStatic({ root: relative(process.cwd(), distDir) || '.' }));
 
