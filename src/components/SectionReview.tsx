@@ -34,20 +34,22 @@ export function SectionReview({
         <h2 className="section-review-heading">{section.heading}</h2>
         <div className="section-review-actions">
           <button
-            className={`section-btn section-btn-approve ${section.status === "approved" ? "active" : ""}`}
+            className={`section-action-btn section-action-btn-approve ${section.status === "approved" ? "active" : ""}`}
             onClick={onApprove}
             aria-label="Approve"
             title="Approve this section"
           >
-            ✓
+            <span className="section-action-icon">&#x2713;</span>
+            Approve
           </button>
           <button
-            className={`section-btn section-btn-reject ${section.status === "rejected" ? "active" : ""}`}
+            className={`section-action-btn section-action-btn-reject ${section.status === "rejected" ? "active" : ""}`}
             onClick={onReject}
             aria-label="Reject"
             title="Reject this section"
           >
-            ✗
+            <span className="section-action-icon">&#x2717;</span>
+            Reject
           </button>
         </div>
       </div>
@@ -55,10 +57,14 @@ export function SectionReview({
       <div className="section-review-comment">
         <textarea
           className="section-comment-textarea"
-          placeholder="Add a comment..."
+          placeholder={
+            section.status === "rejected"
+              ? "Describe what needs to change..."
+              : "Add a comment..."
+          }
           value={section.comment}
           onChange={(e) => onComment(e.target.value)}
-          rows={2}
+          rows={section.status === "rejected" ? 3 : 2}
         />
       </div>
     </div>

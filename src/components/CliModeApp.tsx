@@ -1,18 +1,28 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useMarkdown } from "../hooks/useMarkdown";
 import { useFileWatch } from "../hooks/useFileWatch";
 import { useSections } from "../hooks/useSections";
 import { useFeedback } from "../hooks/useFeedback";
-import { FeedbackOutput } from "./FeedbackOutput";
+import { useDarkMode } from "../hooks/useDarkMode";
 import { MarkdownPreview } from "./MarkdownPreview";
+import { MarkdownSection } from "./MarkdownSection";
+import { SectionReview } from "./SectionReview";
+import { SelectionPopover } from "./SelectionPopover";
+import { CommentList, Comment } from "./CommentList";
 import { ErrorDisplay } from "./ErrorDisplay";
-import { Comment } from "./CommentList";
+import { useResizable } from "../hooks/useResizable";
+import "highlight.js/styles/github.css";
+import "highlight.js/styles/github-dark.css";
 import "../styles/review-layout.css";
+import "../styles/markdown.css";
 
 export const CliModeApp = () => {
   const { content, filename, loading, error, reload } = useMarkdown();
   const [comments, setComments] = useState<Comment[]>([]);
   const [reviewMode, setReviewMode] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const { isDark } = useDarkMode();
 
   // Watch for file changes and reload
   useFileWatch(() => {
@@ -27,27 +37,28 @@ export const CliModeApp = () => {
       .catch(() => setReviewMode(false));
   }, []);
 
-  const { sections, approve, reject, setComment } = useSections(
+  // Update highlight.js theme based on dark mode
+  useEffect(() => {
+    const lightTheme = document.querySelector('link[href*="github.css"]');
+    const darkTheme = document.querySelector('link[href*="github-dark.css"]');
+
+    if (lightTheme && darkTheme) {
+      if (isDark) {
+        (lightTheme as HTMLLinkElement).disabled = true;
+        (darkTheme as HTMLLinkElement).disabled = false;
+      } else {
+        (lightTheme as HTMLLinkElement).disabled = false;
+        (darkTheme as HTMLLinkElement).disabled = true;
+      }
+    }
+  }, [isDark]);
+
+  const { intro, sections, approve, reject, approveAll, clearAll, setComment } = useSections(
     content ?? ""
   );
   const { feedback } = useFeedback(sections, comments, filename ?? "file.md");
 
-  const handleSectionClick = useCallback((sectionId: string) => {
-    // Find the h2 element with a matching data-line-start for this section
-    // The sectionId maps to a section whose startLine corresponds to the h2 heading
-    const section = sections.find((s) => s.id === sectionId);
-    if (section) {
-      const el = document.querySelector(
-        `[data-line-start="${section.startLine}"]`
-      );
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "start" });
-        // Add a brief highlight
-        el.classList.add("highlight-line");
-        setTimeout(() => el.classList.remove("highlight-line"), 2000);
-      }
-    }
-  }, [sections]);
+  const reviewedCount = sections.filter((s) => s.status !== "pending").length;
 
   const handleSubmit = useCallback(async () => {
     await fetch("/api/submit", {
@@ -70,6 +81,72 @@ export const CliModeApp = () => {
       }),
     });
   }, [sections, comments, filename]);
+
+  const handleCopy = useCallback(async () => {
+    await navigator.clipboard.writeText(feedback);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }, [feedback]);
+
+  // Inline comment handlers
+  const handleSubmitComment = (
+    comment: string,
+    selectedText: string,
+    startLine: number,
+    endLine: number
+  ) => {
+    const newComment: Comment = {
+      id: crypto.randomUUID(),
+      text: comment,
+      selectedText,
+      startLine,
+      endLine,
+      createdAt: new Date(),
+    };
+    setComments((prev) => [...prev, newComment]);
+  };
+
+  const handleDeleteComment = (id: string) => {
+    setComments((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const handleDeleteAllComments = () => {
+    setComments([]);
+  };
+
+  const handleEditComment = (id: string, newText: string) => {
+    setComments((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, text: newText } : c))
+    );
+  };
+
+  const handleLineClick = (line: number) => {
+    if (!contentRef.current) return;
+    const element = contentRef.current.querySelector(
+      `[data-line-start="${line}"]`
+    );
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      element.classList.add("highlight-line");
+      setTimeout(() => element.classList.remove("highlight-line"), 2000);
+    }
+  };
+
+  const {
+    width: commentsSidebarWidth,
+    isResizing,
+    isCollapsed,
+    handleMouseDown,
+    toggleCollapse,
+  } = useResizable({
+    initialWidth: 300,
+    minWidth: 250,
+    maxWidth: 600,
+    storageKey: "md-review-comments-sidebar-width",
+    direction: "right",
+    collapsible: true,
+    collapseThreshold: 70,
+  });
 
   if (loading) {
     return (
@@ -110,74 +187,129 @@ export const CliModeApp = () => {
     );
   }
 
-  // Review layout: left sidebar with section nav + review controls,
-  // center with full MarkdownPreview (untouched), bottom with FeedbackOutput
+  const progressPercent =
+    sections.length > 0 ? (reviewedCount / sections.length) * 100 : 0;
+
   return (
-    <div className="review-layout">
-      <div className="review-sidebar">
-        <div className="review-sidebar-header">
-          {sections.filter((s) => s.status !== "pending").length}/
-          {sections.length} reviewed
-        </div>
-        <div className="review-sidebar-sections">
-          {sections.map((section) => (
-            <div key={section.id} className="review-sidebar-item">
-              <div className="review-sidebar-item-header">
-                <button
-                  className="review-sidebar-item-link"
-                  onClick={() => handleSectionClick(section.id)}
-                >
-                  <span
-                    className={`section-nav-badge section-nav-badge-${section.status}`}
-                  />
-                  <span className="section-nav-text">{section.heading}</span>
-                </button>
-                <div className="review-sidebar-item-actions">
-                  <button
-                    className={`section-btn section-btn-approve ${section.status === "approved" ? "active" : ""}`}
-                    onClick={() => approve(section.id)}
-                    aria-label={`Approve ${section.heading}`}
-                    title="Approve this section"
-                  >
-                    &#x2713;
-                  </button>
-                  <button
-                    className={`section-btn section-btn-reject ${section.status === "rejected" ? "active" : ""}`}
-                    onClick={() => reject(section.id)}
-                    aria-label={`Reject ${section.heading}`}
-                    title="Reject this section"
-                  >
-                    &#x2717;
-                  </button>
-                </div>
-              </div>
-              <div className="review-sidebar-item-comment">
-                <textarea
-                  placeholder="Add a comment..."
-                  value={section.comment}
-                  onChange={(e) => setComment(section.id, e.target.value)}
-                  rows={2}
-                />
-              </div>
+    <div
+      className={`markdown-with-comments ${isResizing ? "resizing" : ""} ${isCollapsed ? "comments-collapsed" : ""}`}
+    >
+      <div
+        className="markdown-container"
+        style={{
+          paddingRight: isCollapsed ? "0" : `${commentsSidebarWidth + 20}px`,
+        }}
+      >
+        {/* Sticky top bar */}
+        <div className="review-topbar">
+          <span className="review-topbar-filename">{filename}</span>
+          {reviewMode && <span className="review-mode-badge">REVIEW</span>}
+          <span className="review-topbar-spacer" />
+          <div className="review-progress">
+            <span className="review-progress-text">
+              {reviewedCount}/{sections.length} reviewed
+            </span>
+            <div className="review-progress-bar">
+              <div
+                className="review-progress-fill"
+                style={{ width: `${progressPercent}%` }}
+              />
             </div>
+          </div>
+          <div className="review-topbar-actions">
+            <button className="review-approve-all-btn" onClick={approveAll}>
+              Approve All
+            </button>
+            <button className="review-clear-all-btn" onClick={clearAll}>
+              Clear All
+            </button>
+            {reviewMode ? (
+              <button className="review-submit-btn" onClick={handleSubmit}>
+                Submit Review
+              </button>
+            ) : (
+              <button className="review-copy-btn" onClick={handleCopy}>
+                {copied ? "Copied!" : "Copy Feedback"}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Document content */}
+        <div className="review-document" ref={contentRef}>
+          {/* Intro content (before first ##) */}
+          {intro && (
+            <div className="markdown-content">
+              <MarkdownSection content={intro} />
+            </div>
+          )}
+
+          {/* Sections as review cards */}
+          {sections.map((section) => (
+            <SectionReview
+              key={section.id}
+              section={section}
+              onApprove={() => approve(section.id)}
+              onReject={() => reject(section.id)}
+              onComment={(comment) => setComment(section.id, comment)}
+            >
+              <div className="markdown-content">
+                <MarkdownSection content={section.content} />
+              </div>
+            </SectionReview>
           ))}
         </div>
-      </div>
-      <div className="review-main">
-        <div className="review-content">
-          <MarkdownPreview
-            content={content}
-            filename={filename}
-            comments={comments}
-            onCommentsChange={setComments}
-          />
-        </div>
-        <FeedbackOutput
-          feedback={feedback}
-          reviewMode={reviewMode}
-          onSubmit={handleSubmit}
+
+        <SelectionPopover
+          containerRef={contentRef}
+          onSubmitComment={handleSubmitComment}
         />
       </div>
+
+      {/* Comments sidebar toggle */}
+      {isCollapsed && (
+        <button
+          className="comments-toggle-button"
+          onClick={toggleCollapse}
+          title="Show comments"
+          aria-label="Show comments"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path
+              d="M2 5a2 2 0 012-2h12a2 2 0 012 2v8a2 2 0 01-2 2H6l-4 3V5z"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          {comments.length > 0 && (
+            <span className="comments-badge">{comments.length}</span>
+          )}
+        </button>
+      )}
+
+      {/* Comments sidebar */}
+      {!isCollapsed && (
+        <aside
+          className="comments-sidebar"
+          style={{ width: `${commentsSidebarWidth}px` }}
+        >
+          <div
+            className="comments-sidebar-resizer"
+            onMouseDown={handleMouseDown}
+          />
+          <CommentList
+            comments={[...comments].sort((a, b) => a.startLine - b.startLine)}
+            filename={filename}
+            onDeleteComment={handleDeleteComment}
+            onDeleteAll={handleDeleteAllComments}
+            onClose={toggleCollapse}
+            onLineClick={handleLineClick}
+            onEditComment={handleEditComment}
+          />
+        </aside>
+      )}
     </div>
   );
 };

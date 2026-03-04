@@ -40,16 +40,16 @@ const args = mri(process.argv.slice(2), {
     port: '3030',
     open: true,
   },
-  boolean: ['help', 'version', 'open', 'review', 'skills'],
+  boolean: ['help', 'version', 'open', 'review', 'skills', 'global'],
 });
 
 // Install skills subcommand
 if (args._[0] === 'install' && args.skills) {
-  await installSkills();
+  await installSkills(args.global);
   process.exit(0);
 }
 
-async function installSkills() {
+async function installSkills(global) {
   const fs = await import('node:fs');
   const path = await import('node:path');
   const os = await import('node:os');
@@ -61,7 +61,9 @@ async function installSkills() {
     'md-review-plus.md'
   );
 
-  const claudeDir = path.join(os.homedir(), '.claude', 'skills');
+  const claudeDir = global
+    ? path.join(os.homedir(), '.claude', 'skills')
+    : path.join(process.cwd(), '.claude', 'skills');
 
   if (!fs.existsSync(claudeDir)) {
     fs.mkdirSync(claudeDir, { recursive: true });
@@ -82,12 +84,14 @@ Usage:
   md-review-plus <file> [options]       Preview a specific markdown file (.md or .markdown)
   md-review-plus <directory> [options]  Browse markdown files in a specific directory
   md-review-plus <file> --review        Review mode (blocks, outputs feedback)
-  md-review-plus install --skills       Install Claude Code skill
+  md-review-plus install --skills       Install Claude Code skill (project-local)
+  md-review-plus install --skills --global  Install Claude Code skill (global)
 
 Options:
   -p, --port <port>      Server port (default: 3030)
   --review               Enable review mode (blocks until submit)
   --no-open              Do not open browser automatically
+  --global               Install skills globally (~/.claude/skills/)
   -h, --help             Show this help message
   -v, --version          Show version number
 

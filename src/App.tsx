@@ -6,12 +6,12 @@ function App() {
   const [mode, setMode] = useState<'dev' | 'cli' | 'loading'>('loading');
 
   useEffect(() => {
-    // Detect mode by checking if /api/files endpoint is available
     const detectMode = async () => {
       try {
         const response = await fetch('/api/files');
         if (response.ok) {
-          setMode('dev');
+          const data = await response.json();
+          setMode(data.mode === 'cli' ? 'cli' : 'dev');
         } else {
           setMode('cli');
         }

@@ -1,3 +1,8 @@
+/* FeedbackOutput is now used as a standalone drawer;
+   the old bottom-panel styles have been removed.
+   Styling for the drawer lives in review-layout.css.
+   This file is kept for the legacy non-review usage. */
+
 .feedback-output {
   border-top: 1px solid var(--border-color, #d0d7de);
   background: var(--bg-secondary, #f6f8fa);

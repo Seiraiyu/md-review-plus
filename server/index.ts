@@ -172,6 +172,7 @@ app.get('/api/files', async (c: Context) => {
   if (MARKDOWN_FILE_PATH) {
     const name = basename(MARKDOWN_FILE_PATH);
     return c.json({
+      mode: 'cli' as const,
       files: [{ name, path: name, dir: '.' }],
       baseDir: dirname(MARKDOWN_FILE_PATH),
       selectedFile: name,
@@ -180,7 +181,7 @@ app.get('/api/files', async (c: Context) => {
 
   try {
     const files = await scanMarkdownFiles(BASE_DIR);
-    return c.json({ files, baseDir: BASE_DIR });
+    return c.json({ mode: 'dev' as const, files, baseDir: BASE_DIR });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error('Error scanning markdown files:', message);
@@ -278,9 +279,13 @@ function formatFeedback(body: SubmitBody): string {
   const { sections, lineComments, filename } = body;
   const rejected = sections.filter((s) => s.status === 'rejected');
   const approved = sections.filter((s) => s.status === 'approved');
+  const hasAnyComment = sections.some((s) => s.comment && s.comment.trim() !== '');
 
   const isAllApproved =
-    sections.length > 0 && approved.length === sections.length && lineComments.length === 0;
+    sections.length > 0 &&
+    approved.length === sections.length &&
+    lineComments.length === 0 &&
+    !hasAnyComment;
 
   if (isAllApproved) {
     return 'All sections approved. No changes needed.';
@@ -298,6 +303,20 @@ function formatFeedback(body: SubmitBody): string {
       if (section.comment) {
         parts.push(`  → ${section.comment}`);
       }
+    }
+  }
+
+  // Section comments on approved/pending sections
+  const otherWithComments = sections.filter(
+    (s) => s.status !== 'rejected' && s.comment && s.comment.trim() !== ''
+  );
+  if (otherWithComments.length > 0) {
+    parts.push('');
+    parts.push('## Section Comments');
+    for (const section of otherWithComments) {
+      parts.push('');
+      parts.push(`**${section.heading}**`);
+      parts.push(`  → ${section.comment}`);
     }
   }
 

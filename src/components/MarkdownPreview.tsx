@@ -21,7 +21,7 @@ interface MarkdownPreviewProps {
 }
 
 // Components that add data-line-start attribute to elements
-const componentsWithLinePosition: Components = {
+export const componentsWithLinePosition: Components = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
   code: ({ node, className, children, ...props }: any) => {
     const match = /language-(\w+)/.exec(className || '');

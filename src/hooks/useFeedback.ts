@@ -23,10 +23,12 @@ export function useFeedback(
   return useMemo(() => {
     const rejected = sections.filter((s) => s.status === "rejected");
     const approved = sections.filter((s) => s.status === "approved");
+    const hasAnyComment = sections.some((s) => s.comment.trim() !== "");
     const isAllApproved =
       sections.length > 0 &&
       approved.length === sections.length &&
-      comments.length === 0;
+      comments.length === 0 &&
+      !hasAnyComment;
 
     if (isAllApproved) {
       return {
@@ -47,6 +49,20 @@ export function useFeedback(
         if (section.comment) {
           parts.push(`  → ${section.comment}`);
         }
+      }
+    }
+
+    // Section comments on approved/pending sections
+    const otherWithComments = sections.filter(
+      (s) => s.status !== "rejected" && s.comment.trim() !== ""
+    );
+    if (otherWithComments.length > 0) {
+      parts.push("");
+      parts.push("## Section Comments");
+      for (const section of otherWithComments) {
+        parts.push("");
+        parts.push(`**${section.heading}**`);
+        parts.push(`  → ${section.comment}`);
       }
     }
 

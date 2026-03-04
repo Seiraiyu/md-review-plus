@@ -103,6 +103,21 @@ export function useSections(content: string) {
     });
   }, []);
 
+  const approveAll = useCallback(() => {
+    setSectionState((prev) => {
+      const next = new Map(prev);
+      for (const s of parsed.sections) {
+        const current = next.get(s.id);
+        next.set(s.id, { status: "approved", comment: current?.comment ?? "" });
+      }
+      return next;
+    });
+  }, [parsed.sections]);
+
+  const clearAll = useCallback(() => {
+    setSectionState(new Map());
+  }, []);
+
   const setComment = useCallback((id: string, comment: string) => {
     setSectionState((prev) => {
       const next = new Map(prev);
@@ -120,6 +135,8 @@ export function useSections(content: string) {
     sections,
     approve,
     reject,
+    approveAll,
+    clearAll,
     setComment,
   };
 }
