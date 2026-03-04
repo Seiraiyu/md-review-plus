@@ -26,10 +26,10 @@ interface SSEClient {
   encoder: TextEncoder;
 }
 
-// Port validation function
+// Port validation function (port 0 means random available port)
 function validatePort(value: string | number): number {
   const port = parseInt(String(value), 10);
-  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  if (!Number.isInteger(port) || port < 0 || port > 65535) {
     throw new Error(`Invalid port: ${value}`);
   }
   return port;
@@ -40,7 +40,7 @@ async function startServer(app: Hono, port: number, maxRetries: number = 10): Pr
   for (let i = 0; i < maxRetries; i++) {
     const tryPort = port + i;
     try {
-      await new Promise<ServerType>((resolve, reject) => {
+      const server = await new Promise<ServerType>((resolve, reject) => {
         const server = serve({
           fetch: app.fetch,
           port: tryPort,
@@ -48,6 +48,11 @@ async function startServer(app: Hono, port: number, maxRetries: number = 10): Pr
         server.once('listening', () => resolve(server));
         server.once('error', reject);
       });
+      // When port is 0, the OS assigns a random port - get it from the server
+      const addr = server.address();
+      if (typeof addr === 'object' && addr !== null) {
+        return addr.port;
+      }
       return tryPort;
     } catch (err: unknown) {
       if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'EADDRINUSE') {
@@ -64,9 +69,29 @@ const app = new Hono();
 const PORT = validatePort(process.env.API_PORT || '3030');
 const MARKDOWN_FILE_PATH: string | undefined = process.env.MARKDOWN_FILE_PATH;
 const BASE_DIR: string = process.env.BASE_DIR || process.cwd();
+const REVIEW_MODE: boolean = process.env.REVIEW_MODE === 'true';
 
 // Store SSE clients
 const sseClients = new Set<SSEClient>();
+
+// Review mode disconnect detection
+let disconnectTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearDisconnectTimer(): void {
+  if (disconnectTimer) {
+    clearTimeout(disconnectTimer);
+    disconnectTimer = null;
+  }
+}
+
+function startDisconnectTimer(): void {
+  if (!REVIEW_MODE) return;
+  clearDisconnectTimer();
+  disconnectTimer = setTimeout(() => {
+    console.error('Browser disconnected without submitting review.');
+    process.exit(1);
+  }, 30_000);
+}
 
 // Check if file has markdown extension
 function isMarkdownFile(filename: string): boolean {
@@ -114,9 +139,16 @@ app.get('/api/watch', (c: Context) => {
       const client: SSEClient = { controller, encoder };
       sseClients.add(client);
 
+      // Clear any disconnect timer since a client just connected
+      clearDisconnectTimer();
+
       // Cleanup on disconnect
       c.req.raw.signal.addEventListener('abort', () => {
         sseClients.delete(client);
+        // In review mode, start grace period when last client disconnects
+        if (REVIEW_MODE && sseClients.size === 0) {
+          startDisconnectTimer();
+        }
       });
     },
   });
@@ -222,7 +254,7 @@ app.get('/api/markdown/:path{.+}', async (c: Context) => {
 
 // Review mode endpoint
 app.get('/api/review-mode', (c: Context) => {
-  return c.json({ reviewMode: process.env.REVIEW_MODE === 'true' });
+  return c.json({ reviewMode: REVIEW_MODE });
 });
 
 // Submit review feedback endpoint
@@ -299,6 +331,9 @@ app.post('/api/submit', async (c: Context) => {
   const body = await c.req.json<SubmitBody>();
   const feedback = formatFeedback(body);
 
+  // Clear any disconnect timer since submit was received
+  clearDisconnectTimer();
+
   // Print feedback to stdout (this is what the CLI captures)
   console.log(feedback);
 
@@ -306,7 +341,7 @@ app.post('/api/submit', async (c: Context) => {
   const response = c.json({ ok: true });
 
   // If in review mode, schedule shutdown
-  if (process.env.REVIEW_MODE === 'true') {
+  if (REVIEW_MODE) {
     setTimeout(() => {
       process.exit(0);
     }, 100);

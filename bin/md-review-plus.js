@@ -40,7 +40,7 @@ const args = mri(process.argv.slice(2), {
     port: '3030',
     open: true,
   },
-  boolean: ['help', 'version', 'open'],
+  boolean: ['help', 'version', 'open', 'review'],
 });
 
 // Help message
@@ -52,9 +52,11 @@ Usage:
   md-review-plus [options]              Start in dev mode (browse all markdown files)
   md-review-plus <file> [options]       Preview a specific markdown file (.md or .markdown)
   md-review-plus <directory> [options]  Browse markdown files in a specific directory
+  md-review-plus <file> --review        Review mode (blocks, outputs feedback)
 
 Options:
   -p, --port <port>      Server port (default: 3030)
+  --review               Enable review mode (blocks until submit)
   --no-open              Do not open browser automatically
   -h, --help             Show this help message
   -v, --version          Show version number
@@ -64,6 +66,7 @@ Examples:
   md-review-plus docs                   Browse markdown files in docs directory
   md-review-plus README.md              Preview README.md
   md-review-plus docs/guide.md --port 8080
+  md-review-plus spec.md --review       Review and get structured feedback
 `);
   process.exit(0);
 }
@@ -75,11 +78,9 @@ if (args.version) {
 }
 
 const file = args._[0];
-const port = validatePort(args.port, 'port');
+let port = validatePort(args.port, 'port');
 const shouldOpen = args.open;
-
-// Set environment variables
-process.env.API_PORT = port;
+const reviewMode = args.review;
 
 // If file is specified, validate it
 if (file) {
@@ -104,16 +105,41 @@ if (file) {
     }
 
     process.env.MARKDOWN_FILE_PATH = filePath;
-    console.log(`File: ${filePath}`);
+    if (!reviewMode) {
+      console.log(`File: ${filePath}`);
+    }
   }
 } else {
   // Dev mode - browse all markdown files
+  if (reviewMode) {
+    console.error('Error: --review requires a markdown file path');
+    process.exit(1);
+  }
   process.env.BASE_DIR = process.cwd();
   console.log(`Directory: ${process.cwd()}`);
 }
 
-console.log('Starting md-review-plus...');
-console.log(`   Port: ${port}`);
+// Review mode setup
+if (reviewMode) {
+  if (!process.env.MARKDOWN_FILE_PATH) {
+    console.error('Error: --review requires a markdown file, not a directory');
+    process.exit(1);
+  }
+  process.env.REVIEW_MODE = 'true';
+  // Use port 0 (random available port) unless user explicitly specified a port
+  const userSpecifiedPort = process.argv.includes('--port') || process.argv.includes('-p');
+  if (!userSpecifiedPort) {
+    port = 0;
+  }
+}
+
+// Set environment variables (after review mode may override port)
+process.env.API_PORT = String(port);
+
+if (!reviewMode) {
+  console.log('Starting md-review-plus...');
+  console.log(`   Port: ${port}`);
+}
 
 // Start server
 const serverProcess = spawn('bun', ['run', 'server/index.ts'], {
@@ -127,13 +153,20 @@ let actualPort = port;
 
 // Wait for server to be ready before opening browser
 serverProcess.stdout.on('data', async (data) => {
-  process.stdout.write(data);
   const output = data.toString();
 
   // Extract actual port from "API Server running on http://localhost:XXXX"
   const portMatch = output.match(/API Server running on http:\/\/localhost:(\d+)/);
   if (portMatch) {
     actualPort = parseInt(portMatch[1], 10);
+  }
+
+  if (!reviewMode) {
+    // In normal mode, forward all server output
+    process.stdout.write(data);
+  } else if (serverReady) {
+    // In review mode after startup, forward output (feedback from /api/submit)
+    process.stdout.write(data);
   }
 
   if (!serverReady && output.includes(SERVER_READY_MESSAGE)) {
@@ -158,10 +191,10 @@ process.on('SIGTERM', shutdown);
 
 // Handle server exit
 serverProcess.on('exit', (code) => {
-  if (code !== 0 && code !== null) {
+  if (!reviewMode && code !== 0 && code !== null) {
     console.error(`Server exited with code ${code}`);
   }
-  process.exit(code || 0);
+  process.exit(code ?? 0);
 });
 
 serverProcess.on('error', (err) => {
