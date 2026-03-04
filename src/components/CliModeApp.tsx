@@ -54,7 +54,8 @@ export const CliModeApp = () => {
   }, [isDark]);
 
   const { intro, sections, approve, reject, approveAll, clearAll, setComment } = useSections(
-    content ?? ""
+    content ?? "",
+    reviewMode
   );
   const { feedback } = useFeedback(sections, comments, filename ?? "file.md");
 
@@ -80,6 +81,7 @@ export const CliModeApp = () => {
         filename,
       }),
     });
+    window.close();
   }, [sections, comments, filename]);
 
   const handleCopy = useCallback(async () => {

@@ -19,7 +19,10 @@ function generateId(heading: string, index: number): string {
   return `section-${index}-${heading.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
 }
 
-function parseMarkdownSections(content: string): ParsedContent {
+function parseMarkdownSections(
+  content: string,
+  singleSectionFallback: boolean = false
+): ParsedContent {
   if (!content) {
     return { intro: "", sections: [] };
   }
@@ -34,6 +37,25 @@ function parseMarkdownSections(content: string): ParsedContent {
   }
 
   if (sectionStarts.length === 0) {
+    if (singleSectionFallback) {
+      // Find heading from first # line, or use "Document"
+      const firstH1 = lines.find((l) => l.match(/^# /));
+      const heading = firstH1 ? firstH1.replace(/^# /, "") : "Document";
+      return {
+        intro: "",
+        sections: [
+          {
+            id: generateId(heading, 0),
+            heading,
+            startLine: 1,
+            endLine: lines.length,
+            content,
+            status: "pending" as const,
+            comment: "",
+          },
+        ],
+      };
+    }
     return { intro: content, sections: [] };
   }
 
@@ -63,8 +85,14 @@ function parseMarkdownSections(content: string): ParsedContent {
   return { intro, sections };
 }
 
-export function useSections(content: string) {
-  const parsed = useMemo(() => parseMarkdownSections(content), [content]);
+export function useSections(
+  content: string,
+  singleSectionFallback: boolean = false
+) {
+  const parsed = useMemo(
+    () => parseMarkdownSections(content, singleSectionFallback),
+    [content, singleSectionFallback]
+  );
 
   const [sectionState, setSectionState] = useState<
     Map<string, { status: Section["status"]; comment: string }>
