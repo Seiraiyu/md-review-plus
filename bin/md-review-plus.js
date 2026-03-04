@@ -61,15 +61,15 @@ async function installSkills(global) {
     'md-review-plus.md'
   );
 
-  const claudeDir = global
-    ? path.join(os.homedir(), '.claude', 'skills')
-    : path.join(process.cwd(), '.claude', 'skills');
+  const baseDir = global
+    ? path.join(os.homedir(), '.claude', 'skills', 'md-review-plus')
+    : path.join(process.cwd(), '.claude', 'skills', 'md-review-plus');
 
-  if (!fs.existsSync(claudeDir)) {
-    fs.mkdirSync(claudeDir, { recursive: true });
+  if (!fs.existsSync(baseDir)) {
+    fs.mkdirSync(baseDir, { recursive: true });
   }
 
-  const dest = path.join(claudeDir, 'md-review-plus.md');
+  const dest = path.join(baseDir, 'SKILL.md');
   fs.copyFileSync(skillSource, dest);
   console.log(`Installed skill to ${dest}`);
 }
