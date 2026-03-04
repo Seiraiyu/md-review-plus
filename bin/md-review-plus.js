@@ -40,8 +40,37 @@ const args = mri(process.argv.slice(2), {
     port: '3030',
     open: true,
   },
-  boolean: ['help', 'version', 'open', 'review'],
+  boolean: ['help', 'version', 'open', 'review', 'skills'],
 });
+
+// Install skills subcommand
+if (args._[0] === 'install' && args.skills) {
+  await installSkills();
+  process.exit(0);
+}
+
+async function installSkills() {
+  const fs = await import('node:fs');
+  const path = await import('node:path');
+  const os = await import('node:os');
+
+  const skillSource = path.join(
+    path.dirname(new URL(import.meta.url).pathname),
+    '..',
+    'skills',
+    'md-review-plus.md'
+  );
+
+  const claudeDir = path.join(os.homedir(), '.claude', 'skills');
+
+  if (!fs.existsSync(claudeDir)) {
+    fs.mkdirSync(claudeDir, { recursive: true });
+  }
+
+  const dest = path.join(claudeDir, 'md-review-plus.md');
+  fs.copyFileSync(skillSource, dest);
+  console.log(`Installed skill to ${dest}`);
+}
 
 // Help message
 if (args.help) {
@@ -53,6 +82,7 @@ Usage:
   md-review-plus <file> [options]       Preview a specific markdown file (.md or .markdown)
   md-review-plus <directory> [options]  Browse markdown files in a specific directory
   md-review-plus <file> --review        Review mode (blocks, outputs feedback)
+  md-review-plus install --skills       Install Claude Code skill
 
 Options:
   -p, --port <port>      Server port (default: 3030)

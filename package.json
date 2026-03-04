@@ -9,7 +9,8 @@
   "files": [
     "bin",
     "dist",
-    "server"
+    "server",
+    "skills"
   ],
   "repository": {
     "type": "git",
