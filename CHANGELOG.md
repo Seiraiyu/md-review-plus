@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/Seiraiyu/md-review-plus/compare/v1.0.0...v1.0.1) (2026-03-04)
+
+
+### Bug Fixes
+
+* bump Node to 24 in publish workflows for OIDC trusted publishing ([0c58806](https://github.com/Seiraiyu/md-review-plus/commit/0c58806aa9779c0ad11bc508006b8412dc22a603))
+
 ## 1.0.0 (2026-03-04)
 
 
