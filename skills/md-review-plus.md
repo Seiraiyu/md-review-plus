@@ -22,11 +22,13 @@ The command blocks until the human submits their review, then prints structured 
 The stdout output follows this format:
 
 **All approved:**
+
 ```
 All sections approved. No changes needed.
 ```
 
 **Changes requested:**
+
 ```
 Please update the document with the following changes:
 

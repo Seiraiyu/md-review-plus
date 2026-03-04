@@ -1,20 +1,20 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useMarkdown } from "../hooks/useMarkdown";
-import { useFileWatch } from "../hooks/useFileWatch";
-import { useSections } from "../hooks/useSections";
-import { useFeedback } from "../hooks/useFeedback";
-import { useDarkMode } from "../hooks/useDarkMode";
-import { MarkdownPreview } from "./MarkdownPreview";
-import { MarkdownSection } from "./MarkdownSection";
-import { SectionReview } from "./SectionReview";
-import { SelectionPopover } from "./SelectionPopover";
-import { CommentList, Comment } from "./CommentList";
-import { ErrorDisplay } from "./ErrorDisplay";
-import { useResizable } from "../hooks/useResizable";
-import "highlight.js/styles/github.css";
-import "highlight.js/styles/github-dark.css";
-import "../styles/review-layout.css";
-import "../styles/markdown.css";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useMarkdown } from '../hooks/useMarkdown';
+import { useFileWatch } from '../hooks/useFileWatch';
+import { useSections } from '../hooks/useSections';
+import { useFeedback } from '../hooks/useFeedback';
+import { useDarkMode } from '../hooks/useDarkMode';
+import { MarkdownPreview } from './MarkdownPreview';
+import { MarkdownSection } from './MarkdownSection';
+import { SectionReview } from './SectionReview';
+import { SelectionPopover } from './SelectionPopover';
+import { CommentList, Comment } from './CommentList';
+import { ErrorDisplay } from './ErrorDisplay';
+import { useResizable } from '../hooks/useResizable';
+import 'highlight.js/styles/github.css';
+import 'highlight.js/styles/github-dark.css';
+import '../styles/review-layout.css';
+import '../styles/markdown.css';
 
 export const CliModeApp = () => {
   const { content, filename, loading, error, reload } = useMarkdown();
@@ -31,7 +31,7 @@ export const CliModeApp = () => {
 
   // Check if we're in review mode
   useEffect(() => {
-    fetch("/api/review-mode")
+    fetch('/api/review-mode')
       .then((r) => r.json())
       .then((data) => setReviewMode(data.reviewMode))
       .catch(() => setReviewMode(false));
@@ -54,17 +54,17 @@ export const CliModeApp = () => {
   }, [isDark]);
 
   const { intro, sections, approve, reject, approveAll, clearAll, setComment } = useSections(
-    content ?? "",
-    reviewMode
+    content ?? '',
+    reviewMode,
   );
-  const { feedback } = useFeedback(sections, comments, filename ?? "file.md");
+  const { feedback } = useFeedback(sections, comments, filename ?? 'file.md');
 
-  const reviewedCount = sections.filter((s) => s.status !== "pending").length;
+  const reviewedCount = sections.filter((s) => s.status !== 'pending').length;
 
   const handleSubmit = useCallback(async () => {
-    await fetch("/api/submit", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    await fetch('/api/submit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         sections: sections.map((s) => ({
           heading: s.heading,
@@ -95,7 +95,7 @@ export const CliModeApp = () => {
     comment: string,
     selectedText: string,
     startLine: number,
-    endLine: number
+    endLine: number,
   ) => {
     const newComment: Comment = {
       id: crypto.randomUUID(),
@@ -117,20 +117,16 @@ export const CliModeApp = () => {
   };
 
   const handleEditComment = (id: string, newText: string) => {
-    setComments((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, text: newText } : c))
-    );
+    setComments((prev) => prev.map((c) => (c.id === id ? { ...c, text: newText } : c)));
   };
 
   const handleLineClick = (line: number) => {
     if (!contentRef.current) return;
-    const element = contentRef.current.querySelector(
-      `[data-line-start="${line}"]`
-    );
+    const element = contentRef.current.querySelector(`[data-line-start="${line}"]`);
     if (element) {
-      element.scrollIntoView({ behavior: "smooth", block: "center" });
-      element.classList.add("highlight-line");
-      setTimeout(() => element.classList.remove("highlight-line"), 2000);
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      element.classList.add('highlight-line');
+      setTimeout(() => element.classList.remove('highlight-line'), 2000);
     }
   };
 
@@ -144,8 +140,8 @@ export const CliModeApp = () => {
     initialWidth: 300,
     minWidth: 250,
     maxWidth: 600,
-    storageKey: "md-review-comments-sidebar-width",
-    direction: "right",
+    storageKey: 'md-review-comments-sidebar-width',
+    direction: 'right',
     collapsible: true,
     collapseThreshold: 70,
   });
@@ -154,10 +150,10 @@ export const CliModeApp = () => {
     return (
       <div
         style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "100vh",
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          height: '100vh',
         }}
       >
         <p>Loading...</p>
@@ -171,7 +167,7 @@ export const CliModeApp = () => {
 
   if (!content || !filename) {
     return (
-      <div style={{ padding: "2rem" }}>
+      <div style={{ padding: '2rem' }}>
         <p>No content available</p>
       </div>
     );
@@ -189,17 +185,16 @@ export const CliModeApp = () => {
     );
   }
 
-  const progressPercent =
-    sections.length > 0 ? (reviewedCount / sections.length) * 100 : 0;
+  const progressPercent = sections.length > 0 ? (reviewedCount / sections.length) * 100 : 0;
 
   return (
     <div
-      className={`markdown-with-comments ${isResizing ? "resizing" : ""} ${isCollapsed ? "comments-collapsed" : ""}`}
+      className={`markdown-with-comments ${isResizing ? 'resizing' : ''} ${isCollapsed ? 'comments-collapsed' : ''}`}
     >
       <div
         className="markdown-container"
         style={{
-          paddingRight: isCollapsed ? "0" : `${commentsSidebarWidth + 20}px`,
+          paddingRight: isCollapsed ? '0' : `${commentsSidebarWidth + 20}px`,
         }}
       >
         {/* Sticky top bar */}
@@ -212,10 +207,7 @@ export const CliModeApp = () => {
               {reviewedCount}/{sections.length} reviewed
             </span>
             <div className="review-progress-bar">
-              <div
-                className="review-progress-fill"
-                style={{ width: `${progressPercent}%` }}
-              />
+              <div className="review-progress-fill" style={{ width: `${progressPercent}%` }} />
             </div>
           </div>
           <div className="review-topbar-actions">
@@ -231,7 +223,7 @@ export const CliModeApp = () => {
               </button>
             ) : (
               <button className="review-copy-btn" onClick={handleCopy}>
-                {copied ? "Copied!" : "Copy Feedback"}
+                {copied ? 'Copied!' : 'Copy Feedback'}
               </button>
             )}
           </div>
@@ -262,10 +254,7 @@ export const CliModeApp = () => {
           ))}
         </div>
 
-        <SelectionPopover
-          containerRef={contentRef}
-          onSubmitComment={handleSubmitComment}
-        />
+        <SelectionPopover containerRef={contentRef} onSubmitComment={handleSubmitComment} />
       </div>
 
       {/* Comments sidebar toggle */}
@@ -285,22 +274,14 @@ export const CliModeApp = () => {
               strokeLinejoin="round"
             />
           </svg>
-          {comments.length > 0 && (
-            <span className="comments-badge">{comments.length}</span>
-          )}
+          {comments.length > 0 && <span className="comments-badge">{comments.length}</span>}
         </button>
       )}
 
       {/* Comments sidebar */}
       {!isCollapsed && (
-        <aside
-          className="comments-sidebar"
-          style={{ width: `${commentsSidebarWidth}px` }}
-        >
-          <div
-            className="comments-sidebar-resizer"
-            onMouseDown={handleMouseDown}
-          />
+        <aside className="comments-sidebar" style={{ width: `${commentsSidebarWidth}px` }}>
+          <div className="comments-sidebar-resizer" onMouseDown={handleMouseDown} />
           <CommentList
             comments={[...comments].sort((a, b) => a.startLine - b.startLine)}
             filename={filename}

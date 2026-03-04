@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import "../styles/feedback-output.css";
+import { useState, useCallback } from 'react';
+import '../styles/feedback-output.css';
 
 interface FeedbackOutputProps {
   feedback: string;
@@ -7,11 +7,7 @@ interface FeedbackOutputProps {
   onSubmit: () => void;
 }
 
-export function FeedbackOutput({
-  feedback,
-  reviewMode,
-  onSubmit,
-}: FeedbackOutputProps) {
+export function FeedbackOutput({ feedback, reviewMode, onSubmit }: FeedbackOutputProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
 
@@ -29,9 +25,7 @@ export function FeedbackOutput({
           onClick={() => setCollapsed(!collapsed)}
           aria-label="Feedback"
         >
-          <span className={`feedback-chevron ${collapsed ? "collapsed" : ""}`}>
-            ▾
-          </span>
+          <span className={`feedback-chevron ${collapsed ? 'collapsed' : ''}`}>▾</span>
           Feedback Output
         </button>
         <div className="feedback-output-actions">
@@ -49,14 +43,12 @@ export function FeedbackOutput({
               onClick={handleCopy}
               aria-label="Copy"
             >
-              {copied ? "Copied!" : "Copy"}
+              {copied ? 'Copied!' : 'Copy'}
             </button>
           )}
         </div>
       </div>
-      <div
-        className={`feedback-output-body ${collapsed ? "collapsed" : ""}`}
-      >
+      <div className={`feedback-output-body ${collapsed ? 'collapsed' : ''}`}>
         <pre className="feedback-output-text">{feedback}</pre>
       </div>
     </div>

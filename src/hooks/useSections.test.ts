@@ -1,6 +1,6 @@
-import { describe, it, expect } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useSections } from "./useSections";
+import { describe, it, expect } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { useSections } from './useSections';
 
 const SAMPLE_MARKDOWN = `# Title
 
@@ -20,17 +20,17 @@ Error handling content.
 Testing content.
 `;
 
-describe("useSections", () => {
-  it("parses ## headings into sections", () => {
+describe('useSections', () => {
+  it('parses ## headings into sections', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
     expect(result.current.sections).toHaveLength(3);
-    expect(result.current.sections[0].heading).toBe("Architecture");
-    expect(result.current.sections[1].heading).toBe("Error Handling");
-    expect(result.current.sections[2].heading).toBe("Testing");
+    expect(result.current.sections[0].heading).toBe('Architecture');
+    expect(result.current.sections[1].heading).toBe('Error Handling');
+    expect(result.current.sections[2].heading).toBe('Testing');
   });
 
-  it("assigns correct line ranges", () => {
+  it('assigns correct line ranges', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
     // "## Architecture" is on line 5 (1-based, index 4)
@@ -48,103 +48,99 @@ describe("useSections", () => {
     expect(result.current.sections[2].endLine).toBe(16);
   });
 
-  it("extracts intro content before first ##", () => {
+  it('extracts intro content before first ##', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
-    expect(result.current.intro).toContain("# Title");
-    expect(result.current.intro).toContain("Intro paragraph.");
-    expect(result.current.intro).not.toContain("## Architecture");
+    expect(result.current.intro).toContain('# Title');
+    expect(result.current.intro).toContain('Intro paragraph.');
+    expect(result.current.intro).not.toContain('## Architecture');
   });
 
-  it("extracts section content (including heading)", () => {
+  it('extracts section content (including heading)', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
-    expect(result.current.sections[0].content).toContain(
-      "## Architecture"
-    );
-    expect(result.current.sections[0].content).toContain(
-      "Architecture content here."
-    );
+    expect(result.current.sections[0].content).toContain('## Architecture');
+    expect(result.current.sections[0].content).toContain('Architecture content here.');
   });
 
-  it("initializes all sections as pending", () => {
+  it('initializes all sections as pending', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
     for (const section of result.current.sections) {
-      expect(section.status).toBe("pending");
-      expect(section.comment).toBe("");
+      expect(section.status).toBe('pending');
+      expect(section.comment).toBe('');
     }
   });
 
-  it("approves a section", () => {
+  it('approves a section', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
     act(() => {
       result.current.approve(result.current.sections[0].id);
     });
 
-    expect(result.current.sections[0].status).toBe("approved");
+    expect(result.current.sections[0].status).toBe('approved');
   });
 
-  it("rejects a section", () => {
+  it('rejects a section', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
     act(() => {
       result.current.reject(result.current.sections[1].id);
     });
 
-    expect(result.current.sections[1].status).toBe("rejected");
+    expect(result.current.sections[1].status).toBe('rejected');
   });
 
-  it("sets a comment on a section", () => {
+  it('sets a comment on a section', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
     act(() => {
-      result.current.setComment(result.current.sections[0].id, "Looks good");
+      result.current.setComment(result.current.sections[0].id, 'Looks good');
     });
 
-    expect(result.current.sections[0].comment).toBe("Looks good");
+    expect(result.current.sections[0].comment).toBe('Looks good');
   });
 
-  it("toggles approved → pending when clicking approve again", () => {
+  it('toggles approved → pending when clicking approve again', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
     act(() => {
       result.current.approve(result.current.sections[0].id);
     });
-    expect(result.current.sections[0].status).toBe("approved");
+    expect(result.current.sections[0].status).toBe('approved');
 
     act(() => {
       result.current.approve(result.current.sections[0].id);
     });
-    expect(result.current.sections[0].status).toBe("pending");
+    expect(result.current.sections[0].status).toBe('pending');
   });
 
-  it("toggles rejected → pending when clicking reject again", () => {
+  it('toggles rejected → pending when clicking reject again', () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
     act(() => {
       result.current.reject(result.current.sections[1].id);
     });
-    expect(result.current.sections[1].status).toBe("rejected");
+    expect(result.current.sections[1].status).toBe('rejected');
 
     act(() => {
       result.current.reject(result.current.sections[1].id);
     });
-    expect(result.current.sections[1].status).toBe("pending");
+    expect(result.current.sections[1].status).toBe('pending');
   });
 
-  it("returns empty sections for content with no ## headings", () => {
-    const { result } = renderHook(() => useSections("# Just a title\n\nSome text."));
+  it('returns empty sections for content with no ## headings', () => {
+    const { result } = renderHook(() => useSections('# Just a title\n\nSome text.'));
 
     expect(result.current.sections).toHaveLength(0);
-    expect(result.current.intro).toContain("# Just a title");
+    expect(result.current.intro).toContain('# Just a title');
   });
 
-  it("handles empty content", () => {
-    const { result } = renderHook(() => useSections(""));
+  it('handles empty content', () => {
+    const { result } = renderHook(() => useSections(''));
 
     expect(result.current.sections).toHaveLength(0);
-    expect(result.current.intro).toBe("");
+    expect(result.current.intro).toBe('');
   });
 });

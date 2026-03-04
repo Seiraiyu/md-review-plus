@@ -167,7 +167,9 @@
   max-height: 0;
   border-bottom: none;
   background: var(--bg-secondary, #f6f8fa);
-  transition: max-height 0.25s ease, border-bottom 0.25s ease;
+  transition:
+    max-height 0.25s ease,
+    border-bottom 0.25s ease;
 }
 
 .review-feedback-drawer.open {
@@ -184,7 +186,7 @@
 .review-feedback-drawer-content pre {
   margin: 0;
   /* stylelint-disable-next-line plugin/use-baseline */
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-family: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   font-size: 0.8125rem;
   line-height: 1.5;
   white-space: pre-wrap;

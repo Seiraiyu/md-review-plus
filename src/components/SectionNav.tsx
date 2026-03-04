@@ -1,5 +1,5 @@
-import type { Section } from "../hooks/useSections";
-import "../styles/section-nav.css";
+import type { Section } from '../hooks/useSections';
+import '../styles/section-nav.css';
 
 interface SectionNavProps {
   sections: Section[];
@@ -16,7 +16,7 @@ export function SectionNav({ sections, onSectionClick }: SectionNavProps) {
   }
 
   const reviewed = sections.filter(
-    (s) => s.status === "approved" || s.status === "rejected"
+    (s) => s.status === 'approved' || s.status === 'rejected',
   ).length;
 
   return (
@@ -27,13 +27,8 @@ export function SectionNav({ sections, onSectionClick }: SectionNavProps) {
       <ul className="section-nav-list">
         {sections.map((section) => (
           <li key={section.id} className="section-nav-item">
-            <button
-              className="section-nav-link"
-              onClick={() => onSectionClick(section.id)}
-            >
-              <span
-                className={`section-nav-badge section-nav-badge-${section.status}`}
-              />
+            <button className="section-nav-link" onClick={() => onSectionClick(section.id)}>
+              <span className={`section-nav-badge section-nav-badge-${section.status}`} />
               <span className="section-nav-text">{section.heading}</span>
             </button>
           </li>

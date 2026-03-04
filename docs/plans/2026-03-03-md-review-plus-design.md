@@ -47,6 +47,7 @@ md-review-plus install --skills
 Each `##` heading defines a reviewable section. The content under a `##` (until the next `##` or end of file) is one review unit.
 
 **Per-section controls:**
+
 - Approve button (green)
 - Reject button (red)
 - Optional comment textarea (always visible, collapsible)
@@ -57,6 +58,7 @@ Content before the first `##` (title, intro) is shown but not a reviewable secti
 ### 2. Section Navigation
 
 Left sidebar TOC generated from `##` headings:
+
 - Click to scroll to section
 - Shows approve/reject status badge per section
 - Shows count summary at top (e.g., "3/5 reviewed")
@@ -107,6 +109,7 @@ When `--review` flag is passed:
 7. Server shuts down, process exits with code 0
 
 If all sections are approved and no comments exist, stdout is:
+
 ```
 All sections approved. No changes needed.
 ```
@@ -122,6 +125,7 @@ md-review-plus install --skills
 ```
 
 Installs a skill definition file that Claude Code discovers. The skill instructs agents to:
+
 - Use single-file mode: `md-review-plus ./path/to/file.md --review`
 - Parse the stdout feedback
 - Act on rejected sections and line comments
@@ -199,7 +203,7 @@ Returns `{ reviewMode: true/false }` so the frontend knows whether to show the s
 ```typescript
 interface Section {
   id: string;
-  heading: string;          // The ## heading text
+  heading: string; // The ## heading text
   startLine: number;
   endLine: number;
   status: "pending" | "approved" | "rejected";

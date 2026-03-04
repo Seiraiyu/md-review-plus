@@ -17,6 +17,7 @@
 ### Task 1: Fork upstream and set up project
 
 **Files:**
+
 - Modify: `package.json`
 - Create: `bunfig.toml`
 - Delete: `pnpm-workspace.yaml`, `pnpm-lock.yaml`
@@ -35,6 +36,7 @@ Resolve any conflicts (the only local file is `docs/plans/`). Keep both sides.
 **Step 2: Rename package and update identifiers**
 
 In `package.json`, change:
+
 ```json
 {
   "name": "md-review-plus",
@@ -47,6 +49,7 @@ In `package.json`, change:
 Remove the `packageManager` field (we're switching to Bun).
 
 Rename the CLI entry point:
+
 ```bash
 mv bin/md-review.js bin/md-review-plus.js
 ```
@@ -100,6 +103,7 @@ git commit -m "fork: rename to md-review-plus, convert pnpm to bun"
 The upstream `server/index.js` is plain JavaScript. Convert it to TypeScript for consistency with the rest of the codebase.
 
 **Files:**
+
 - Delete: `server/index.js`
 - Create: `server/index.ts`
 - Modify: `package.json` (update scripts)
@@ -119,6 +123,7 @@ Keep all logic identical — this is a mechanical conversion, not a refactor.
 **Step 2: Update package.json scripts**
 
 Change the `server` script:
+
 ```json
 "server": "bun run server/index.ts"
 ```
@@ -126,8 +131,9 @@ Change the `server` script:
 **Step 3: Update CLI entry point**
 
 In `bin/md-review-plus.js`, change the server spawn to use `bun`:
+
 ```javascript
-const serverProcess = spawn('bun', ['run', 'server/index.ts'], {
+const serverProcess = spawn("bun", ["run", "server/index.ts"], {
   // ... keep existing options
 });
 ```
@@ -170,6 +176,7 @@ git commit -m "chore: convert server to TypeScript, use bun runtime"
 This hook parses markdown content to extract `##` sections and manages their review state (pending/approved/rejected + comments).
 
 **Files:**
+
 - Create: `src/hooks/useSections.ts`
 - Create: `src/hooks/useSections.test.ts`
 
@@ -230,9 +237,7 @@ describe("useSections", () => {
   it("extracts section content (including heading)", () => {
     const { result } = renderHook(() => useSections(SAMPLE_MARKDOWN));
 
-    expect(result.current.sections[0].content).toContain(
-      "## Architecture"
-    );
+    expect(result.current.sections[0].content).toContain("## Architecture");
     expect(result.current.sections[0].content).toContain(
       "Architecture content here."
     );
@@ -292,7 +297,9 @@ describe("useSections", () => {
   });
 
   it("returns empty sections for content with no ## headings", () => {
-    const { result } = renderHook(() => useSections("# Just a title\n\nSome text."));
+    const { result } = renderHook(() =>
+      useSections("# Just a title\n\nSome text.")
+    );
 
     expect(result.current.sections).toHaveLength(0);
     expect(result.current.intro).toContain("# Just a title");
@@ -367,7 +374,10 @@ function parseMarkdownSections(content: string): ParsedContent {
     const heading = lines[start].replace(/^## /, "");
     const sectionLines = lines.slice(start, end);
     // Remove trailing empty lines from section content
-    while (sectionLines.length > 0 && sectionLines[sectionLines.length - 1] === "") {
+    while (
+      sectionLines.length > 0 &&
+      sectionLines[sectionLines.length - 1] === ""
+    ) {
       sectionLines.pop();
     }
 
@@ -378,7 +388,7 @@ function parseMarkdownSections(content: string): ParsedContent {
       endLine: start + sectionLines.length, // 1-based, inclusive
       content: lines.slice(start, end).join("\n"),
       status: "pending" as const,
-      comment: "",
+      comment: ""
     };
   });
 
@@ -407,7 +417,7 @@ export function useSections(content: string) {
       const current = next.get(id);
       next.set(id, {
         status: current?.status === "approved" ? "pending" : "approved",
-        comment: current?.comment ?? "",
+        comment: current?.comment ?? ""
       });
       return next;
     });
@@ -419,7 +429,7 @@ export function useSections(content: string) {
       const current = next.get(id);
       next.set(id, {
         status: current?.status === "rejected" ? "pending" : "rejected",
-        comment: current?.comment ?? "",
+        comment: current?.comment ?? ""
       });
       return next;
     });
@@ -431,7 +441,7 @@ export function useSections(content: string) {
       const current = next.get(id);
       next.set(id, {
         status: current?.status ?? "pending",
-        comment,
+        comment
       });
       return next;
     });
@@ -442,7 +452,7 @@ export function useSections(content: string) {
     sections,
     approve,
     reject,
-    setComment,
+    setComment
   };
 }
 ```
@@ -469,6 +479,7 @@ git commit -m "feat: add useSections hook for section-level review state"
 This hook generates the structured feedback prompt string from sections and line comments.
 
 **Files:**
+
 - Create: `src/hooks/useFeedback.ts`
 - Create: `src/hooks/useFeedback.test.ts`
 
@@ -492,7 +503,7 @@ function makeSection(
     content: "",
     status: "pending",
     comment: "",
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -513,7 +524,7 @@ function makeComment(overrides: Partial<LineComment>): LineComment {
     startLine: 5,
     endLine: 5,
     createdAt: new Date(),
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -521,12 +532,10 @@ describe("useFeedback", () => {
   it("returns all-approved message when everything is approved and no comments", () => {
     const sections = [
       makeSection({ heading: "Architecture", status: "approved" }),
-      makeSection({ heading: "Data Flow", status: "approved" }),
+      makeSection({ heading: "Data Flow", status: "approved" })
     ];
 
-    const { result } = renderHook(() =>
-      useFeedback(sections, [], "plan.md")
-    );
+    const { result } = renderHook(() => useFeedback(sections, [], "plan.md"));
 
     expect(result.current.feedback).toBe(
       "All sections approved. No changes needed."
@@ -538,14 +547,12 @@ describe("useFeedback", () => {
       makeSection({
         heading: "Error Handling",
         status: "rejected",
-        comment: "Add retry logic for API failures",
+        comment: "Add retry logic for API failures"
       }),
-      makeSection({ heading: "Architecture", status: "approved" }),
+      makeSection({ heading: "Architecture", status: "approved" })
     ];
 
-    const { result } = renderHook(() =>
-      useFeedback(sections, [], "plan.md")
-    );
+    const { result } = renderHook(() => useFeedback(sections, [], "plan.md"));
 
     expect(result.current.feedback).toContain("## Needs Changes");
     expect(result.current.feedback).toContain("**Error Handling**");
@@ -560,13 +567,11 @@ describe("useFeedback", () => {
       makeSection({
         heading: "Error Handling",
         status: "rejected",
-        comment: "Fix it",
-      }),
+        comment: "Fix it"
+      })
     ];
 
-    const { result } = renderHook(() =>
-      useFeedback(sections, [], "plan.md")
-    );
+    const { result } = renderHook(() => useFeedback(sections, [], "plan.md"));
 
     expect(result.current.feedback).toContain("## Approved");
     expect(result.current.feedback).toContain("- Architecture");
@@ -574,15 +579,15 @@ describe("useFeedback", () => {
 
   it("includes line comments", () => {
     const sections = [
-      makeSection({ heading: "Architecture", status: "approved" }),
+      makeSection({ heading: "Architecture", status: "approved" })
     ];
     const comments = [
       makeComment({
         startLine: 17,
         endLine: 17,
         selectedText: "the cache invalidation strategy",
-        text: "This won't work with distributed systems",
-      }),
+        text: "This won't work with distributed systems"
+      })
     ];
 
     const { result } = renderHook(() =>
@@ -601,15 +606,15 @@ describe("useFeedback", () => {
 
   it("shows line range for multi-line comments", () => {
     const sections = [
-      makeSection({ heading: "Architecture", status: "approved" }),
+      makeSection({ heading: "Architecture", status: "approved" })
     ];
     const comments = [
       makeComment({
         startLine: 42,
         endLine: 45,
         selectedText: "retry after 5 seconds",
-        text: "Use exponential backoff instead",
-      }),
+        text: "Use exponential backoff instead"
+      })
     ];
 
     const { result } = renderHook(() =>
@@ -624,13 +629,11 @@ describe("useFeedback", () => {
       makeSection({
         heading: "Error Handling",
         status: "rejected",
-        comment: "Fix it",
-      }),
+        comment: "Fix it"
+      })
     ];
 
-    const { result } = renderHook(() =>
-      useFeedback(sections, [], "plan.md")
-    );
+    const { result } = renderHook(() => useFeedback(sections, [], "plan.md"));
 
     expect(result.current.feedback).toContain(
       "Please update the document with the following changes:"
@@ -644,13 +647,11 @@ describe("useFeedback", () => {
       makeSection({
         heading: "Error Handling",
         status: "rejected",
-        comment: "Fix",
-      }),
+        comment: "Fix"
+      })
     ];
 
-    const { result } = renderHook(() =>
-      useFeedback(sections, [], "plan.md")
-    );
+    const { result } = renderHook(() => useFeedback(sections, [], "plan.md"));
 
     expect(result.current.feedback).not.toContain("Pending Section");
   });
@@ -658,7 +659,7 @@ describe("useFeedback", () => {
   it("returns isAllApproved flag", () => {
     const allApproved = [
       makeSection({ heading: "A", status: "approved" }),
-      makeSection({ heading: "B", status: "approved" }),
+      makeSection({ heading: "B", status: "approved" })
     ];
 
     const { result: r1 } = renderHook(() =>
@@ -668,12 +669,10 @@ describe("useFeedback", () => {
 
     const mixed = [
       makeSection({ heading: "A", status: "approved" }),
-      makeSection({ heading: "B", status: "rejected", comment: "No" }),
+      makeSection({ heading: "B", status: "rejected", comment: "No" })
     ];
 
-    const { result: r2 } = renderHook(() =>
-      useFeedback(mixed, [], "plan.md")
-    );
+    const { result: r2 } = renderHook(() => useFeedback(mixed, [], "plan.md"));
     expect(r2.current.isAllApproved).toBe(false);
   });
 });
@@ -725,7 +724,7 @@ export function useFeedback(
     if (isAllApproved) {
       return {
         feedback: "All sections approved. No changes needed.",
-        isAllApproved: true,
+        isAllApproved: true
       };
     }
 
@@ -769,7 +768,7 @@ export function useFeedback(
 
     return {
       feedback: parts.join("\n"),
-      isAllApproved: false,
+      isAllApproved: false
     };
   }, [sections, comments, filename]);
 }
@@ -799,6 +798,7 @@ git commit -m "feat: add useFeedback hook for structured feedback generation"
 This endpoint receives the review state, formats it as structured feedback, prints to stdout, and shuts down the server when in review mode.
 
 **Files:**
+
 - Modify: `server/index.ts`
 
 **Step 1: Add the review-mode endpoint**
@@ -934,6 +934,7 @@ git commit -m "feat: add POST /api/submit and GET /api/review-mode endpoints"
 This component wraps a section of markdown content and provides approve/reject buttons + a comment textarea.
 
 **Files:**
+
 - Create: `src/components/SectionReview.tsx`
 - Create: `src/components/SectionReview.test.tsx`
 - Create: `src/styles/section-review.css`
@@ -957,7 +958,7 @@ function makeSection(overrides?: Partial<Section>): Section {
     content: "## Architecture\n\nSome content.",
     status: "pending",
     comment: "",
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -975,7 +976,9 @@ describe("SectionReview", () => {
     );
 
     expect(screen.getByText("Architecture")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /approve/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /approve/i })
+    ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /reject/i })).toBeInTheDocument();
   });
 
@@ -1108,7 +1111,7 @@ export function SectionReview({
   onApprove,
   onReject,
   onComment,
-  children,
+  children
 }: SectionReviewProps) {
   const statusClass =
     section.status === "approved"
@@ -1289,6 +1292,7 @@ git commit -m "feat: add SectionReview component with approve/reject/comment con
 Left sidebar TOC generated from `##` headings with status badges and progress summary.
 
 **Files:**
+
 - Create: `src/components/SectionNav.tsx`
 - Create: `src/components/SectionNav.test.tsx`
 - Create: `src/styles/section-nav.css`
@@ -1312,7 +1316,7 @@ function makeSections(): Section[] {
       endLine: 12,
       content: "",
       status: "approved",
-      comment: "",
+      comment: ""
     },
     {
       id: "section-1-error-handling",
@@ -1321,7 +1325,7 @@ function makeSections(): Section[] {
       endLine: 22,
       content: "",
       status: "rejected",
-      comment: "Fix it",
+      comment: "Fix it"
     },
     {
       id: "section-2-testing",
@@ -1330,16 +1334,14 @@ function makeSections(): Section[] {
       endLine: 30,
       content: "",
       status: "pending",
-      comment: "",
-    },
+      comment: ""
+    }
   ];
 }
 
 describe("SectionNav", () => {
   it("renders all section headings", () => {
-    render(
-      <SectionNav sections={makeSections()} onSectionClick={vi.fn()} />
-    );
+    render(<SectionNav sections={makeSections()} onSectionClick={vi.fn()} />);
 
     expect(screen.getByText("Architecture")).toBeInTheDocument();
     expect(screen.getByText("Error Handling")).toBeInTheDocument();
@@ -1347,9 +1349,7 @@ describe("SectionNav", () => {
   });
 
   it("shows progress summary", () => {
-    render(
-      <SectionNav sections={makeSections()} onSectionClick={vi.fn()} />
-    );
+    render(<SectionNav sections={makeSections()} onSectionClick={vi.fn()} />);
 
     // 2 of 3 reviewed (approved + rejected)
     expect(screen.getByText("2/3 reviewed")).toBeInTheDocument();
@@ -1555,6 +1555,7 @@ git commit -m "feat: add SectionNav sidebar with TOC and status badges"
 Bottom panel that displays the structured feedback prompt with submit/copy buttons.
 
 **Files:**
+
 - Create: `src/components/FeedbackOutput.tsx`
 - Create: `src/components/FeedbackOutput.test.tsx`
 - Create: `src/styles/feedback-output.css`
@@ -1606,9 +1607,7 @@ describe("FeedbackOutput", () => {
       />
     );
 
-    expect(
-      screen.getByRole("button", { name: /copy/i })
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /copy/i })).toBeInTheDocument();
   });
 
   it("calls onSubmit when Submit Review is clicked", () => {
@@ -1669,7 +1668,7 @@ interface FeedbackOutputProps {
 export function FeedbackOutput({
   feedback,
   reviewMode,
-  onSubmit,
+  onSubmit
 }: FeedbackOutputProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -1713,9 +1712,7 @@ export function FeedbackOutput({
           )}
         </div>
       </div>
-      <div
-        className={`feedback-output-body ${collapsed ? "collapsed" : ""}`}
-      >
+      <div className={`feedback-output-body ${collapsed ? "collapsed" : ""}`}>
         <pre className="feedback-output-text">{feedback}</pre>
       </div>
     </div>
@@ -1805,7 +1802,8 @@ Create `src/styles/feedback-output.css`:
 .feedback-output-text {
   margin: 0;
   padding: 0.75rem 1rem;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.8125rem;
   line-height: 1.5;
   white-space: pre-wrap;
@@ -1849,12 +1847,14 @@ git commit -m "feat: add FeedbackOutput panel with submit and copy buttons"
 This is the main integration task. We modify `CliModeApp.tsx` to use the new hooks and components, creating the full review layout.
 
 **Files:**
+
 - Modify: `src/components/CliModeApp.tsx`
 - Create: `src/styles/review-layout.css`
 
 **Step 1: Read the current CliModeApp to understand existing structure**
 
 Read `src/components/CliModeApp.tsx` and understand how it currently works:
+
 - It uses `useMarkdown()` for content
 - It uses `useFileWatch()` for hot reload
 - It passes content to `MarkdownPreview`
@@ -1962,17 +1962,17 @@ export const CliModeApp = () => {
         sections: sections.map((s) => ({
           heading: s.heading,
           status: s.status,
-          comment: s.comment,
+          comment: s.comment
         })),
         lineComments: comments.map((c) => ({
           file: filename,
           startLine: c.startLine,
           endLine: c.endLine,
           selectedText: c.selectedText,
-          comment: c.text,
+          comment: c.text
         })),
-        filename,
-      }),
+        filename
+      })
     });
   }, [sections, comments, filename]);
 
@@ -2062,6 +2062,7 @@ bun run bin/md-review-plus.js /tmp/test-review.md
 ```
 
 Expected: Browser opens, showing:
+
 - Left sidebar with "Section One" and "Section Two"
 - Each section has approve/reject buttons
 - Bottom panel shows feedback output
@@ -2082,11 +2083,13 @@ git commit -m "feat: integrate section review system into CliModeApp"
 When `--review` is passed, the CLI uses a random port, blocks until submit, and exits with structured output.
 
 **Files:**
+
 - Modify: `bin/md-review-plus.js`
 
 **Step 1: Read the current CLI entry point**
 
 Read `bin/md-review-plus.js` carefully. Understand:
+
 - How args are parsed (via `mri`)
 - How the server is spawned
 - How the browser is opened
@@ -2095,15 +2098,17 @@ Read `bin/md-review-plus.js` carefully. Understand:
 **Step 2: Add --review flag handling**
 
 Add `review` to the boolean args in mri:
+
 ```javascript
 const args = mri(process.argv.slice(2), {
-  alias: { p: 'port', h: 'help', v: 'version' },
-  default: { port: '3030', open: true },
-  boolean: ['help', 'version', 'open', 'review'],
+  alias: { p: "port", h: "help", v: "version" },
+  default: { port: "3030", open: true },
+  boolean: ["help", "version", "open", "review"]
 });
 ```
 
 When `--review` is set:
+
 1. Override port to `0` (random available port) unless user specified a port
 2. Set `process.env.REVIEW_MODE = 'true'`
 3. Require a file argument (not directory mode)
@@ -2112,13 +2117,13 @@ When `--review` is set:
 ```javascript
 if (args.review) {
   if (!filePath) {
-    console.error('Error: --review requires a markdown file path');
+    console.error("Error: --review requires a markdown file path");
     process.exit(1);
   }
-  process.env.REVIEW_MODE = 'true';
+  process.env.REVIEW_MODE = "true";
   // Use port 0 for random port unless explicitly specified
-  if (!args.p && !process.argv.includes('--port')) {
-    port = '0';
+  if (!args.p && !process.argv.includes("--port")) {
+    port = "0";
   }
 }
 ```
@@ -2126,12 +2131,13 @@ if (args.review) {
 **Step 3: Capture server stdout for port detection and feedback**
 
 The server prints its actual port on startup. In review mode, we need to:
+
 - Parse the startup message to find the actual port
 - Forward only the submit feedback to parent stdout
 - On server process exit, propagate the exit code
 
 ```javascript
-serverProcess.stdout.on('data', (data) => {
+serverProcess.stdout.on("data", (data) => {
   const msg = data.toString();
 
   // Detect server started message to get actual port
@@ -2150,7 +2156,7 @@ serverProcess.stdout.on('data', (data) => {
   }
 });
 
-serverProcess.on('exit', (code) => {
+serverProcess.on("exit", (code) => {
   process.exit(code ?? 0);
 });
 ```
@@ -2164,6 +2170,7 @@ The server already has SSE connections. Add a timeout mechanism: if no submit is
 This is handled by the server process exiting — if the server crashes or is killed, the CLI exits via the `exit` handler above.
 
 For browser disconnect detection, add to the server (in `server/index.ts`):
+
 - Track active SSE connections
 - When last SSE connection closes and review mode is active, start a 30-second grace period
 - If no new connection or submit within grace period, exit with code 1 and stderr message
@@ -2210,6 +2217,7 @@ bun run bin/md-review-plus.js /tmp/test.md --review
 ```
 
 Expected: Browser opens, CLI blocks. After clicking "Submit Review" in browser:
+
 - Structured feedback prints to stdout
 - CLI exits with code 0
 
@@ -2227,6 +2235,7 @@ git commit -m "feat: add --review blocking CLI mode with auto-shutdown"
 Installs a Claude Code skill definition file.
 
 **Files:**
+
 - Modify: `bin/md-review-plus.js`
 - Create: `skills/md-review-plus.md`
 
@@ -2234,7 +2243,7 @@ Installs a Claude Code skill definition file.
 
 Create `skills/md-review-plus.md`:
 
-```markdown
+````markdown
 ---
 name: md-review-plus
 description: Request human review of a markdown document with section-level approval and structured feedback
@@ -2251,6 +2260,7 @@ Run the review command and wait for the human to submit feedback:
 ```bash
 md-review-plus ./path/to/document.md --review
 ```
+````
 
 The command blocks until the human submits their review, then prints structured feedback to stdout.
 
@@ -2259,11 +2269,13 @@ The command blocks until the human submits their review, then prints structured 
 The stdout output follows this format:
 
 **All approved:**
+
 ```
 All sections approved. No changes needed.
 ```
 
 **Changes requested:**
+
 ```
 Please update the document with the following changes:
 
@@ -2297,7 +2309,8 @@ file.md:L17
 - The document MUST have `##` headings to define reviewable sections
 - Content before the first `##` is shown but not reviewable
 - Exit code 0 = review submitted, exit code 1 = browser closed without review
-```
+
+````
 
 **Step 2: Add the install --skills subcommand to CLI**
 
@@ -2332,9 +2345,10 @@ async function installSkills() {
   fs.copyFileSync(skillSource, dest);
   console.log(`Installed skill to ${dest}`);
 }
-```
+````
 
 Also add to the boolean args:
+
 ```javascript
 boolean: ['help', 'version', 'open', 'review', 'skills'],
 ```
@@ -2354,6 +2368,7 @@ bun run bin/md-review-plus.js install --skills
 Expected: "Installed skill to ~/.claude/skills/md-review-plus.md"
 
 Verify the file exists:
+
 ```bash
 cat ~/.claude/skills/md-review-plus.md
 ```
@@ -2417,6 +2432,7 @@ bun run bin/md-review-plus.js /tmp/test-e2e.md --review
 ```
 
 Expected:
+
 - Browser opens with review UI
 - CLI blocks
 - Click approve on both sections → feedback output shows "All sections approved"
@@ -2446,6 +2462,7 @@ git commit -m "fix: polish and end-to-end verification"
 ### Task 13: Prepare for npm publish
 
 **Files:**
+
 - Modify: `package.json`
 
 **Step 1: Update package.json metadata**
@@ -2484,12 +2501,12 @@ git commit -m "chore: prepare package metadata for npm publish"
 
 ## Summary
 
-| Phase | Tasks | Description |
-|-------|-------|-------------|
-| 1. Setup | 1-2 | Fork, rename, convert to Bun + TypeScript server |
-| 2. Data Layer | 3-4 | useSections + useFeedback hooks with tests |
-| 3. Server API | 5 | POST /api/submit + GET /api/review-mode |
-| 4. UI Components | 6-8 | SectionReview + SectionNav + FeedbackOutput |
-| 5. Integration | 9 | Wire everything into CliModeApp |
-| 6. CLI | 10-11 | --review blocking mode + install --skills |
-| 7. Polish | 12-13 | E2E testing + npm publish prep |
+| Phase            | Tasks | Description                                      |
+| ---------------- | ----- | ------------------------------------------------ |
+| 1. Setup         | 1-2   | Fork, rename, convert to Bun + TypeScript server |
+| 2. Data Layer    | 3-4   | useSections + useFeedback hooks with tests       |
+| 3. Server API    | 5     | POST /api/submit + GET /api/review-mode          |
+| 4. UI Components | 6-8   | SectionReview + SectionNav + FeedbackOutput      |
+| 5. Integration   | 9     | Wire everything into CliModeApp                  |
+| 6. CLI           | 10-11 | --review blocking mode + install --skills        |
+| 7. Polish        | 12-13 | E2E testing + npm publish prep                   |

@@ -55,7 +55,11 @@ async function startServer(app: Hono, port: number, maxRetries: number = 10): Pr
       }
       return tryPort;
     } catch (err: unknown) {
-      if (err instanceof Error && 'code' in err && (err as NodeJS.ErrnoException).code === 'EADDRINUSE') {
+      if (
+        err instanceof Error &&
+        'code' in err &&
+        (err as NodeJS.ErrnoException).code === 'EADDRINUSE'
+      ) {
         console.log(`Port ${tryPort} is in use, trying ${tryPort + 1}...`);
         continue;
       }
@@ -308,7 +312,7 @@ function formatFeedback(body: SubmitBody): string {
 
   // Section comments on approved/pending sections
   const otherWithComments = sections.filter(
-    (s) => s.status !== 'rejected' && s.comment && s.comment.trim() !== ''
+    (s) => s.status !== 'rejected' && s.comment && s.comment.trim() !== '',
   );
   if (otherWithComments.length > 0) {
     parts.push('');

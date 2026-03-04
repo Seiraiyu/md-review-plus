@@ -58,7 +58,7 @@ async function installSkills(global) {
     path.dirname(new URL(import.meta.url).pathname),
     '..',
     'skills',
-    'md-review-plus.md'
+    'md-review-plus.md',
   );
 
   const baseDir = global

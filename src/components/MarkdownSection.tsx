@@ -1,9 +1,9 @@
-import React from "react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import remarkBreaks from "remark-breaks";
-import rehypeHighlight from "rehype-highlight";
-import { componentsWithLinePosition } from "./MarkdownPreview";
+import React from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import remarkBreaks from 'remark-breaks';
+import rehypeHighlight from 'rehype-highlight';
+import { componentsWithLinePosition } from './MarkdownPreview';
 
 interface MarkdownSectionProps {
   content: string;
