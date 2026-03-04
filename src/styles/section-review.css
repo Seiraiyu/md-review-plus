@@ -84,6 +84,7 @@
   color: var(--text-primary, #1f2328);
   font-family: inherit;
   font-size: 0.875rem;
+  /* stylelint-disable-next-line plugin/use-baseline */
   resize: vertical;
   box-sizing: border-box;
 }
@@ -91,7 +92,7 @@
 .section-comment-textarea:focus {
   outline: none;
   border-color: #0969da;
-  box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.3);
+  box-shadow: 0 0 0 3px rgb(9 105 218 / 30%);
 }
 
 /* Dark mode overrides */

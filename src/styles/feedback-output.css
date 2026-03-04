@@ -77,11 +77,12 @@
 .feedback-output-text {
   margin: 0;
   padding: 0.75rem 1rem;
+  /* stylelint-disable-next-line plugin/use-baseline */
   font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   font-size: 0.8125rem;
   line-height: 1.5;
   white-space: pre-wrap;
-  word-wrap: break-word;
+  overflow-wrap: break-word;
   overflow-y: auto;
   max-height: 250px;
   color: var(--text-primary, #1f2328);
