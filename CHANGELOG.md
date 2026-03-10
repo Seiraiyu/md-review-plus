@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/Seiraiyu/md-review-plus/compare/v1.0.1...v1.0.2) (2026-03-10)
+
+
+### Bug Fixes
+
+* clarify md-review-plus is a CLI command and add allowed-tools ([f4403f0](https://github.com/Seiraiyu/md-review-plus/commit/f4403f0d323a3ca4acea17f20b602609a0c0fa3b))
+
 ## [1.0.1](https://github.com/Seiraiyu/md-review-plus/compare/v1.0.0...v1.0.1) (2026-03-04)
 
 
