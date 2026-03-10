@@ -1,6 +1,7 @@
 ---
 name: md-review-plus
 description: Request human review of a markdown document with section-level approval and structured feedback
+allowed-tools: Bash(md-review-plus:*)
 ---
 
 # md-review-plus
@@ -9,7 +10,7 @@ Use this skill when you need a human to review a markdown document (plan, spec, 
 
 ## Usage
 
-Run the review command and wait for the human to submit feedback:
+`md-review-plus` is a CLI command installed on PATH. Run it directly:
 
 ```bash
 md-review-plus ./path/to/document.md --review
