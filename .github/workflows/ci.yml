@@ -8,7 +8,11 @@ on:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
 
@@ -28,8 +32,8 @@ jobs:
       - name: Run format check
         run: bun run fmt:check
 
-      - name: Run tests
-        run: bun run test
-
       - name: Run build
         run: bun run build
+
+      - name: Run tests
+        run: bun run test
