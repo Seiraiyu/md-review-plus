@@ -222,11 +222,13 @@ serverProcess.stdout.on('data', async (data) => {
   }
 });
 
-// Handle graceful shutdown
+// Handle graceful shutdown via IPC (works on Windows, macOS, Linux)
 const shutdown = () => {
-  console.log('\nShutting down...');
-  serverProcess.kill('SIGINT');
-  process.exit(0);
+  if (serverProcess.connected) {
+    serverProcess.send({ type: 'shutdown' });
+  } else {
+    serverProcess.kill();
+  }
 };
 
 process.on('SIGINT', shutdown);
