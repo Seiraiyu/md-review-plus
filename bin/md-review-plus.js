@@ -55,7 +55,7 @@ async function installSkills(global) {
   const os = await import('node:os');
 
   const skillSource = path.join(
-    path.dirname(new URL(import.meta.url).pathname),
+    path.dirname(fileURLToPath(import.meta.url)),
     '..',
     'skills',
     'md-review-plus.md',
