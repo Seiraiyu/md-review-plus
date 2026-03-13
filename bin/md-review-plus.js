@@ -176,10 +176,19 @@ if (!reviewMode) {
 }
 
 // Start server
-const serverProcess = spawn('bun', ['run', 'server/index.ts'], {
+const isWindows = process.platform === 'win32';
+const serverScript = resolve(packageRoot, 'dist', 'server.js');
+
+if (!existsSync(serverScript)) {
+  console.error('Error: dist/server.js not found. Run "bun run build" first.');
+  process.exit(1);
+}
+
+const serverProcess = spawn('node', [serverScript], {
   cwd: packageRoot,
-  stdio: ['inherit', 'pipe', 'inherit'],
+  stdio: ['inherit', 'pipe', 'inherit', 'ipc'],
   env: process.env,
+  ...(isWindows && { shell: true }),
 });
 
 let serverReady = false;
