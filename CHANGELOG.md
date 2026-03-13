@@ -1,5 +1,22 @@
 # Changelog
 
+## [1.1.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.0.2...v1.1.0) (2026-03-13)
+
+
+### Features
+
+* add IPC shutdown handler for cross-platform graceful exit ([fa0bed1](https://github.com/Seiraiyu/md-review-plus/commit/fa0bed15bbb2feaff59a6e214191c62594268556))
+* add server build step to compile TypeScript to JS for Node runtime ([48c58be](https://github.com/Seiraiyu/md-review-plus/commit/48c58be0178a1e5a0ea55a875e1a8abe6e6c0eda))
+* spawn Node instead of Bun for cross-platform server execution ([a04976f](https://github.com/Seiraiyu/md-review-plus/commit/a04976f0c8fe4414d818d598e404b7fdff3b9568))
+* use IPC for graceful shutdown instead of SIGINT signal ([b53a769](https://github.com/Seiraiyu/md-review-plus/commit/b53a76957093239ea0cce9957c331c0d27f26394))
+
+
+### Bug Fixes
+
+* add .gitattributes to enforce LF line endings on Windows ([e9bc38c](https://github.com/Seiraiyu/md-review-plus/commit/e9bc38c35e60f1baff324ab9d565968a3e03de88))
+* remove shell:true from spawn to fix IPC on Windows ([30ef96a](https://github.com/Seiraiyu/md-review-plus/commit/30ef96a3c5280154c0b828db59017bf29888c609))
+* use fileURLToPath in installSkills for Windows path compatibility ([974f202](https://github.com/Seiraiyu/md-review-plus/commit/974f20288cbb3981a72c951dd3e9d2f7bfc88983))
+
 ## [1.0.2](https://github.com/Seiraiyu/md-review-plus/compare/v1.0.1...v1.0.2) (2026-03-10)
 
 
