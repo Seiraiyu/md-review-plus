@@ -176,7 +176,6 @@ if (!reviewMode) {
 }
 
 // Start server
-const isWindows = process.platform === 'win32';
 const serverScript = resolve(packageRoot, 'dist', 'server.js');
 
 if (!existsSync(serverScript)) {
@@ -188,7 +187,6 @@ const serverProcess = spawn('node', [serverScript], {
   cwd: packageRoot,
   stdio: ['inherit', 'pipe', 'inherit', 'ipc'],
   env: process.env,
-  ...(isWindows && { shell: true }),
 });
 
 let serverReady = false;

@@ -8,11 +8,9 @@ const SERVER_SCRIPT = resolve(__dirname, '../../dist/server.js');
 const STARTUP_TIMEOUT = 15_000;
 
 function spawnServer(env: Record<string, string> = {}): ChildProcess {
-  const isWindows = process.platform === 'win32';
   return spawn('node', [SERVER_SCRIPT], {
     stdio: ['inherit', 'pipe', 'inherit', 'ipc'],
     env: { ...process.env, API_PORT: '0', BASE_DIR: process.cwd(), ...env },
-    ...(isWindows && { shell: true }),
   });
 }
 
