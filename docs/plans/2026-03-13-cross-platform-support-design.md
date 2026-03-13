@@ -35,18 +35,24 @@ Make md-review-plus work reliably on Windows PowerShell (5.1+ on Windows 10/11),
 **File:** `bin/md-review-plus.js`
 
 Replace:
+
 ```javascript
 const skillSource = path.join(
   path.dirname(new URL(import.meta.url).pathname),
-  '..', 'skills', 'md-review-plus.md',
+  "..",
+  "skills",
+  "md-review-plus.md"
 );
 ```
 
 With:
+
 ```javascript
 const skillSource = path.join(
   path.dirname(fileURLToPath(import.meta.url)),
-  '..', 'skills', 'md-review-plus.md',
+  "..",
+  "skills",
+  "md-review-plus.md"
 );
 ```
 
@@ -61,6 +67,7 @@ const skillSource = path.join(
 **Changes:**
 
 1. **Add server build step to `package.json`:**
+
    ```json
    {
      "scripts": {
@@ -74,12 +81,17 @@ const skillSource = path.join(
    - `dist/` already listed in `files`, so `dist/server.js` is automatically included.
 
 3. **Update CLI to spawn Node instead of Bun:**
+
    ```javascript
-   const serverProcess = spawn('node', [resolve(packageRoot, 'dist', 'server.js')], {
-     cwd: packageRoot,
-     stdio: ['inherit', 'pipe', 'inherit', 'ipc'],
-     env: process.env,
-   });
+   const serverProcess = spawn(
+     "node",
+     [resolve(packageRoot, "dist", "server.js")],
+     {
+       cwd: packageRoot,
+       stdio: ["inherit", "pipe", "inherit", "ipc"],
+       env: process.env
+     }
+   );
    ```
 
 4. **Dev mode stays on Bun** — The `bun run server` script in `dev` mode continues using Bun for developers. Only the production CLI path changes.
@@ -89,13 +101,17 @@ const skillSource = path.join(
 **3a. Spawn with `shell: true` on Windows:**
 
 ```javascript
-const isWindows = process.platform === 'win32';
-const serverProcess = spawn('node', [resolve(packageRoot, 'dist', 'server.js')], {
-  cwd: packageRoot,
-  stdio: ['inherit', 'pipe', 'inherit', 'ipc'],
-  env: process.env,
-  ...(isWindows && { shell: true }),
-});
+const isWindows = process.platform === "win32";
+const serverProcess = spawn(
+  "node",
+  [resolve(packageRoot, "dist", "server.js")],
+  {
+    cwd: packageRoot,
+    stdio: ["inherit", "pipe", "inherit", "ipc"],
+    env: process.env,
+    ...(isWindows && { shell: true })
+  }
+);
 ```
 
 On Windows, `shell: true` ensures the command resolves through `cmd.exe`, which properly finds `node.exe` on PATH. On Unix, we skip `shell: true` to avoid unnecessary shell overhead.
@@ -105,35 +121,38 @@ On Windows, `shell: true` ensures the command resolves through `cmd.exe`, which 
 Replace signal-based shutdown with IPC messages:
 
 **CLI side (`bin/md-review-plus.js`):**
+
 ```javascript
 const shutdown = () => {
   if (serverProcess.connected) {
-    serverProcess.send({ type: 'shutdown' });
+    serverProcess.send({ type: "shutdown" });
   } else {
     serverProcess.kill();
   }
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 ```
 
 **Server side (`server/index.ts`):**
+
 ```typescript
-process.on('message', (msg: { type: string }) => {
-  if (msg.type === 'shutdown') {
+process.on("message", (msg: { type: string }) => {
+  if (msg.type === "shutdown") {
     process.exit(0);
   }
 });
 ```
 
 **Why IPC over signals:**
+
 - `process.send()` works identically on Windows, macOS, and Linux
 - No platform-specific signal handling code
 - The IPC channel is established automatically when `stdio` includes `'ipc'`
 - Fallback to `serverProcess.kill()` handles edge cases where IPC disconnects
 
-**Ctrl+C handling:** The parent process's `SIGINT` handler still works on Windows because Node.js translates Ctrl+C into a SIGINT event on the parent process even on Windows. The issue was only with *sending* SIGINT to a child process.
+**Ctrl+C handling:** The parent process's `SIGINT` handler still works on Windows because Node.js translates Ctrl+C into a SIGINT event on the parent process even on Windows. The issue was only with _sending_ SIGINT to a child process.
 
 ### Phase 4: CI Matrix Expansion
 
@@ -182,36 +201,40 @@ A Vitest integration test that:
 5. Asserts the process exits with code 0
 
 ```typescript
-import { spawn } from 'child_process';
-import { resolve } from 'path';
-import { describe, it, expect } from 'vitest';
+import { spawn } from "child_process";
+import { resolve } from "path";
+import { describe, it, expect } from "vitest";
 
-describe('CLI integration', () => {
-  it('starts server, responds to health check, and shuts down cleanly', async () => {
-    const serverProcess = spawn('node', [resolve(__dirname, '../../dist/server.js')], {
-      stdio: ['inherit', 'pipe', 'inherit', 'ipc'],
-      env: { ...process.env, API_PORT: '0', BASE_DIR: process.cwd() },
-    });
+describe("CLI integration", () => {
+  it("starts server, responds to health check, and shuts down cleanly", async () => {
+    const serverProcess = spawn(
+      "node",
+      [resolve(__dirname, "../../dist/server.js")],
+      {
+        stdio: ["inherit", "pipe", "inherit", "ipc"],
+        env: { ...process.env, API_PORT: "0", BASE_DIR: process.cwd() }
+      }
+    );
 
     // Wait for server ready
     const port = await new Promise<number>((resolve, reject) => {
-      serverProcess.stdout!.on('data', (data) => {
+      serverProcess.stdout!.on("data", (data) => {
         const match = data.toString().match(/localhost:(\d+)/);
         if (match) resolve(parseInt(match[1]));
       });
-      setTimeout(() => reject(new Error('Server startup timeout')), 10000);
+      setTimeout(() => reject(new Error("Server startup timeout")), 10000);
     });
 
     // Health check
     const res = await fetch(`http://localhost:${port}/api/health`);
     expect(res.ok).toBe(true);
     const body = await res.json();
-    expect(body.status).toBe('ok');
+    expect(body.status).toBe("ok");
 
     // Shutdown via IPC
-    serverProcess.send({ type: 'shutdown' });
+    serverProcess.send({ type: "shutdown" });
     const code = await new Promise<number>((resolve) => {
-      serverProcess.on('exit', (code) => resolve(code ?? 0));
+      serverProcess.on("exit", (code) => resolve(code ?? 0));
     });
     expect(code).toBe(0);
   });
@@ -246,29 +269,29 @@ CLI (bin/md-review-plus.js)
 
 ## Testing Approach
 
-| Test | What it verifies | Platform |
-|------|-----------------|----------|
-| Existing unit tests | React components, hooks | All (via jsdom) |
-| New CLI integration test | Server spawn, health check, IPC shutdown | All (native) |
-| CI matrix | Everything passes on Linux, Windows, macOS | All |
+| Test                     | What it verifies                           | Platform        |
+| ------------------------ | ------------------------------------------ | --------------- |
+| Existing unit tests      | React components, hooks                    | All (via jsdom) |
+| New CLI integration test | Server spawn, health check, IPC shutdown   | All (native)    |
+| CI matrix                | Everything passes on Linux, Windows, macOS | All             |
 
 ## Decisions Log
 
-| Decision | Choice | Why |
-|----------|--------|-----|
-| End-user runtime | Node.js only | Widest compatibility. Bun stays as dev tool only. |
-| Server compilation | Pre-compile at build time | Zero runtime TS dependency. Fast startup. |
-| Shutdown mechanism | IPC messages | Works identically on all platforms. No platform branching. |
-| CI coverage | Full suite on all 3 OSes | Catches all platform-specific issues. |
-| WSL handling | Don't touch it | Already works. Risk of regression. |
-| Windows spawn | `shell: true` on Windows | Reliable command resolution through cmd.exe. |
+| Decision           | Choice                    | Why                                                        |
+| ------------------ | ------------------------- | ---------------------------------------------------------- |
+| End-user runtime   | Node.js only              | Widest compatibility. Bun stays as dev tool only.          |
+| Server compilation | Pre-compile at build time | Zero runtime TS dependency. Fast startup.                  |
+| Shutdown mechanism | IPC messages              | Works identically on all platforms. No platform branching. |
+| CI coverage        | Full suite on all 3 OSes  | Catches all platform-specific issues.                      |
+| WSL handling       | Don't touch it            | Already works. Risk of regression.                         |
+| Windows spawn      | `shell: true` on Windows  | Reliable command resolution through cmd.exe.               |
 
 ## Phase Tracking
 
-| Phase | Description | Status | Tested | Pushed |
-|-------|-------------|--------|--------|--------|
-| 1 | Fix installSkills() path bug | pending | no | no |
-| 2 | Pre-compile server to JS | pending | no | no |
-| 3 | Cross-platform process management (spawn + IPC shutdown) | pending | no | no |
-| 4 | CI matrix expansion (ubuntu, windows, macos) | pending | no | no |
-| 5 | CLI integration test | pending | no | no |
+| Phase | Description                                              | Status  | Tested | Pushed |
+| ----- | -------------------------------------------------------- | ------- | ------ | ------ |
+| 1     | Fix installSkills() path bug                             | pending | no     | no     |
+| 2     | Pre-compile server to JS                                 | pending | no     | no     |
+| 3     | Cross-platform process management (spawn + IPC shutdown) | pending | no     | no     |
+| 4     | CI matrix expansion (ubuntu, windows, macos)             | pending | no     | no     |
+| 5     | CLI integration test                                     | pending | no     | no     |

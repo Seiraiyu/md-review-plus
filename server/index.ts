@@ -448,7 +448,12 @@ watcher.on('add', (path: string) => {
 // Listen for IPC shutdown message from parent CLI process
 if (process.send) {
   process.on('message', (msg: unknown) => {
-    if (msg && typeof msg === 'object' && 'type' in msg && (msg as { type: string }).type === 'shutdown') {
+    if (
+      msg &&
+      typeof msg === 'object' &&
+      'type' in msg &&
+      (msg as { type: string }).type === 'shutdown'
+    ) {
       process.exit(0);
     }
   });

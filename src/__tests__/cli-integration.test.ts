@@ -18,10 +18,7 @@ function spawnServer(env: Record<string, string> = {}): ChildProcess {
 
 function waitForReady(proc: ChildProcess): Promise<number> {
   return new Promise((resolve, reject) => {
-    const timeout = setTimeout(
-      () => reject(new Error('Server startup timeout')),
-      STARTUP_TIMEOUT,
-    );
+    const timeout = setTimeout(() => reject(new Error('Server startup timeout')), STARTUP_TIMEOUT);
 
     proc.stdout!.on('data', (data: Buffer) => {
       const output = data.toString();
@@ -70,30 +67,38 @@ describe('CLI integration', () => {
     expect(existsSync(SERVER_SCRIPT)).toBe(true);
   });
 
-  it('starts server, responds to health check, and shuts down via IPC', async () => {
-    serverProc = spawnServer();
-    const port = await waitForReady(serverProc);
+  it(
+    'starts server, responds to health check, and shuts down via IPC',
+    async () => {
+      serverProc = spawnServer();
+      const port = await waitForReady(serverProc);
 
-    // Health check
-    const res = await fetch(`http://localhost:${port}/api/health`);
-    expect(res.ok).toBe(true);
-    const body = await res.json();
-    expect(body).toEqual({ status: 'ok' });
+      // Health check
+      const res = await fetch(`http://localhost:${port}/api/health`);
+      expect(res.ok).toBe(true);
+      const body = await res.json();
+      expect(body).toEqual({ status: 'ok' });
 
-    // Shutdown via IPC
-    const exitCode = await shutdownAndWait(serverProc);
-    expect(exitCode).toBe(0);
-  }, STARTUP_TIMEOUT + 5_000);
+      // Shutdown via IPC
+      const exitCode = await shutdownAndWait(serverProc);
+      expect(exitCode).toBe(0);
+    },
+    STARTUP_TIMEOUT + 5_000,
+  );
 
-  it('serves review-mode endpoint', async () => {
-    serverProc = spawnServer();
-    const port = await waitForReady(serverProc);
+  it(
+    'serves review-mode endpoint',
+    async () => {
+      serverProc = spawnServer();
+      const port = await waitForReady(serverProc);
 
-    const res = await fetch(`http://localhost:${port}/api/review-mode`);
-    expect(res.ok).toBe(true);
-    const body = await res.json();
-    expect(body).toEqual({ reviewMode: false });
+      const res = await fetch(`http://localhost:${port}/api/review-mode`);
+      expect(res.ok).toBe(true);
+      const body = await res.json();
+      expect(body).toEqual({ reviewMode: false });
 
-    await shutdownAndWait(serverProc);
-  }, STARTUP_TIMEOUT + 5_000);
+      await shutdownAndWait(serverProc);
+    },
+    STARTUP_TIMEOUT + 5_000,
+  );
 });

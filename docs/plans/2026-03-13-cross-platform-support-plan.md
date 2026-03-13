@@ -8,22 +8,23 @@
 
 ## Task Tracking
 
-| Task | Description | Status | Tested | Pushed |
-|------|-------------|--------|--------|--------|
-| 1 | Fix installSkills() path bug | pending | no | no |
-| 2 | Add server build step | pending | no | no |
-| 3 | Switch CLI from Bun to Node spawn | pending | no | no |
-| 4 | Add IPC shutdown to server | pending | no | no |
-| 5 | Wire IPC shutdown in CLI | pending | no | no |
-| 6 | Add CLI integration test | pending | no | no |
-| 7 | Expand CI matrix | pending | no | no |
-| 8 | Manual smoke test on Windows | pending | no | no |
+| Task | Description                       | Status  | Tested | Pushed |
+| ---- | --------------------------------- | ------- | ------ | ------ |
+| 1    | Fix installSkills() path bug      | pending | no     | no     |
+| 2    | Add server build step             | pending | no     | no     |
+| 3    | Switch CLI from Bun to Node spawn | pending | no     | no     |
+| 4    | Add IPC shutdown to server        | pending | no     | no     |
+| 5    | Wire IPC shutdown in CLI          | pending | no     | no     |
+| 6    | Add CLI integration test          | pending | no     | no     |
+| 7    | Expand CI matrix                  | pending | no     | no     |
+| 8    | Manual smoke test on Windows      | pending | no     | no     |
 
 ---
 
 ### Task 1: Fix installSkills() Path Bug
 
 **Files:**
+
 - Modify: `bin/md-review-plus.js:57-62`
 
 **Step 1: Implement fix**
@@ -31,23 +32,23 @@
 In `bin/md-review-plus.js`, replace lines 57-62:
 
 ```javascript
-  const skillSource = path.join(
-    path.dirname(new URL(import.meta.url).pathname),
-    '..',
-    'skills',
-    'md-review-plus.md',
-  );
+const skillSource = path.join(
+  path.dirname(new URL(import.meta.url).pathname),
+  "..",
+  "skills",
+  "md-review-plus.md"
+);
 ```
 
 With:
 
 ```javascript
-  const skillSource = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    '..',
-    'skills',
-    'md-review-plus.md',
-  );
+const skillSource = path.join(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "skills",
+  "md-review-plus.md"
+);
 ```
 
 Note: `fileURLToPath` is already imported at line 6. No new imports needed.
@@ -72,6 +73,7 @@ git commit -m "fix: use fileURLToPath in installSkills for Windows path compatib
 ### Task 2: Add Server Build Step
 
 **Files:**
+
 - Modify: `package.json` (scripts section)
 
 **Step 1: Add build:server script and update build script**
@@ -105,6 +107,7 @@ API_PORT=0 BASE_DIR=. timeout 5 node dist/server.js 2>&1 || true
 ```
 
 Expected output includes:
+
 ```
 API Server running on http://localhost:XXXXX
 md-review-plus server started
@@ -126,6 +129,7 @@ git commit -m "feat: add server build step to compile TypeScript to JS for Node 
 ### Task 3: Switch CLI from Bun to Node Spawn
 
 **Files:**
+
 - Modify: `bin/md-review-plus.js:178-183`
 
 **Step 1: Implement**
@@ -134,10 +138,10 @@ In `bin/md-review-plus.js`, replace lines 178-183:
 
 ```javascript
 // Start server
-const serverProcess = spawn('bun', ['run', 'server/index.ts'], {
+const serverProcess = spawn("bun", ["run", "server/index.ts"], {
   cwd: packageRoot,
-  stdio: ['inherit', 'pipe', 'inherit'],
-  env: process.env,
+  stdio: ["inherit", "pipe", "inherit"],
+  env: process.env
 });
 ```
 
@@ -145,19 +149,19 @@ With:
 
 ```javascript
 // Start server
-const isWindows = process.platform === 'win32';
-const serverScript = resolve(packageRoot, 'dist', 'server.js');
+const isWindows = process.platform === "win32";
+const serverScript = resolve(packageRoot, "dist", "server.js");
 
 if (!existsSync(serverScript)) {
   console.error('Error: dist/server.js not found. Run "bun run build" first.');
   process.exit(1);
 }
 
-const serverProcess = spawn('node', [serverScript], {
+const serverProcess = spawn("node", [serverScript], {
   cwd: packageRoot,
-  stdio: ['inherit', 'pipe', 'inherit', 'ipc'],
+  stdio: ["inherit", "pipe", "inherit", "ipc"],
   env: process.env,
-  ...(isWindows && { shell: true }),
+  ...(isWindows && { shell: true })
 });
 ```
 
@@ -190,6 +194,7 @@ git commit -m "feat: spawn Node instead of Bun for cross-platform server executi
 ### Task 4: Add IPC Shutdown Handler to Server
 
 **Files:**
+
 - Modify: `server/index.ts` (add before the `startServer` call at end of file)
 
 **Step 1: Implement**
@@ -199,8 +204,13 @@ In `server/index.ts`, add this block just before the `startServer(app, PORT)` ca
 ```typescript
 // Listen for IPC shutdown message from parent CLI process
 if (process.send) {
-  process.on('message', (msg: unknown) => {
-    if (msg && typeof msg === 'object' && 'type' in msg && (msg as { type: string }).type === 'shutdown') {
+  process.on("message", (msg: unknown) => {
+    if (
+      msg &&
+      typeof msg === "object" &&
+      "type" in msg &&
+      (msg as { type: string }).type === "shutdown"
+    ) {
       process.exit(0);
     }
   });
@@ -236,6 +246,7 @@ p.on('exit', code => {
 ```
 
 Expected:
+
 ```
 API Server running on http://localhost:XXXXX
 ...
@@ -256,6 +267,7 @@ git commit -m "feat: add IPC shutdown handler for cross-platform graceful exit"
 ### Task 5: Wire IPC Shutdown in CLI
 
 **Files:**
+
 - Modify: `bin/md-review-plus.js:216-224`
 
 **Step 1: Implement**
@@ -265,13 +277,13 @@ In `bin/md-review-plus.js`, replace lines 216-224:
 ```javascript
 // Handle graceful shutdown
 const shutdown = () => {
-  console.log('\nShutting down...');
-  serverProcess.kill('SIGINT');
+  console.log("\nShutting down...");
+  serverProcess.kill("SIGINT");
   process.exit(0);
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 ```
 
 With:
@@ -280,17 +292,18 @@ With:
 // Handle graceful shutdown via IPC (works on Windows, macOS, Linux)
 const shutdown = () => {
   if (serverProcess.connected) {
-    serverProcess.send({ type: 'shutdown' });
+    serverProcess.send({ type: "shutdown" });
   } else {
     serverProcess.kill();
   }
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 ```
 
 Key changes:
+
 - Removed `console.log('\nShutting down...')` — the server exit triggers the `serverProcess.on('exit')` handler which already calls `process.exit()`
 - Replaced `serverProcess.kill('SIGINT')` with IPC `send({ type: 'shutdown' })`
 - Removed `process.exit(0)` from shutdown — let the server's exit event drive the parent exit (already handled at line 227-232)
@@ -321,6 +334,7 @@ git commit -m "feat: use IPC for graceful shutdown instead of SIGINT signal"
 ### Task 6: Add CLI Integration Test
 
 **Files:**
+
 - Create: `src/__tests__/cli-integration.test.ts`
 
 **Step 1: Write the test**
@@ -328,46 +342,48 @@ git commit -m "feat: use IPC for graceful shutdown instead of SIGINT signal"
 Create `src/__tests__/cli-integration.test.ts`:
 
 ```typescript
-import { spawn } from 'child_process';
-import type { ChildProcess } from 'child_process';
-import { resolve } from 'path';
-import { existsSync } from 'fs';
-import { describe, it, expect, afterEach } from 'vitest';
+import { spawn } from "child_process";
+import type { ChildProcess } from "child_process";
+import { resolve } from "path";
+import { existsSync } from "fs";
+import { describe, it, expect, afterEach } from "vitest";
 
-const SERVER_SCRIPT = resolve(__dirname, '../../dist/server.js');
+const SERVER_SCRIPT = resolve(__dirname, "../../dist/server.js");
 const STARTUP_TIMEOUT = 15_000;
 
 function spawnServer(env: Record<string, string> = {}): ChildProcess {
-  const isWindows = process.platform === 'win32';
-  return spawn('node', [SERVER_SCRIPT], {
-    stdio: ['inherit', 'pipe', 'inherit', 'ipc'],
-    env: { ...process.env, API_PORT: '0', BASE_DIR: process.cwd(), ...env },
-    ...(isWindows && { shell: true }),
+  const isWindows = process.platform === "win32";
+  return spawn("node", [SERVER_SCRIPT], {
+    stdio: ["inherit", "pipe", "inherit", "ipc"],
+    env: { ...process.env, API_PORT: "0", BASE_DIR: process.cwd(), ...env },
+    ...(isWindows && { shell: true })
   });
 }
 
 function waitForReady(proc: ChildProcess): Promise<number> {
   return new Promise((resolve, reject) => {
     const timeout = setTimeout(
-      () => reject(new Error('Server startup timeout')),
-      STARTUP_TIMEOUT,
+      () => reject(new Error("Server startup timeout")),
+      STARTUP_TIMEOUT
     );
 
-    proc.stdout!.on('data', (data: Buffer) => {
+    proc.stdout!.on("data", (data: Buffer) => {
       const output = data.toString();
-      const match = output.match(/API Server running on http:\/\/localhost:(\d+)/);
+      const match = output.match(
+        /API Server running on http:\/\/localhost:(\d+)/
+      );
       if (match) {
         clearTimeout(timeout);
         resolve(parseInt(match[1], 10));
       }
     });
 
-    proc.on('error', (err: Error) => {
+    proc.on("error", (err: Error) => {
       clearTimeout(timeout);
       reject(err);
     });
 
-    proc.on('exit', (code: number | null) => {
+    proc.on("exit", (code: number | null) => {
       clearTimeout(timeout);
       reject(new Error(`Server exited early with code ${code}`));
     });
@@ -376,56 +392,64 @@ function waitForReady(proc: ChildProcess): Promise<number> {
 
 function shutdownAndWait(proc: ChildProcess): Promise<number> {
   return new Promise((resolve) => {
-    proc.on('exit', (code: number | null) => resolve(code ?? 0));
+    proc.on("exit", (code: number | null) => resolve(code ?? 0));
     if (proc.connected) {
-      proc.send({ type: 'shutdown' });
+      proc.send({ type: "shutdown" });
     } else {
       proc.kill();
     }
   });
 }
 
-describe('CLI integration', () => {
+describe("CLI integration", () => {
   let serverProc: ChildProcess | null = null;
 
   afterEach(async () => {
     if (serverProc && !serverProc.killed) {
       serverProc.kill();
-      await new Promise<void>((r) => serverProc!.on('exit', () => r()));
+      await new Promise<void>((r) => serverProc!.on("exit", () => r()));
     }
     serverProc = null;
   });
 
-  it('dist/server.js exists (requires bun run build)', () => {
+  it("dist/server.js exists (requires bun run build)", () => {
     expect(existsSync(SERVER_SCRIPT)).toBe(true);
   });
 
-  it('starts server, responds to health check, and shuts down via IPC', async () => {
-    serverProc = spawnServer();
-    const port = await waitForReady(serverProc);
+  it(
+    "starts server, responds to health check, and shuts down via IPC",
+    async () => {
+      serverProc = spawnServer();
+      const port = await waitForReady(serverProc);
 
-    // Health check
-    const res = await fetch(`http://localhost:${port}/api/health`);
-    expect(res.ok).toBe(true);
-    const body = await res.json();
-    expect(body).toEqual({ status: 'ok' });
+      // Health check
+      const res = await fetch(`http://localhost:${port}/api/health`);
+      expect(res.ok).toBe(true);
+      const body = await res.json();
+      expect(body).toEqual({ status: "ok" });
 
-    // Shutdown via IPC
-    const exitCode = await shutdownAndWait(serverProc);
-    expect(exitCode).toBe(0);
-  }, STARTUP_TIMEOUT + 5_000);
+      // Shutdown via IPC
+      const exitCode = await shutdownAndWait(serverProc);
+      expect(exitCode).toBe(0);
+    },
+    STARTUP_TIMEOUT + 5_000
+  );
 
-  it('serves review-mode endpoint', async () => {
-    serverProc = spawnServer();
-    const port = await waitForReady(serverProc);
+  it(
+    "serves review-mode endpoint",
+    async () => {
+      serverProc = spawnServer();
+      const port = await waitForReady(serverProc);
 
-    const res = await fetch(`http://localhost:${port}/api/review-mode`);
-    expect(res.ok).toBe(true);
-    const body = await res.json();
-    expect(body).toEqual({ reviewMode: false });
+      const res = await fetch(`http://localhost:${port}/api/review-mode`);
+      expect(res.ok).toBe(true);
+      const body = await res.json();
+      expect(body).toEqual({ reviewMode: false });
 
-    await shutdownAndWait(serverProc);
-  }, STARTUP_TIMEOUT + 5_000);
+      await shutdownAndWait(serverProc);
+    },
+    STARTUP_TIMEOUT + 5_000
+  );
 });
 ```
 
@@ -457,6 +481,7 @@ git commit -m "test: add CLI integration tests for server spawn, health check, a
 ### Task 7: Expand CI Matrix
 
 **Files:**
+
 - Modify: `.github/workflows/ci.yml`
 
 **Step 1: Implement**
@@ -506,6 +531,7 @@ jobs:
 ```
 
 Key changes:
+
 - Added `strategy.matrix.os` with three OSes
 - Added `fail-fast: false` so all platforms report results even if one fails
 - Moved `Run build` **before** `Run tests` because the CLI integration test requires `dist/server.js` to exist
