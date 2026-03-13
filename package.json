@@ -23,7 +23,8 @@
   "scripts": {
     "dev": "concurrently 'bun run server' 'bun run client'",
     "client": "vite",
-    "build": "tsc && vite build",
+    "build:server": "bun build server/index.ts --outfile dist/server.js --target node --format esm",
+    "build": "tsc && vite build && bun run build:server",
     "preview": "vite preview",
     "server": "bun run server/index.ts",
     "lint": "concurrently 'bun run lint:js' 'bun run lint:css'",
