@@ -238,3 +238,52 @@
   --border-color: #30363d;
   --text-primary: #e6edf3;
 }
+
+/* Mobile responsive: stack content + sidebar, wider touch targets */
+@media (width <= 768px) {
+  .markdown-with-comments {
+    flex-direction: column;
+  }
+
+  .comments-sidebar {
+    width: 100% !important;
+    max-height: 50vh;
+    border-left: none;
+    border-top: 1px solid var(--border-color, #ddd);
+  }
+
+  .comments-sidebar-resizer {
+    display: none;
+  }
+
+  .markdown-container {
+    padding-right: 0 !important;
+  }
+
+  .review-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .review-topbar-spacer {
+    display: none;
+  }
+
+  .review-progress {
+    order: 3;
+    flex-basis: 100%;
+  }
+
+  .review-approve-all-btn,
+  .review-clear-all-btn,
+  .review-copy-btn,
+  .review-submit-btn,
+  .section-review-approve,
+  .section-review-reject {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.6rem 1rem;
+  }
+}

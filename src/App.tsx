@@ -20,9 +20,7 @@ function detectRemoteMode(): { id: string; key: string } | null {
 function App() {
   const [mode, setMode] = useState<Mode>(() => {
     const remote = detectRemoteMode();
-    return remote
-      ? { kind: 'remote', id: remote.id, key: remote.key }
-      : { kind: 'loading' };
+    return remote ? { kind: 'remote', id: remote.id, key: remote.key } : { kind: 'loading' };
   });
 
   useEffect(() => {

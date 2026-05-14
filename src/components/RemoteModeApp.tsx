@@ -15,11 +15,7 @@ export function RemoteModeApp({ id, keyBase64Url }: RemoteModeAppProps) {
   useEffect(() => {
     // Strip the fragment so the key doesn't sit in the address bar.
     if (window.location.hash) {
-      history.replaceState(
-        null,
-        '',
-        window.location.pathname + window.location.search,
-      );
+      history.replaceState(null, '', window.location.pathname + window.location.search);
     }
   }, []);
 

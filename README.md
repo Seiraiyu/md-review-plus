@@ -51,6 +51,8 @@ md-review-plus <file> --review        # Review mode: blocks until submit, output
 ```sh
 -p, --port <port>      Server port (default: 3030)
     --review           Enable review mode (blocks until submit)
+    --remote           Use remote relay (works over SSH, mobile, cloud)
+    --relay <url>      Override relay URL (env: MDRP_RELAY)
     --no-open          Do not open browser automatically
     --global           Install skills globally (~/.claude/skills/)
 -h, --help             Show this help message
@@ -102,6 +104,29 @@ file.md:L17
 ```
 
 The document must have `##` headings to define reviewable sections. Exit code 0 means review submitted, exit code 1 means the browser was closed without submitting.
+
+## Remote review
+
+When Claude Code runs somewhere your browser cannot reach — SSH session,
+cloud runtime, mobile, CI — use `--remote`:
+
+```sh
+md-review-plus ./document.md --review --remote
+```
+
+The CLI encrypts the document with a fresh AES-256-GCM key, uploads the
+ciphertext to the relay, and prints a URL with the key in the URL
+fragment (which browsers do not send to the server). Open the URL on any
+device, review, submit. The CLI receives the encrypted feedback,
+decrypts it locally, and exits with the usual structured output.
+
+Override the relay with `MDRP_RELAY` or `--relay <url>`. To self-host the
+relay, see [relay/README.md](relay/README.md) and
+[relay/DEPLOY.md](relay/DEPLOY.md).
+
+**Privacy:** AES-256-GCM end-to-end. The key never leaves the CLI or
+your browser. The relay holds ciphertext for up to 24h, deletes on
+submit, and does not log request bodies or URL fragments.
 
 ## Comment Management
 

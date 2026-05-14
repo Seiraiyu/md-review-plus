@@ -1,9 +1,5 @@
 import { useEffect, useState } from 'react';
-import {
-  decryptToString,
-  encryptFromString,
-  keyFromBase64Url,
-} from '../crypto/sessionCrypto';
+import { decryptToString, encryptFromString, keyFromBase64Url } from '../crypto/sessionCrypto';
 
 export interface UseRemoteSessionArgs {
   id: string;

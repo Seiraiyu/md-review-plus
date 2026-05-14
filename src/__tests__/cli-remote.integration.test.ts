@@ -35,14 +35,7 @@ describe('CLI --remote end-to-end (sans browser)', () => {
   it('CLI uploads, prints URL, and decrypts simulated feedback', async () => {
     const cli = spawn(
       'node',
-      [
-        BIN,
-        SAMPLE,
-        '--review',
-        '--remote',
-        '--relay',
-        `http://localhost:${PORT}`,
-      ],
+      [BIN, SAMPLE, '--review', '--remote', '--relay', `http://localhost:${PORT}`],
       {
         env: { ...process.env, MDRP_INSECURE: '1' },
         stdio: ['ignore', 'pipe', 'inherit'],
@@ -82,9 +75,7 @@ describe('CLI --remote end-to-end (sans browser)', () => {
     });
     expect(r.status).toBe(200);
 
-    const exitCode = await new Promise<number>((res) =>
-      cli.on('exit', (code) => res(code ?? -1)),
-    );
+    const exitCode = await new Promise<number>((res) => cli.on('exit', (code) => res(code ?? -1)));
     expect(exitCode).toBe(0);
     expect(stdoutChunks.join('')).toContain('All sections approved');
   }, 20_000);

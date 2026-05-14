@@ -71,6 +71,7 @@ The local `--review` flow stays as-is for the common case. A new `--remote` flag
 New flag: `--remote` (boolean). Implies `--review`. Mutually exclusive with `--port` (no local server is started). Requires a markdown file argument.
 
 New env vars:
+
 - `MDRP_RELAY` — override the relay base URL. Default: `https://relay.mdrp.dev` (placeholder; real domain TBD).
 - `MDRP_RELAY` also accepts `http://` for local dev / self-hosted relays without TLS.
 
@@ -103,14 +104,14 @@ Storage: in-memory `Map<sessionId, Session>`. Lost on restart — acceptable for
 
 ```ts
 interface Session {
-  id: string;              // 16 random bytes, base64url (128-bit unguessable)
-  ciphertext: Uint8Array;  // opaque to relay
-  iv: string;              // opaque to relay, just stored
-  filename: string;        // for display in browser tab; not sensitive
+  id: string; // 16 random bytes, base64url (128-bit unguessable)
+  ciphertext: Uint8Array; // opaque to relay
+  iv: string; // opaque to relay, just stored
+  filename: string; // for display in browser tab; not sensitive
   createdAt: number;
-  expiresAt: number;       // createdAt + 24h
-  feedbackSubscribers: SSEClient[];  // CLI(s) waiting for submit
-  submittedFeedback?: { iv: string; ct: string };  // set on POST /feedback
+  expiresAt: number; // createdAt + 24h
+  feedbackSubscribers: SSEClient[]; // CLI(s) waiting for submit
+  submittedFeedback?: { iv: string; ct: string }; // set on POST /feedback
 }
 ```
 
@@ -167,7 +168,7 @@ The existing React app already renders the section-review UI. Three changes:
    - `importKey(base64urlKey) → CryptoKey`
    - `decryptDocument(key, iv, ct) → string`
    - `encryptFeedback(key, feedbackJSON) → { iv, ct }`
-   The fragment key is read from `window.location.hash`, then immediately blanked from history (`history.replaceState`) so it doesn't show up in copy-pasted links from the browser address bar after navigation.
+     The fragment key is read from `window.location.hash`, then immediately blanked from history (`history.replaceState`) so it doesn't show up in copy-pasted links from the browser address bar after navigation.
 
 3. **Submit path.** `FeedbackOutput`'s submit button currently hits `POST /api/submit`. In remote mode, build the same payload, JSON.stringify, encrypt with the session key, then `POST /api/sessions/:id/feedback` with `{ iv, ct }`. Show a "Submitted, you can close this tab" confirmation.
 
@@ -196,17 +197,17 @@ The existing React app already renders the section-review UI. Three changes:
 
 ## Error handling
 
-| Failure | Behavior |
-|---------|----------|
-| Relay POST `/api/sessions` returns 4xx/5xx or network error | CLI prints error + actionable hint (check `MDRP_RELAY`, network), exits 1. |
-| File > 1 MB | CLI refuses before upload, prints size + cap, exits 1. |
-| SSE connection drops mid-wait | CLI reconnects with backoff (1s, 2s, 5s, 10s, 30s, capped). Session still on relay — resumable. |
-| Session expires (24h) before submit | Relay 404s the SSE. CLI exits 1 with "Review session expired without submit." |
-| Browser tab closed before submit | Nothing happens until 24h TTL fires or CLI is killed. No mid-stream signaling — keep it simple. |
-| Decrypt fails in browser (wrong key, corrupted) | Show "This review link is invalid or corrupted." No partial render. |
-| Decrypt fails in CLI (relay misbehaving) | Print raw error, exit 1. Should never happen with honest relay; if it does, treat as compromise. |
-| Two browsers open the URL | Both can review. First submit wins; second's POST returns 410. |
-| Relay restarts (memory wipe) | All in-flight sessions are gone. CLI's SSE 404s → exits 1. User re-runs. Acceptable for v1. |
+| Failure                                                     | Behavior                                                                                         |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Relay POST `/api/sessions` returns 4xx/5xx or network error | CLI prints error + actionable hint (check `MDRP_RELAY`, network), exits 1.                       |
+| File > 1 MB                                                 | CLI refuses before upload, prints size + cap, exits 1.                                           |
+| SSE connection drops mid-wait                               | CLI reconnects with backoff (1s, 2s, 5s, 10s, 30s, capped). Session still on relay — resumable.  |
+| Session expires (24h) before submit                         | Relay 404s the SSE. CLI exits 1 with "Review session expired without submit."                    |
+| Browser tab closed before submit                            | Nothing happens until 24h TTL fires or CLI is killed. No mid-stream signaling — keep it simple.  |
+| Decrypt fails in browser (wrong key, corrupted)             | Show "This review link is invalid or corrupted." No partial render.                              |
+| Decrypt fails in CLI (relay misbehaving)                    | Print raw error, exit 1. Should never happen with honest relay; if it does, treat as compromise. |
+| Two browsers open the URL                                   | Both can review. First submit wins; second's POST returns 410.                                   |
+| Relay restarts (memory wipe)                                | All in-flight sessions are gone. CLI's SSE 404s → exits 1. User re-runs. Acceptable for v1.      |
 
 ## Testing approach
 
@@ -243,13 +244,13 @@ The existing React app already renders the section-review UI. Three changes:
 
 ## Phase tracking
 
-| Phase | Description | Status | Tested | Pushed |
-|-------|-------------|--------|--------|--------|
-| 1 | Relay service: Hono+Bun skeleton, session model, all 6 endpoints, in-memory store, expiry sweeper. Dockerfile. Unit + integration tests. | pending | no | no |
-| 2 | CLI: `--remote` flag, AES-GCM encrypt, POST /api/sessions, SSE subscribe with reconnect, decrypt feedback, structured stdout. Vitest crypto roundtrip. | pending | no | no |
-| 3 | Web client: `/r/:id` route, fragment key handling, in-browser decrypt of document, encrypt-and-submit feedback, "submitted" confirmation. | pending | no | no |
-| 4 | End-to-end Playwright test: relay + CLI + browser, full review loop produces correct stdout. | pending | no | no |
-| 5 | Mobile hardening: responsive `SectionNav`, touch targets, iOS/Android selection-to-comment, sticky toolbar on narrow viewports. | pending | no | no |
-| 6 | Abuse hardening: rate limits, size caps, global session cap, structured 4xx errors. | pending | no | no |
-| 7 | Deployment: self-host at home behind Caddy, public domain pointed at it, smoke-test from phone / SSH / cloud-CC. Bake default relay URL into next release. | pending | no | no |
-| 8 | Skill + README updates: document `--remote` in `skills/md-review-plus.md` so CC knows to use it when local browser-opening will fail; update README with privacy model. | pending | no | no |
+| Phase | Description                                                                                                                                                             | Status  | Tested | Pushed |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | ------ |
+| 1     | Relay service: Hono+Bun skeleton, session model, all 6 endpoints, in-memory store, expiry sweeper. Dockerfile. Unit + integration tests.                                | pending | no     | no     |
+| 2     | CLI: `--remote` flag, AES-GCM encrypt, POST /api/sessions, SSE subscribe with reconnect, decrypt feedback, structured stdout. Vitest crypto roundtrip.                  | pending | no     | no     |
+| 3     | Web client: `/r/:id` route, fragment key handling, in-browser decrypt of document, encrypt-and-submit feedback, "submitted" confirmation.                               | pending | no     | no     |
+| 4     | End-to-end Playwright test: relay + CLI + browser, full review loop produces correct stdout.                                                                            | pending | no     | no     |
+| 5     | Mobile hardening: responsive `SectionNav`, touch targets, iOS/Android selection-to-comment, sticky toolbar on narrow viewports.                                         | pending | no     | no     |
+| 6     | Abuse hardening: rate limits, size caps, global session cap, structured 4xx errors.                                                                                     | pending | no     | no     |
+| 7     | Deployment: self-host at home behind Caddy, public domain pointed at it, smoke-test from phone / SSH / cloud-CC. Bake default relay URL into next release.              | pending | no     | no     |
+| 8     | Skill + README updates: document `--remote` in `skills/md-review-plus.md` so CC knows to use it when local browser-opening will fail; update README with privacy model. | pending | no     | no     |

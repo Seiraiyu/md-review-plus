@@ -253,7 +253,7 @@ export const SelectionPopover = ({ containerRef, onSubmitComment }: SelectionPop
   };
 
   useEffect(() => {
-    const handleMouseUp = (e: MouseEvent) => {
+    const handleSelectionSettle = (e: Event) => {
       setTimeout(() => {
         if ((e.target as HTMLElement)?.closest('.selection-popover')) {
           return;
@@ -275,12 +275,15 @@ export const SelectionPopover = ({ containerRef, onSubmitComment }: SelectionPop
       }
     };
 
-    document.addEventListener('mouseup', handleMouseUp);
+    document.addEventListener('mouseup', handleSelectionSettle);
     document.addEventListener('mousedown', handleMouseDown);
+    // Mobile / iOS Safari: selection settles on touchend, not mouseup.
+    document.addEventListener('touchend', handleSelectionSettle);
 
     return () => {
-      document.removeEventListener('mouseup', handleMouseUp);
+      document.removeEventListener('mouseup', handleSelectionSettle);
       document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener('touchend', handleSelectionSettle);
     };
   }, [updatePosition, updateHighlight]);
 

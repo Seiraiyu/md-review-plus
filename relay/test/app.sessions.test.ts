@@ -17,7 +17,13 @@ describe('POST /api/sessions', () => {
       body({ v: 1, iv: 'aGVsbG8=', ct: 'd29ybGQ=', filename: 'spec.md' }),
     );
     expect(res.status).toBe(200);
-    const j = (await res.json()) as { id?: string; iv?: string; ct?: string; filename?: string; expiresAt?: number };
+    const j = (await res.json()) as {
+      id?: string;
+      iv?: string;
+      ct?: string;
+      filename?: string;
+      expiresAt?: number;
+    };
     expect(typeof j.id).toBe('string');
     expect(typeof j.expiresAt).toBe('number');
   });
@@ -62,10 +68,7 @@ describe('POST /api/sessions', () => {
 
   it('rejects when at capacity', async () => {
     const { app } = await createApp({ ttlMs: 60_000, maxSessions: 1, rateLimit: 100 });
-    await app.request(
-      '/api/sessions',
-      body({ v: 1, iv: 'a', ct: 'b', filename: 'x.md' }),
-    );
+    await app.request('/api/sessions', body({ v: 1, iv: 'a', ct: 'b', filename: 'x.md' }));
     const res = await app.request(
       '/api/sessions',
       body({ v: 1, iv: 'a', ct: 'b', filename: 'y.md' }),
@@ -85,7 +88,13 @@ describe('GET /api/sessions/:id', () => {
     const { id } = (await create.json()) as { id: string };
     const res = await app.request(`/api/sessions/${id}`);
     expect(res.status).toBe(200);
-    const j = (await res.json()) as { id?: string; iv?: string; ct?: string; filename?: string; expiresAt?: number };
+    const j = (await res.json()) as {
+      id?: string;
+      iv?: string;
+      ct?: string;
+      filename?: string;
+      expiresAt?: number;
+    };
     expect(j.iv).toBe('AAA');
     expect(j.ct).toBe('AQID');
     expect(j.filename).toBe('spec.md');

@@ -1,0 +1,11 @@
+relay.mdrp.dev {
+  encode zstd gzip
+  reverse_proxy localhost:8080 {
+    transport http {
+      response_header_timeout 60s
+      read_buffer 4096
+    }
+    # Disable buffering so SSE flushes promptly.
+    flush_interval -1
+  }
+}

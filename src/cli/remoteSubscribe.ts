@@ -32,9 +32,7 @@ export async function subscribeFeedback(args: SubscribeArgs): Promise<FeedbackEn
     buffer = events.pop() ?? '';
     for (const evt of events) {
       const lines = evt.split('\n');
-      const dataLines = lines
-        .filter((l) => l.startsWith('data: '))
-        .map((l) => l.slice(6));
+      const dataLines = lines.filter((l) => l.startsWith('data: ')).map((l) => l.slice(6));
       if (dataLines.length === 0) continue;
       const payload = dataLines.join('\n');
       try {

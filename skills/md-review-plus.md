@@ -18,6 +18,30 @@ md-review-plus ./path/to/document.md --review
 
 The command blocks until the human submits their review, then prints structured feedback to stdout.
 
+## Remote review (use this when you can't open a local browser)
+
+If you are running in an environment where the user cannot reach
+`http://localhost` (CC over SSH, cloud / remote runtime, Claude Desktop
+or mobile, headless CI), pass `--remote`:
+
+```bash
+md-review-plus ./document.md --review --remote
+```
+
+The CLI prints a single line:
+
+```
+Review URL: https://relay.mdrp.dev/r/<id>#<key>
+```
+
+Share that URL with the user — they can open it on any device. The
+document is end-to-end encrypted (AES-256-GCM) before upload; the relay
+never sees plaintext or the key. The CLI receives the encrypted
+feedback, decrypts it locally, and exits with the same stdout format as
+local `--review`. Exit code 0 = submitted; 1 = expired / failed.
+
+Override the relay with `--relay <url>` or `MDRP_RELAY`.
+
 ## Handling Feedback
 
 The stdout output follows this format:

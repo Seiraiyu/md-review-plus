@@ -16,10 +16,7 @@ export function keyFromBase64Url(s: string): Uint8Array {
   return new Uint8Array(Buffer.from(s, 'base64url'));
 }
 
-export function encryptDocument(
-  key: Uint8Array,
-  plaintext: string,
-): { iv: string; ct: string } {
+export function encryptDocument(key: Uint8Array, plaintext: string): { iv: string; ct: string } {
   const iv = randomBytes(IV_BYTES);
   const cipher = createCipheriv(AES_GCM, key, iv);
   const enc = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
@@ -29,10 +26,7 @@ export function encryptDocument(
   return { iv: iv.toString('base64'), ct: ct.toString('base64') };
 }
 
-export function decryptFeedback(
-  key: Uint8Array,
-  payload: { iv: string; ct: string },
-): string {
+export function decryptFeedback(key: Uint8Array, payload: { iv: string; ct: string }): string {
   const iv = Buffer.from(payload.iv, 'base64');
   const ctTag = Buffer.from(payload.ct, 'base64');
   if (ctTag.length < TAG_BYTES) throw new Error('ciphertext too short');

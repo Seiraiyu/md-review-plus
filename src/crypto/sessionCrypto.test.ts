@@ -2,9 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { webcrypto } from 'node:crypto';
 import { importKey, decryptToString, encryptFromString } from './sessionCrypto';
 
-const cryptoApi = (
-  globalThis.crypto?.subtle ? globalThis.crypto : webcrypto
-) as Crypto;
+const cryptoApi = (globalThis.crypto?.subtle ? globalThis.crypto : webcrypto) as Crypto;
 
 describe('sessionCrypto', () => {
   it('roundtrips a string', async () => {

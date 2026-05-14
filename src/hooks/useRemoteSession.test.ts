@@ -27,9 +27,7 @@ describe('useRemoteSession', () => {
       .replace(/\//g, '_')
       .replace(/=+$/, '');
 
-    const { result } = renderHook(() =>
-      useRemoteSession({ id: 'abc', keyBase64Url: keyB64 }),
-    );
+    const { result } = renderHook(() => useRemoteSession({ id: 'abc', keyBase64Url: keyB64 }));
 
     await waitFor(() => expect(result.current.state).toBe('ready'));
     expect(result.current.content).toBe('# hello\n');

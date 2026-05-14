@@ -32,12 +32,7 @@ interface ReviewViewProps {
   onSubmit: (payload: SubmitPayload) => void | Promise<void>;
 }
 
-export function ReviewView({
-  content,
-  filename,
-  reviewMode,
-  onSubmit,
-}: ReviewViewProps) {
+export function ReviewView({ content, filename, reviewMode, onSubmit }: ReviewViewProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -58,8 +53,10 @@ export function ReviewView({
     }
   }, [isDark]);
 
-  const { intro, sections, approve, reject, approveAll, clearAll, setComment } =
-    useSections(content, reviewMode);
+  const { intro, sections, approve, reject, approveAll, clearAll, setComment } = useSections(
+    content,
+    reviewMode,
+  );
   const { feedback } = useFeedback(sections, comments, filename);
 
   const reviewedCount = sections.filter((s) => s.status !== 'pending').length;
@@ -115,9 +112,7 @@ export function ReviewView({
   };
 
   const handleEditComment = (id: string, newText: string) => {
-    setComments((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, text: newText } : c)),
-    );
+    setComments((prev) => prev.map((c) => (c.id === id ? { ...c, text: newText } : c)));
   };
 
   const handleLineClick = (line: number) => {
@@ -158,8 +153,7 @@ export function ReviewView({
     );
   }
 
-  const progressPercent =
-    sections.length > 0 ? (reviewedCount / sections.length) * 100 : 0;
+  const progressPercent = sections.length > 0 ? (reviewedCount / sections.length) * 100 : 0;
 
   return (
     <div
@@ -180,10 +174,7 @@ export function ReviewView({
               {reviewedCount}/{sections.length} reviewed
             </span>
             <div className="review-progress-bar">
-              <div
-                className="review-progress-fill"
-                style={{ width: `${progressPercent}%` }}
-              />
+              <div className="review-progress-fill" style={{ width: `${progressPercent}%` }} />
             </div>
           </div>
           <div className="review-topbar-actions">
@@ -227,10 +218,7 @@ export function ReviewView({
           ))}
         </div>
 
-        <SelectionPopover
-          containerRef={contentRef}
-          onSubmitComment={handleSubmitComment}
-        />
+        <SelectionPopover containerRef={contentRef} onSubmitComment={handleSubmitComment} />
       </div>
 
       {isCollapsed && (
@@ -249,9 +237,7 @@ export function ReviewView({
               strokeLinejoin="round"
             />
           </svg>
-          {comments.length > 0 && (
-            <span className="comments-badge">{comments.length}</span>
-          )}
+          {comments.length > 0 && <span className="comments-badge">{comments.length}</span>}
         </button>
       )}
 

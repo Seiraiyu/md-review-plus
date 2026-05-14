@@ -17,19 +17,12 @@ function bytesToB64(bytes: Uint8Array): string {
   return btoa(s);
 }
 
-export function importKey(
-  raw: Uint8Array<ArrayBuffer>,
-  c: Crypto = crypto,
-): Promise<CryptoKey> {
-  return c.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, [
-    'encrypt',
-    'decrypt',
-  ]);
+export function importKey(raw: Uint8Array<ArrayBuffer>, c: Crypto = crypto): Promise<CryptoKey> {
+  return c.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
 }
 
 export function keyFromBase64Url(s: string, c: Crypto = crypto): Promise<CryptoKey> {
-  const norm =
-    s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4);
+  const norm = s.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((s.length + 3) % 4);
   return importKey(b64ToBytes(norm), c);
 }
 
@@ -51,11 +44,7 @@ export async function encryptFromString(
 ): Promise<Envelope> {
   const iv = c.getRandomValues(new Uint8Array(new ArrayBuffer(12)));
   const ct = new Uint8Array(
-    await c.subtle.encrypt(
-      { name: 'AES-GCM', iv },
-      key,
-      new TextEncoder().encode(plaintext),
-    ),
+    await c.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(plaintext)),
   );
   return { iv: bytesToB64(iv), ct: bytesToB64(ct) };
 }

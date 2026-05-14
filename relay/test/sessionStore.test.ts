@@ -50,9 +50,9 @@ describe('SessionStore', () => {
     const small = new SessionStore({ ttlMs: 60_000, maxSessions: 2, now });
     small.create({ iv: 'a', ct: new Uint8Array([1]), filename: '1.md' });
     small.create({ iv: 'a', ct: new Uint8Array([1]), filename: '2.md' });
-    expect(() =>
-      small.create({ iv: 'a', ct: new Uint8Array([1]), filename: '3.md' }),
-    ).toThrow(/capacity/i);
+    expect(() => small.create({ iv: 'a', ct: new Uint8Array([1]), filename: '3.md' })).toThrow(
+      /capacity/i,
+    );
   });
 
   it('stores and reads feedback', () => {

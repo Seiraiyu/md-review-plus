@@ -189,9 +189,7 @@ if (args.remote) {
     !/^http:\/\/(localhost|127\.0\.0\.1)/i.test(relay) &&
     process.env.MDRP_INSECURE !== '1'
   ) {
-    console.error(
-      `Error: relay must be HTTPS (got ${relay}). Set MDRP_INSECURE=1 to override.`,
-    );
+    console.error(`Error: relay must be HTTPS (got ${relay}). Set MDRP_INSECURE=1 to override.`);
     process.exit(1);
   }
 

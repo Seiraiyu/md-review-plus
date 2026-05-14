@@ -71,11 +71,7 @@ export async function createApp(opts: AppOptions): Promise<AppHandle> {
       return c.json({ error: 'invalid_json' }, 400);
     }
 
-    if (
-      typeof body !== 'object' ||
-      body === null ||
-      (body as { v?: unknown }).v !== 1
-    ) {
+    if (typeof body !== 'object' || body === null || (body as { v?: unknown }).v !== 1) {
       return c.json({ error: 'unsupported_version' }, 400);
     }
     const { iv, ct, filename } = body as {
@@ -255,10 +251,7 @@ export async function createApp(opts: AppOptions): Promise<AppHandle> {
     if (opts.staticAssetsRoot) {
       const fs = await import('node:fs/promises');
       const path = await import('node:path');
-      const html = await fs.readFile(
-        path.join(opts.staticAssetsRoot, 'index.html'),
-        'utf8',
-      );
+      const html = await fs.readFile(path.join(opts.staticAssetsRoot, 'index.html'), 'utf8');
       return c.html(html);
     }
     return c.text('relay running; no static html configured', 200);

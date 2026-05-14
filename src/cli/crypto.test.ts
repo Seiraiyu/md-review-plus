@@ -26,13 +26,9 @@ describe('CLI crypto', () => {
     const k = generateKey();
     const { iv, ct } = encryptDocument(k, '# hello\n');
 
-    const cryptoKey = await webcrypto.subtle.importKey(
-      'raw',
-      k,
-      { name: 'AES-GCM' },
-      false,
-      ['decrypt'],
-    );
+    const cryptoKey = await webcrypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, [
+      'decrypt',
+    ]);
     const plain = await webcrypto.subtle.decrypt(
       { name: 'AES-GCM', iv: Buffer.from(iv, 'base64') },
       cryptoKey,
@@ -43,13 +39,9 @@ describe('CLI crypto', () => {
 
   it('decrypts feedback that was encrypted with WebCrypto', async () => {
     const k = generateKey();
-    const cryptoKey = await webcrypto.subtle.importKey(
-      'raw',
-      k,
-      { name: 'AES-GCM' },
-      false,
-      ['encrypt'],
-    );
+    const cryptoKey = await webcrypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, [
+      'encrypt',
+    ]);
     const iv = webcrypto.getRandomValues(new Uint8Array(12));
     const payload = JSON.stringify({ feedback: 'ok' });
     const ct = new Uint8Array(
