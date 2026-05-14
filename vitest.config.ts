@@ -9,6 +9,8 @@ export default mergeConfig(
       environment: 'jsdom',
       setupFiles: ['./src/test/setup.ts'],
       css: true,
+      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      exclude: ['node_modules/**', 'dist/**', 'relay/**', 'e2e/**'],
       coverage: {
         provider: 'v8',
         reporter: ['text', 'json', 'html'],
