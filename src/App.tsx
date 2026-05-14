@@ -1,29 +1,49 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { DevModeApp } from './components/DevModeApp';
 import { CliModeApp } from './components/CliModeApp';
+import { RemoteModeApp } from './components/RemoteModeApp';
+
+type Mode =
+  | { kind: 'loading' }
+  | { kind: 'remote'; id: string; key: string }
+  | { kind: 'dev' }
+  | { kind: 'cli' };
+
+function detectRemoteMode(): { id: string; key: string } | null {
+  const m = window.location.pathname.match(/^\/r\/([^/]+)\/?$/);
+  if (!m) return null;
+  const key = window.location.hash.replace(/^#/, '');
+  if (!key) return null;
+  return { id: m[1], key };
+}
 
 function App() {
-  const [mode, setMode] = useState<'dev' | 'cli' | 'loading'>('loading');
+  const [mode, setMode] = useState<Mode>(() => {
+    const remote = detectRemoteMode();
+    return remote
+      ? { kind: 'remote', id: remote.id, key: remote.key }
+      : { kind: 'loading' };
+  });
 
   useEffect(() => {
+    if (mode.kind !== 'loading') return;
     const detectMode = async () => {
       try {
         const response = await fetch('/api/files');
         if (response.ok) {
           const data = await response.json();
-          setMode(data.mode === 'cli' ? 'cli' : 'dev');
+          setMode({ kind: data.mode === 'cli' ? 'cli' : 'dev' });
         } else {
-          setMode('cli');
+          setMode({ kind: 'cli' });
         }
       } catch {
-        setMode('cli');
+        setMode({ kind: 'cli' });
       }
     };
-
     detectMode();
-  }, []);
+  }, [mode.kind]);
 
-  if (mode === 'loading') {
+  if (mode.kind === 'loading') {
     return (
       <div
         style={{
@@ -37,8 +57,11 @@ function App() {
       </div>
     );
   }
-
-  return mode === 'dev' ? <DevModeApp /> : <CliModeApp />;
+  if (mode.kind === 'remote') {
+    return <RemoteModeApp id={mode.id} keyBase64Url={mode.key} />;
+  }
+  if (mode.kind === 'dev') return <DevModeApp />;
+  return <CliModeApp />;
 }
 
 export default App;
