@@ -3,7 +3,7 @@
 import { spawn } from 'child_process';
 import { resolve, dirname } from 'path';
 import { existsSync, readFileSync, statSync } from 'fs';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import mri from 'mri';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -40,7 +40,8 @@ const args = mri(process.argv.slice(2), {
     port: '3030',
     open: true,
   },
-  boolean: ['help', 'version', 'open', 'review', 'skills', 'global'],
+  boolean: ['help', 'version', 'open', 'review', 'skills', 'global', 'remote'],
+  string: ['relay'],
 });
 
 // Install skills subcommand
@@ -90,6 +91,8 @@ Usage:
 Options:
   -p, --port <port>      Server port (default: 3030)
   --review               Enable review mode (blocks until submit)
+  --remote               Use remote relay for review (works over SSH, mobile, cloud CC)
+  --relay <url>          Override relay URL (env: MDRP_RELAY)
   --no-open              Do not open browser automatically
   --global               Install skills globally (~/.claude/skills/)
   -h, --help             Show this help message
@@ -165,6 +168,100 @@ if (reviewMode) {
   if (!userSpecifiedPort) {
     port = 0;
   }
+}
+
+// Remote review mode: encrypt + upload + block on relay SSE. Bypasses local server.
+if (args.remote) {
+  if (!reviewMode) {
+    console.error('Error: --remote requires --review');
+    process.exit(1);
+  }
+  if (!process.env.MARKDOWN_FILE_PATH) {
+    console.error('Error: --remote requires a markdown file');
+    process.exit(1);
+  }
+  const filePath = process.env.MARKDOWN_FILE_PATH;
+  const filename = filePath.split(/[\\/]/).pop();
+  const relay = args.relay || process.env.MDRP_RELAY || 'https://relay.mdrp.dev';
+
+  if (
+    !/^https:/i.test(relay) &&
+    !/^http:\/\/(localhost|127\.0\.0\.1)/i.test(relay) &&
+    process.env.MDRP_INSECURE !== '1'
+  ) {
+    console.error(
+      `Error: relay must be HTTPS (got ${relay}). Set MDRP_INSECURE=1 to override.`,
+    );
+    process.exit(1);
+  }
+
+  const distCli = resolve(packageRoot, 'dist', 'cli.js');
+  if (!existsSync(distCli)) {
+    console.error('Error: dist/cli.js not found. Run "bun run build" first.');
+    process.exit(1);
+  }
+  const cli = await import(pathToFileURL(distCli).href);
+
+  const content = readFileSync(filePath, 'utf-8');
+  const MAX = 1_048_576;
+  if (Buffer.byteLength(content, 'utf-8') > MAX) {
+    console.error(`Error: file exceeds ${MAX} bytes`);
+    process.exit(1);
+  }
+
+  const key = cli.generateKey();
+  const { iv, ct } = cli.encryptDocument(key, content);
+
+  let upload;
+  try {
+    upload = await cli.uploadSession({ relay, filename, iv, ct });
+  } catch (e) {
+    console.error(`Error: upload failed: ${e.message}`);
+    process.exit(1);
+  }
+
+  const keyB64 = cli.keyToBase64Url(key);
+  const reviewUrl = `${relay.replace(/\/$/, '')}/r/${upload.id}#${keyB64}`;
+  console.log(`Review URL: ${reviewUrl}`);
+
+  const ac = new AbortController();
+  const onSigint = async () => {
+    try {
+      await fetch(`${relay.replace(/\/$/, '')}/api/sessions/${upload.id}`, {
+        method: 'DELETE',
+      });
+    } catch {
+      /* ignore */
+    }
+    ac.abort();
+    process.exit(130);
+  };
+  process.on('SIGINT', onSigint);
+  process.on('SIGTERM', onSigint);
+
+  let envelope;
+  try {
+    envelope = await cli.subscribeFeedback({
+      relay,
+      id: upload.id,
+      signal: ac.signal,
+    });
+  } catch (e) {
+    console.error(`Error: review session ended without feedback: ${e.message}`);
+    process.exit(1);
+  }
+
+  let feedback;
+  try {
+    feedback = cli.decryptFeedback(key, envelope);
+  } catch (e) {
+    console.error(`Error: failed to decrypt feedback: ${e.message}`);
+    process.exit(1);
+  }
+
+  process.stdout.write(feedback);
+  if (!feedback.endsWith('\n')) process.stdout.write('\n');
+  process.exit(0);
 }
 
 // Set environment variables (after review mode may override port)
