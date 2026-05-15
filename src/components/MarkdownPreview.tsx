@@ -225,7 +225,11 @@ export const MarkdownPreview = ({
         </button>
       )}
       {!isCollapsed && (
-        <aside className="comments-sidebar" style={{ width: `${commentsSidebarWidth}px` }}>
+        <aside
+          className="comments-sidebar"
+          data-comments-empty={comments.length === 0 ? 'true' : 'false'}
+          style={{ width: `${commentsSidebarWidth}px` }}
+        >
           <div className="comments-sidebar-resizer" onMouseDown={handleMouseDown} />
           <CommentList
             comments={[...comments].sort((a, b) => a.startLine - b.startLine)}

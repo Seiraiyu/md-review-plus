@@ -272,4 +272,8 @@
   .review-progress-text {
     font-size: 0.75rem;
   }
+
+  .comments-sidebar[data-comments-empty='true'] {
+    display: none;
+  }
 }
