@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.2.0...v1.3.0) (2026-05-15)
+
+
+### Features
+
+* **web:** terminal submit screens with retry on failure ([97c1a60](https://github.com/Seiraiyu/md-review-plus/commit/97c1a60391f0be61c3190f1544323e79e074dae8))
+
+
+### Bug Fixes
+
+* **server:** bind to 127.0.0.1 by default; add --host flag for LAN review ([b90534f](https://github.com/Seiraiyu/md-review-plus/commit/b90534f85ebc8a6ee7d88196f0d3b98976f46fc3))
+* **web:** hide empty comments sidebar on narrow viewports ([ac39813](https://github.com/Seiraiyu/md-review-plus/commit/ac39813bb1aa5309c75413c1116c3ef1436b13af))
+* **web:** stable slug-based section IDs survive hot-reload ([a87d5f9](https://github.com/Seiraiyu/md-review-plus/commit/a87d5f9c08860b25927fc660836f33a8f224d067))
+
 ## [1.2.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.1.0...v1.2.0) (2026-05-15)
 
 
