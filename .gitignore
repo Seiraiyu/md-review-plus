@@ -24,4 +24,6 @@ dist-ssr
 *.sln
 *.sw?
 
-coveragerelay/data/
+coverage
+relay/data/
+e2e-screenshots/

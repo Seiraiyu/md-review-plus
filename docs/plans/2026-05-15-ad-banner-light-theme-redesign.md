@@ -88,24 +88,25 @@ Take md-review-plus.ai from "deployment proven, ad story aspirational, several r
 
 ### Theme palette (light only)
 
-| Token | Value | Use |
-|-------|-------|-----|
-| `--bg` | `#fafbfc` | Page background |
-| `--bg-elev` | `#ffffff` | Cards, panels |
-| `--bg-tint` | `#f0f3f7` | Code blocks, subtle fills |
-| `--fg` | `#0b0d12` | Body text, headings |
-| `--fg-dim` | `#5b6577` | Secondary text, labels |
-| `--accent` | `#008f73` | CTAs, links, status |
-| `--accent-dim` | `#006754` | Hover, focus states |
-| `--border` | `#e1e5ec` | Card borders, dividers |
-| `--success` | `#0d8a3e` | Approved indicators |
-| `--danger` | `#c4361b` | Reject indicators, error states |
-| `--banner-bg` | `#0b0d12` | Sponsor banner background (inverted) |
-| `--banner-fg` | `#ffffff` | Banner text |
-| `--banner-dim` | `#9aa1ad` | Banner secondary text |
-| `--banner-accent` | `#00d4aa` | Banner CTA (bright teal on dark) |
+| Token             | Value     | Use                                  |
+| ----------------- | --------- | ------------------------------------ |
+| `--bg`            | `#fafbfc` | Page background                      |
+| `--bg-elev`       | `#ffffff` | Cards, panels                        |
+| `--bg-tint`       | `#f0f3f7` | Code blocks, subtle fills            |
+| `--fg`            | `#0b0d12` | Body text, headings                  |
+| `--fg-dim`        | `#5b6577` | Secondary text, labels               |
+| `--accent`        | `#008f73` | CTAs, links, status                  |
+| `--accent-dim`    | `#006754` | Hover, focus states                  |
+| `--border`        | `#e1e5ec` | Card borders, dividers               |
+| `--success`       | `#0d8a3e` | Approved indicators                  |
+| `--danger`        | `#c4361b` | Reject indicators, error states      |
+| `--banner-bg`     | `#0b0d12` | Sponsor banner background (inverted) |
+| `--banner-fg`     | `#ffffff` | Banner text                          |
+| `--banner-dim`    | `#9aa1ad` | Banner secondary text                |
+| `--banner-accent` | `#00d4aa` | Banner CTA (bright teal on dark)     |
 
 WCAG checks:
+
 - `--fg` on `--bg`: 17.4:1 (AAA)
 - `--fg-dim` on `--bg`: 5.4:1 (AA, sufficient for body)
 - `--accent` on `--bg`: 4.6:1 (AA on regular text, AAA on large)
@@ -134,6 +135,7 @@ Single horizontal band, full-width, `position: sticky; top: 0; z-index: 100`.
 ```
 
 Properties:
+
 - Dark background (`--banner-bg`), white text, bright teal CTA. Contrasts cleanly against the light page below.
 - Label "SPONSOR" in `--banner-dim`, all caps, letter-spacing for clear category framing.
 - Right side: CTA button + dismiss ×.
@@ -266,6 +268,7 @@ Static HTML for the 404 path. Same banner. Friendly message. Both this and the S
 ### `relay/src/banner.ts` (new)
 
 Renders the banner HTML snippet given a campaign. Exports `renderBanner(campaign, opts): string`. Used by:
+
 - The static-page render path (substituted into landing/advertise/error before sending).
 - Injected into the SPA's `index.html` at the top of `<body>` before serving for `/r/:id`.
 
@@ -343,14 +346,17 @@ CREATE TABLE IF NOT EXISTS clicks (
 function recordImpression(campaignId: string, ipHash: string) {
   const day = todayUtc();
   const inserted = db.run(
-    'INSERT OR IGNORE INTO impression_dedup (campaign_id, ip_hash, day) VALUES (?, ?, ?)',
-    campaignId, ipHash, day
+    "INSERT OR IGNORE INTO impression_dedup (campaign_id, ip_hash, day) VALUES (?, ?, ?)",
+    campaignId,
+    ipHash,
+    day
   );
   if (inserted.changes > 0) {
     db.run(
       `INSERT INTO impressions (campaign_id, day, count) VALUES (?, ?, 1)
        ON CONFLICT (campaign_id, day) DO UPDATE SET count = count + 1`,
-      campaignId, day
+      campaignId,
+      day
     );
   }
 }
@@ -365,23 +371,23 @@ Daily sweeper: `DELETE FROM impression_dedup WHERE day < date('now', '-1 day')`.
 New routes:
 
 ```typescript
-app.get('/', renderLandingWithBanner);
-app.get('/advertise', renderAdvertiseWithBanner);
-app.get('/api/sponsors/current', () => json(getActiveCampaign()));
-app.post('/api/sponsors/impression', async (c) => {
+app.get("/", renderLandingWithBanner);
+app.get("/advertise", renderAdvertiseWithBanner);
+app.get("/api/sponsors/current", () => json(getActiveCampaign()));
+app.post("/api/sponsors/impression", async (c) => {
   const { c: campaignId } = await c.req.json();
   if (!isValidCampaignId(campaignId)) return c.body(null, 204);
   recordImpression(campaignId, ipHashFor(c));
   return c.body(null, 204);
 });
-app.get('/go/:campaignId', (c) => {
-  const campaign = getCampaign(c.req.param('campaignId'));
-  if (!campaign) return c.redirect('/', 302);
+app.get("/go/:campaignId", (c) => {
+  const campaign = getCampaign(c.req.param("campaignId"));
+  if (!campaign) return c.redirect("/", 302);
   recordClick(campaign.id);
   return c.redirect(campaign.clickUrl, 302);
 });
-app.get('/api/admin/stats', (c) => {
-  const tok = c.req.header('authorization');
+app.get("/api/admin/stats", (c) => {
+  const tok = c.req.header("authorization");
   if (tok !== `Bearer ${ADMIN_TOKEN}`) return c.body(null, 401);
   return c.json(getStats());
 });
@@ -451,14 +457,14 @@ async function subscribeFeedback({ relay, id, signal }) {
       const envelope = await openSseAndAwaitMessage({ relay, id, signal });
       return envelope; // success
     } catch (e) {
-      if (e.code === 'SESSION_GONE') throw e; // 404 — terminal
+      if (e.code === "SESSION_GONE") throw e; // 404 — terminal
       if (signal.aborted) throw e;
       const delay = delays[Math.min(attempt, delays.length - 1)];
       await sleep(delay);
       attempt++;
     }
   }
-  throw new Error('aborted');
+  throw new Error("aborted");
 }
 ```
 
@@ -504,18 +510,18 @@ If browser was on a different network when it submitted while CLI was still in b
 
 ## Error handling
 
-| Failure | Behavior |
-|---------|----------|
-| SQLite write fails (disk full, locked) | Log to journald; don't fail the request. Impression/click is dropped silently. Page still serves. |
-| `sponsors.json` malformed | Boot fails fast with a clear error. systemd restarts; admin investigates. House ad acts as fallback only if file is valid but `active` is null. |
-| `/api/sponsors/impression` missing or bad campaign id | 204, no-op. Don't 4xx — beacons are best-effort. |
-| `/go/:bad` | 302 redirect to `/`. Don't expose which campaigns exist. |
-| `/api/admin/stats` no/wrong token | 401, no body. |
-| nginx CSP blocks something | Will surface in browser DevTools. Pragmatic CSP allows inline so this is rare. |
-| Banner dismiss button missing JS | Banner still renders; just non-dismissible for that one user. Functional degradation. |
-| Browser doesn't support `sendBeacon` | Falls back to a `fetch('/api/sponsors/impression', {method:'POST', keepalive: true, body: ...})`. Modern browsers all support `sendBeacon`. |
-| SPA decrypt fails (wrong key, corrupted CT, ANY crypto error) | Show friendly error page. Log raw error to `console.error`. Never expose the raw error string in user-visible text. |
-| CLI's SSE reconnect hits the 30s cap and keeps failing for >24h | Session has expired on relay anyway; relay returns 404; CLI sees `SESSION_GONE` and exits 1 with "review session expired without submit." |
+| Failure                                                         | Behavior                                                                                                                                        |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| SQLite write fails (disk full, locked)                          | Log to journald; don't fail the request. Impression/click is dropped silently. Page still serves.                                               |
+| `sponsors.json` malformed                                       | Boot fails fast with a clear error. systemd restarts; admin investigates. House ad acts as fallback only if file is valid but `active` is null. |
+| `/api/sponsors/impression` missing or bad campaign id           | 204, no-op. Don't 4xx — beacons are best-effort.                                                                                                |
+| `/go/:bad`                                                      | 302 redirect to `/`. Don't expose which campaigns exist.                                                                                        |
+| `/api/admin/stats` no/wrong token                               | 401, no body.                                                                                                                                   |
+| nginx CSP blocks something                                      | Will surface in browser DevTools. Pragmatic CSP allows inline so this is rare.                                                                  |
+| Banner dismiss button missing JS                                | Banner still renders; just non-dismissible for that one user. Functional degradation.                                                           |
+| Browser doesn't support `sendBeacon`                            | Falls back to a `fetch('/api/sponsors/impression', {method:'POST', keepalive: true, body: ...})`. Modern browsers all support `sendBeacon`.     |
+| SPA decrypt fails (wrong key, corrupted CT, ANY crypto error)   | Show friendly error page. Log raw error to `console.error`. Never expose the raw error string in user-visible text.                             |
+| CLI's SSE reconnect hits the 30s cap and keeps failing for >24h | Session has expired on relay anyway; relay returns 404; CLI sees `SESSION_GONE` and exits 1 with "review session expired without submit."       |
 
 ## Testing approach
 
@@ -562,22 +568,23 @@ The same loop we ran tonight, with assertions:
 
 ## Security considerations
 
-| Threat | Mitigation |
-|--------|-----------|
-| Operator reads document content via banner injection | Banner is server-rendered HTML, not JS that touches the DOM. Even if it were, it cannot decrypt — key is in URL fragment, never sent. Same threat model as today. |
-| Banner third-party origin compromised → XSS | No third-party origins. All banner content originates from this relay. CSP blocks third-party scripts. |
-| IP retention via analytics | IP is hashed with a daily-rotating salt and never stored. Dedup table is purged daily. The hash leaks only the property "was this IP seen for this campaign today" — and even that is wiped within 24h. |
-| Beacon abuse: someone scripts millions of impressions | Existing relay rate limit (60 req/min per IP) applies. Dedup ensures one logical impression per (IP, day, campaign) anyway. Worst-case noise is bounded. |
-| Click-fraud / inflating CTR | Same nginx + dedup story. Click counts aren't deduped by IP — could be a later refinement. For launch, the order-of-magnitude is what matters. |
-| `MDRP_ADMIN_TOKEN` leakage | Token lives in systemd unit env, readable only by root + mdrp. Never logged. Bearer auth resists timing attacks via constant-time comparison. |
+| Threat                                                           | Mitigation                                                                                                                                                                                                                                                  |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Operator reads document content via banner injection             | Banner is server-rendered HTML, not JS that touches the DOM. Even if it were, it cannot decrypt — key is in URL fragment, never sent. Same threat model as today.                                                                                           |
+| Banner third-party origin compromised → XSS                      | No third-party origins. All banner content originates from this relay. CSP blocks third-party scripts.                                                                                                                                                      |
+| IP retention via analytics                                       | IP is hashed with a daily-rotating salt and never stored. Dedup table is purged daily. The hash leaks only the property "was this IP seen for this campaign today" — and even that is wiped within 24h.                                                     |
+| Beacon abuse: someone scripts millions of impressions            | Existing relay rate limit (60 req/min per IP) applies. Dedup ensures one logical impression per (IP, day, campaign) anyway. Worst-case noise is bounded.                                                                                                    |
+| Click-fraud / inflating CTR                                      | Same nginx + dedup story. Click counts aren't deduped by IP — could be a later refinement. For launch, the order-of-magnitude is what matters.                                                                                                              |
+| `MDRP_ADMIN_TOKEN` leakage                                       | Token lives in systemd unit env, readable only by root + mdrp. Never logged. Bearer auth resists timing attacks via constant-time comparison.                                                                                                               |
 | CSP unsafe-inline allows attacker JS injection if there's an XSS | This is the cost of pragmatic CSP. Mitigation: there is no user-input-driven HTML rendering anywhere; banner content is from a trusted local file; SPA content is from a static build artifact. Risk surface for stored XSS is ~zero. Tighten in Phase 1.5. |
-| Referer leaking session URL | `Referrer-Policy: no-referrer` set globally. Even if a markdown image points off-origin, only path-without-fragment is at risk — and we set no-referrer to kill even that. |
+| Referer leaking session URL                                      | `Referrer-Policy: no-referrer` set globally. Even if a markdown image points off-origin, only path-without-fragment is at risk — and we set no-referrer to kill even that.                                                                                  |
 
 ## Implementation order & file inventory
 
 Phase tracking is in the next section. Quick file inventory:
 
 **New files:**
+
 - `relay/static/landing.html` (replace existing dark)
 - `relay/static/advertise.html` (new)
 - `relay/static/error.html` (new)
@@ -587,6 +594,7 @@ Phase tracking is in the next section. Quick file inventory:
 - `relay/src/analytics.ts` (new)
 
 **Modified files:**
+
 - `relay/src/app.ts` (add routes, banner injection)
 - `relay/src/index.ts` (open SQLite, read env, schedule sweep)
 - `relay/Caddyfile.sample` and the production nginx config — add security headers
@@ -600,20 +608,21 @@ Phase tracking is in the next section. Quick file inventory:
 - `skills/md-review-plus.md` — note about silent reconnect (no behavior change for callers)
 
 **Removed:**
+
 - Inline sponsor card from old landing.html (replaced by banner)
 
 ## Phase tracking
 
-| Phase | Description | Status | Tested | Pushed |
-|-------|-------------|--------|--------|--------|
-| 1 | SQLite analytics module + sponsors config: `relay/src/analytics.ts`, `relay/src/sponsors.ts`, `sponsors.json`, schema migrations, IP hashing. Unit tests. | done | yes | yes |
-| 2 | Banner renderer + new endpoints: `relay/src/banner.ts`, `/api/sponsors/current`, `/api/sponsors/impression`, `/go/:id`, `/api/admin/stats`. Bearer-token guard. Integration tests. | done | yes | yes |
-| 3 | New light-themed static pages: `landing.html` (replace), `advertise.html`, `error.html`. Banner injected via template marker. | done | yes | yes |
-| 4 | Relay route wiring + systemd env vars: `app.ts` extensions, `index.ts` SQLite open + sweep, MDRP_ADMIN_TOKEN + MDRP_IP_HASH_SALT, data dir, ReadWritePaths. | done | yes | yes |
-| 5 | Nginx security headers: HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, CSP (pragmatic). Smoke-tested via curl. | done | yes | yes |
-| 6 | SPA light theme + mobile section layout fix + slim sticky top bar + scroll-margin-top + friendly decrypt-failure UI. | done | yes | yes |
-| 7 | CLI silent SSE reconnect with backoff (1s/2s/5s/10s/30s). Vitest coverage for retry → success and retry → SESSION_GONE. | done | yes | yes |
-| 8 | Deploy + E2E verification: rebuild SPA, scp/git pull on OVH, restart service, run agent-browser smoke through all surfaces (landing, /advertise, /r/:id, error page, mobile viewport). | done | yes | yes |
+| Phase | Description                                                                                                                                                                            | Status | Tested | Pushed |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ | ------ |
+| 1     | SQLite analytics module + sponsors config: `relay/src/analytics.ts`, `relay/src/sponsors.ts`, `sponsors.json`, schema migrations, IP hashing. Unit tests.                              | done   | yes    | yes    |
+| 2     | Banner renderer + new endpoints: `relay/src/banner.ts`, `/api/sponsors/current`, `/api/sponsors/impression`, `/go/:id`, `/api/admin/stats`. Bearer-token guard. Integration tests.     | done   | yes    | yes    |
+| 3     | New light-themed static pages: `landing.html` (replace), `advertise.html`, `error.html`. Banner injected via template marker.                                                          | done   | yes    | yes    |
+| 4     | Relay route wiring + systemd env vars: `app.ts` extensions, `index.ts` SQLite open + sweep, MDRP_ADMIN_TOKEN + MDRP_IP_HASH_SALT, data dir, ReadWritePaths.                            | done   | yes    | yes    |
+| 5     | Nginx security headers: HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, CSP (pragmatic). Smoke-tested via curl.                                    | done   | yes    | yes    |
+| 6     | SPA light theme + mobile section layout fix + slim sticky top bar + scroll-margin-top + friendly decrypt-failure UI.                                                                   | done   | yes    | yes    |
+| 7     | CLI silent SSE reconnect with backoff (1s/2s/5s/10s/30s). Vitest coverage for retry → success and retry → SESSION_GONE.                                                                | done   | yes    | yes    |
+| 8     | Deploy + E2E verification: rebuild SPA, scp/git pull on OVH, restart service, run agent-browser smoke through all surfaces (landing, /advertise, /r/:id, error page, mobile viewport). | done   | yes    | yes    |
 
 ## Open items for later passes (out of scope here)
 

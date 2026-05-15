@@ -41,7 +41,7 @@ The CLI prints a block like this to stdout:
 ```
 
 **IMPORTANT:** As soon as the URL appears, surface it to the user
-*prominently* — do not wait for the CLI to finish. Display the full
+_prominently_ — do not wait for the CLI to finish. Display the full
 URL on its own line in your reply, with a clear call to action like
 "Open this on your phone or laptop to review." The user may be on a
 different device than the CLI host, so they need the link clearly

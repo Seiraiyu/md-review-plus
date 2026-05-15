@@ -24,10 +24,7 @@ function tmpSponsors(): string {
 
 function tmpStaticRoot(): string {
   const dir = mkdtempSync(join(tmpdir(), 'mdrp-static-'));
-  writeFileSync(
-    join(dir, 'landing.html'),
-    '<html><body><!-- BANNER --><h1>Hi</h1></body></html>',
-  );
+  writeFileSync(join(dir, 'landing.html'), '<html><body><!-- BANNER --><h1>Hi</h1></body></html>');
   writeFileSync(join(dir, 'advertise.html'), '<html><body><!-- BANNER --></body></html>');
   writeFileSync(
     join(dir, 'error.html'),

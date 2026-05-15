@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Review link expired — md-review-plus</title>
     <meta name="robots" content="noindex" />
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23ffffff'/><text x='50%25' y='54%25' font-family='ui-monospace,SFMono-Regular,Menlo,monospace' font-size='38' font-weight='700' text-anchor='middle' dominant-baseline='middle' fill='%23008f73'>m</text></svg>" />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><rect width='64' height='64' rx='12' fill='%23ffffff'/><text x='50%25' y='54%25' font-family='ui-monospace,SFMono-Regular,Menlo,monospace' font-size='38' font-weight='700' text-anchor='middle' dominant-baseline='middle' fill='%23008f73'>m</text></svg>"
+    />
     <style>
       :root {
         --bg: #fafbfc;
@@ -17,54 +21,162 @@
         --bg-elev: #ffffff;
       }
       .mdrp-banner {
-        position: sticky; top: 0; z-index: 100;
-        background: #0b0d12; color: #fff;
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: #0b0d12;
+        color: #fff;
         border-bottom: 1px solid #2a2f3a;
       }
       .mdrp-banner-inner {
-        max-width: 1200px; margin: 0 auto; padding: 12px 24px;
-        display: flex; align-items: center; gap: 12px;
-        font-size: 14px; line-height: 1.4; flex-wrap: wrap;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 12px 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        line-height: 1.4;
+        flex-wrap: wrap;
       }
-      .mdrp-banner-label { font-size: 11px; letter-spacing: 0.12em; color: #9aa1ad; font-weight: 700; text-transform: uppercase; }
-      .mdrp-banner-name { font-weight: 700; color: #fff; }
-      .mdrp-banner-sep { color: #5b6577; }
-      .mdrp-banner-tagline { color: #c0c5cf; }
-      .mdrp-banner-spacer { flex: 1; min-width: 8px; }
+      .mdrp-banner-label {
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: #9aa1ad;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .mdrp-banner-name {
+        font-weight: 700;
+        color: #fff;
+      }
+      .mdrp-banner-sep {
+        color: #5b6577;
+      }
+      .mdrp-banner-tagline {
+        color: #c0c5cf;
+      }
+      .mdrp-banner-spacer {
+        flex: 1;
+        min-width: 8px;
+      }
       .mdrp-banner-cta {
-        display: inline-block; padding: 6px 14px; border-radius: 5px;
-        background: #00d4aa; color: #001813; font-weight: 600; text-decoration: none;
+        display: inline-block;
+        padding: 6px 14px;
+        border-radius: 5px;
+        background: #00d4aa;
+        color: #001813;
+        font-weight: 600;
+        text-decoration: none;
       }
-      .mdrp-banner-cta:hover { background: #00b894; text-decoration: none; }
+      .mdrp-banner-cta:hover {
+        background: #00b894;
+        text-decoration: none;
+      }
       .mdrp-banner-dismiss {
-        background: transparent; border: 0; color: #9aa1ad; cursor: pointer;
-        font-size: 20px; line-height: 1; padding: 4px 8px; margin-left: 4px;
+        background: transparent;
+        border: 0;
+        color: #9aa1ad;
+        cursor: pointer;
+        font-size: 20px;
+        line-height: 1;
+        padding: 4px 8px;
+        margin-left: 4px;
       }
-      .mdrp-banner-dismiss:hover { color: #fff; }
+      .mdrp-banner-dismiss:hover {
+        color: #fff;
+      }
       @media (max-width: 720px) {
-        .mdrp-banner-inner { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 16px; }
-        .mdrp-banner-spacer { display: none; }
-        .mdrp-banner-cta { align-self: stretch; text-align: center; }
+        .mdrp-banner-inner {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 6px;
+          padding: 10px 16px;
+        }
+        .mdrp-banner-spacer {
+          display: none;
+        }
+        .mdrp-banner-cta {
+          align-self: stretch;
+          text-align: center;
+        }
       }
-      * { box-sizing: border-box; }
-      body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif; }
-      .wrap { max-width: 520px; margin: 0 auto; padding: 64px 24px; text-align: center; }
-      h1 { font-size: 28px; margin: 0 0 16px; letter-spacing: -0.01em; }
-      p { color: var(--fg-dim); }
-      pre { background: var(--bg-elev); border: 1px solid var(--border); padding: 14px 18px; border-radius: 6px; text-align: left; font-family: ui-monospace,Menlo,Consolas,monospace; overflow-x: auto; font-size: 14px; }
-      .ctas { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
-      .btn { padding: 10px 18px; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-block; }
-      .btn-primary { background: var(--accent); color: #fff; }
-      .btn-primary:hover { background: var(--accent-dim); }
-      .btn-ghost { background: var(--bg-elev); color: var(--fg); border: 1px solid var(--border); }
-      .btn-ghost:hover { background: #f0f3f7; }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+      }
+      .wrap {
+        max-width: 520px;
+        margin: 0 auto;
+        padding: 64px 24px;
+        text-align: center;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 16px;
+        letter-spacing: -0.01em;
+      }
+      p {
+        color: var(--fg-dim);
+      }
+      pre {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        padding: 14px 18px;
+        border-radius: 6px;
+        text-align: left;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        overflow-x: auto;
+        font-size: 14px;
+      }
+      .ctas {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 24px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-block;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-primary:hover {
+        background: var(--accent-dim);
+      }
+      .btn-ghost {
+        background: var(--bg-elev);
+        color: var(--fg);
+        border: 1px solid var(--border);
+      }
+      .btn-ghost:hover {
+        background: #f0f3f7;
+      }
     </style>
   </head>
   <body>
     <!-- BANNER -->
     <main class="wrap">
       <h1>Review link expired or invalid</h1>
-      <p>This link is one-time-use and expires after 24 hours. Ask the agent to generate a new one:</p>
+      <p>
+        This link is one-time-use and expires after 24 hours. Ask the agent to generate a new one:
+      </p>
       <pre>md-review-plus FILE --review --remote</pre>
       <div class="ctas">
         <a class="btn btn-primary" href="/">&larr; Home</a>

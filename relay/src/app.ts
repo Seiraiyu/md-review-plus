@@ -43,9 +43,7 @@ async function readStatic(
 ): Promise<string | null> {
   const fs = await import('node:fs/promises');
   const path = await import('node:path');
-  const roots = [opts.relayStaticRoot, opts.staticAssetsRoot].filter(
-    (r): r is string => !!r,
-  );
+  const roots = [opts.relayStaticRoot, opts.staticAssetsRoot].filter((r): r is string => !!r);
   for (const root of roots) {
     try {
       return await fs.readFile(path.join(root, file), 'utf8');

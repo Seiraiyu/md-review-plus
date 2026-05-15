@@ -4,8 +4,8 @@ import type { Context } from 'hono';
 import { serve } from '@hono/node-server';
 import type { ServerType } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { readFile, readdir } from 'fs/promises';
-import { basename, join, relative, resolve, dirname } from 'path';
+import { readFile, readdir, realpath } from 'fs/promises';
+import { basename, join, relative, resolve, dirname, sep } from 'path';
 import { fileURLToPath } from 'url';
 import { watch } from 'chokidar';
 import type { Dirent } from 'fs';
@@ -113,6 +113,11 @@ async function scanMarkdownFiles(dir: string, baseDir: string = dir): Promise<Ma
 
     const skipPatterns = ['node_modules', 'dist'];
     if (skipPatterns.includes(entry.name)) {
+      continue;
+    }
+
+    // Skip symlinks to avoid escaping baseDir or following loops
+    if (entry.isSymbolicLink()) {
       continue;
     }
 
@@ -230,20 +235,23 @@ app.get('/api/markdown/:path{.+}', async (c: Context) => {
   const requestedPath = c.req.param('path');
 
   try {
-    // Security check: prevent path traversal
+    // Security check: prevent path traversal (including via symlinks and sibling-prefix collisions)
     const baseDir = MARKDOWN_FILE_PATH ? dirname(MARKDOWN_FILE_PATH) : BASE_DIR;
     const fullPath = resolve(baseDir, requestedPath);
-    if (!fullPath.startsWith(resolve(baseDir))) {
-      return c.json(
-        {
-          error: 'Invalid file path',
-        },
-        403,
-      );
+    const realBase = await realpath(resolve(baseDir));
+    let realFull: string;
+    try {
+      realFull = await realpath(fullPath);
+    } catch {
+      return c.json({ error: 'Invalid file path' }, 403);
+    }
+    const baseWithSep = realBase.endsWith(sep) ? realBase : realBase + sep;
+    if (realFull !== realBase && !realFull.startsWith(baseWithSep)) {
+      return c.json({ error: 'Invalid file path' }, 403);
     }
 
-    const data = await readFile(fullPath, 'utf-8');
-    const filename = basename(fullPath);
+    const data = await readFile(realFull, 'utf-8');
+    const filename = basename(realFull);
     return c.json({ content: data, filename, path: requestedPath });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
@@ -396,6 +404,7 @@ const watcher = watch(watchTarget, {
   ignored: MARKDOWN_FILE_PATH ? undefined : /(^|[/\\])\..|(node_modules|dist)/,
   persistent: true,
   ignoreInitial: true,
+  followSymlinks: false,
   awaitWriteFinish: {
     stabilityThreshold: 100,
     pollInterval: 100,

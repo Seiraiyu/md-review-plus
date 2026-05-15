@@ -45,8 +45,7 @@ export function RemoteModeApp({ id, keyBase64Url }: RemoteModeAppProps) {
           Review link expired or invalid
         </h1>
         <p style={{ color: 'var(--text-secondary)' }}>
-          This link is one-time-use and expires after 24 hours. Ask the agent to generate a new
-          one:
+          This link is one-time-use and expires after 24 hours. Ask the agent to generate a new one:
         </p>
         <pre
           style={{

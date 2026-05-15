@@ -40,17 +40,17 @@ const args = mri(process.argv.slice(2), {
     port: '3030',
     open: true,
   },
-  boolean: ['help', 'version', 'open', 'review', 'skills', 'global', 'remote'],
+  boolean: ['help', 'version', 'open', 'review', 'skills', 'global', 'remote', 'force'],
   string: ['relay'],
 });
 
 // Install skills subcommand
 if (args._[0] === 'install' && args.skills) {
-  await installSkills(args.global);
+  await installSkills(args.global, args.force);
   process.exit(0);
 }
 
-async function installSkills(global) {
+async function installSkills(global, force) {
   const fs = await import('node:fs');
   const path = await import('node:path');
   const os = await import('node:os');
@@ -71,6 +71,11 @@ async function installSkills(global) {
   }
 
   const dest = path.join(baseDir, 'SKILL.md');
+  if (fs.existsSync(dest) && !force) {
+    console.log(`Skill already installed at ${dest}`);
+    console.log('Use --force to overwrite.');
+    return;
+  }
   fs.copyFileSync(skillSource, dest);
   console.log(`Installed skill to ${dest}`);
 }
@@ -95,6 +100,7 @@ Options:
   --relay <url>          Override relay URL (env: MDRP_RELAY)
   --no-open              Do not open browser automatically
   --global               Install skills globally (~/.claude/skills/)
+  --force                Overwrite existing skill file (use with install --skills)
   -h, --help             Show this help message
   -v, --version          Show version number
 

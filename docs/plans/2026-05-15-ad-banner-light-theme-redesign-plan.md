@@ -8,64 +8,64 @@
 
 ## Status
 
-| Task | Description | Status | Tested | Pushed |
-|------|-------------|--------|--------|--------|
-| 1 | Add `MDRP_ADMIN_TOKEN` + `MDRP_IP_HASH_SALT` + `MDRP_DATA_DIR` to relay config | pending | no | no |
-| 2 | Write analytics test: record + retrieve impression | pending | no | no |
-| 3 | Create `relay/src/analytics.ts` with `Analytics` class (SQLite, schemas) | pending | no | no |
-| 4 | Write analytics test: dedup by ip_hash same day | pending | no | no |
-| 5 | Implement dedup in `recordImpression` | pending | no | no |
-| 6 | Write analytics test: click counting + getStats rollups (7d/30d/allTime) | pending | no | no |
-| 7 | Implement `recordClick` and `getStats` | pending | no | no |
-| 8 | Write analytics test: sweepDedup removes only stale days | pending | no | no |
-| 9 | Implement `sweepDedup` | pending | no | no |
-| 10 | Commit: analytics module | pending | no | no |
-| 11 | Create `relay/sponsors.json` with kisenon, subaya, house | pending | no | no |
-| 12 | Write sponsors test: loads campaigns, exposes active + house fallback | pending | no | no |
-| 13 | Create `relay/src/sponsors.ts` with `Sponsors` loader | pending | no | no |
-| 14 | Write banner renderer test: emits HTML with campaign fields + beacon | pending | no | no |
-| 15 | Create `relay/src/banner.ts` with `renderBanner()` | pending | no | no |
-| 16 | Commit: sponsors + banner renderer | pending | no | no |
-| 17 | Write app test: `/api/sponsors/current` returns active campaign metadata | pending | no | no |
-| 18 | Wire `/api/sponsors/current` in `app.ts` | pending | no | no |
-| 19 | Write app test: `/api/sponsors/impression` records, returns 204 | pending | no | no |
-| 20 | Wire `/api/sponsors/impression` in `app.ts` | pending | no | no |
-| 21 | Write app test: `/go/:campaignId` 302s + records click; unknown → 302 to / | pending | no | no |
-| 22 | Wire `/go/:campaignId` in `app.ts` | pending | no | no |
-| 23 | Write app test: `/api/admin/stats` 401 without token, 200 with token | pending | no | no |
-| 24 | Wire `/api/admin/stats` in `app.ts` (bearer auth, constant-time compare) | pending | no | no |
-| 25 | Commit: new endpoints | pending | no | no |
-| 26 | Create `relay/static/landing.html` (light-themed, banner marker) | pending | no | no |
-| 27 | Create `relay/static/advertise.html` (light-themed, banner marker) | pending | no | no |
-| 28 | Create `relay/static/error.html` (light-themed, banner marker, friendly copy) | pending | no | no |
-| 29 | Write app test: `GET /` injects banner snippet into landing.html | pending | no | no |
-| 30 | Wire `GET /` and `GET /advertise` in `app.ts` (template substitution) | pending | no | no |
-| 31 | Write app test: `GET /r/:id` for missing session returns `error.html` with banner | pending | no | no |
-| 32 | Update existing `/r/:id` route: 404 → error.html, found → inject banner into SPA index.html | pending | no | no |
-| 33 | Commit: static pages + route wiring | pending | no | no |
-| 34 | Update `relay/src/index.ts`: open SQLite, schedule daily dedup sweep, wire Analytics + Sponsors into createApp | pending | no | no |
-| 35 | Commit: relay startup wiring | pending | no | no |
-| 36 | Generate prod tokens, update systemd unit on OVH (admin token, salt, data dir, ReadWritePaths) | pending | no | no |
-| 37 | Update production nginx config: add 6 security headers | pending | no | no |
-| 38 | Smoke-test production: headers present, `/`, `/advertise`, `/api/sponsors/current`, `/go/kisenon-launch`, `/api/admin/stats` (401 + 200) | pending | no | no |
-| 39 | Commit: deploy notes (Caddyfile.sample, DEPLOY.md, nginx config copy in repo) | pending | no | no |
-| 40 | SPA palette: rewrite `src/index.css` `:root` to light tokens, delete `.dark-mode` block, remove ThemeToggle component refs | pending | no | no |
-| 41 | Write SectionReview test: at 720px viewport, heading is full width and buttons are below content | pending | no | no |
-| 42 | Update `src/styles/section-review.css` with mobile breakpoint (stacked layout) | pending | no | no |
-| 43 | Write SectionNav test: at 720px viewport, top bar is two compact rows | pending | no | no |
-| 44 | Update `src/styles/section-nav.css` + `src/styles/review-layout.css` with mobile breakpoint | pending | no | no |
-| 45 | Add `scroll-margin-top` rule to `.section-review` for sticky offset | pending | no | no |
-| 46 | Write RemoteModeApp test: error state renders friendly copy + CLI command, never raw crypto error | pending | no | no |
-| 47 | Update `src/components/RemoteModeApp.tsx` error branch with redesigned UI | pending | no | no |
-| 48 | Commit: SPA light theme + mobile fixes + error UI | pending | no | no |
-| 49 | Write remoteSubscribe test: reconnects with backoff after transient drop, succeeds | pending | no | no |
-| 50 | Write remoteSubscribe test: 404 from relay → throws `SESSION_GONE`, no reconnect | pending | no | no |
-| 51 | Implement reconnect wrapper in `src/cli/remoteSubscribe.ts` | pending | no | no |
-| 52 | Update `bin/md-review-plus.js` error handling to distinguish SESSION_GONE vs other failures | pending | no | no |
-| 53 | Commit: CLI reconnect with backoff | pending | no | no |
-| 54 | Build SPA, scp to OVH, restart relay; verify SPA index.html banner injection works | pending | no | no |
-| 55 | E2E via agent-browser: banner present + clickable + dismissible, mobile layout fixed, error page styled, full review loop still passes | pending | no | no |
-| 56 | Update phase tracking in design doc, commit | pending | no | no |
+| Task | Description                                                                                                                              | Status  | Tested | Pushed |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------- | ------- | ------ | ------ |
+| 1    | Add `MDRP_ADMIN_TOKEN` + `MDRP_IP_HASH_SALT` + `MDRP_DATA_DIR` to relay config                                                           | pending | no     | no     |
+| 2    | Write analytics test: record + retrieve impression                                                                                       | pending | no     | no     |
+| 3    | Create `relay/src/analytics.ts` with `Analytics` class (SQLite, schemas)                                                                 | pending | no     | no     |
+| 4    | Write analytics test: dedup by ip_hash same day                                                                                          | pending | no     | no     |
+| 5    | Implement dedup in `recordImpression`                                                                                                    | pending | no     | no     |
+| 6    | Write analytics test: click counting + getStats rollups (7d/30d/allTime)                                                                 | pending | no     | no     |
+| 7    | Implement `recordClick` and `getStats`                                                                                                   | pending | no     | no     |
+| 8    | Write analytics test: sweepDedup removes only stale days                                                                                 | pending | no     | no     |
+| 9    | Implement `sweepDedup`                                                                                                                   | pending | no     | no     |
+| 10   | Commit: analytics module                                                                                                                 | pending | no     | no     |
+| 11   | Create `relay/sponsors.json` with kisenon, subaya, house                                                                                 | pending | no     | no     |
+| 12   | Write sponsors test: loads campaigns, exposes active + house fallback                                                                    | pending | no     | no     |
+| 13   | Create `relay/src/sponsors.ts` with `Sponsors` loader                                                                                    | pending | no     | no     |
+| 14   | Write banner renderer test: emits HTML with campaign fields + beacon                                                                     | pending | no     | no     |
+| 15   | Create `relay/src/banner.ts` with `renderBanner()`                                                                                       | pending | no     | no     |
+| 16   | Commit: sponsors + banner renderer                                                                                                       | pending | no     | no     |
+| 17   | Write app test: `/api/sponsors/current` returns active campaign metadata                                                                 | pending | no     | no     |
+| 18   | Wire `/api/sponsors/current` in `app.ts`                                                                                                 | pending | no     | no     |
+| 19   | Write app test: `/api/sponsors/impression` records, returns 204                                                                          | pending | no     | no     |
+| 20   | Wire `/api/sponsors/impression` in `app.ts`                                                                                              | pending | no     | no     |
+| 21   | Write app test: `/go/:campaignId` 302s + records click; unknown → 302 to /                                                               | pending | no     | no     |
+| 22   | Wire `/go/:campaignId` in `app.ts`                                                                                                       | pending | no     | no     |
+| 23   | Write app test: `/api/admin/stats` 401 without token, 200 with token                                                                     | pending | no     | no     |
+| 24   | Wire `/api/admin/stats` in `app.ts` (bearer auth, constant-time compare)                                                                 | pending | no     | no     |
+| 25   | Commit: new endpoints                                                                                                                    | pending | no     | no     |
+| 26   | Create `relay/static/landing.html` (light-themed, banner marker)                                                                         | pending | no     | no     |
+| 27   | Create `relay/static/advertise.html` (light-themed, banner marker)                                                                       | pending | no     | no     |
+| 28   | Create `relay/static/error.html` (light-themed, banner marker, friendly copy)                                                            | pending | no     | no     |
+| 29   | Write app test: `GET /` injects banner snippet into landing.html                                                                         | pending | no     | no     |
+| 30   | Wire `GET /` and `GET /advertise` in `app.ts` (template substitution)                                                                    | pending | no     | no     |
+| 31   | Write app test: `GET /r/:id` for missing session returns `error.html` with banner                                                        | pending | no     | no     |
+| 32   | Update existing `/r/:id` route: 404 → error.html, found → inject banner into SPA index.html                                              | pending | no     | no     |
+| 33   | Commit: static pages + route wiring                                                                                                      | pending | no     | no     |
+| 34   | Update `relay/src/index.ts`: open SQLite, schedule daily dedup sweep, wire Analytics + Sponsors into createApp                           | pending | no     | no     |
+| 35   | Commit: relay startup wiring                                                                                                             | pending | no     | no     |
+| 36   | Generate prod tokens, update systemd unit on OVH (admin token, salt, data dir, ReadWritePaths)                                           | pending | no     | no     |
+| 37   | Update production nginx config: add 6 security headers                                                                                   | pending | no     | no     |
+| 38   | Smoke-test production: headers present, `/`, `/advertise`, `/api/sponsors/current`, `/go/kisenon-launch`, `/api/admin/stats` (401 + 200) | pending | no     | no     |
+| 39   | Commit: deploy notes (Caddyfile.sample, DEPLOY.md, nginx config copy in repo)                                                            | pending | no     | no     |
+| 40   | SPA palette: rewrite `src/index.css` `:root` to light tokens, delete `.dark-mode` block, remove ThemeToggle component refs               | pending | no     | no     |
+| 41   | Write SectionReview test: at 720px viewport, heading is full width and buttons are below content                                         | pending | no     | no     |
+| 42   | Update `src/styles/section-review.css` with mobile breakpoint (stacked layout)                                                           | pending | no     | no     |
+| 43   | Write SectionNav test: at 720px viewport, top bar is two compact rows                                                                    | pending | no     | no     |
+| 44   | Update `src/styles/section-nav.css` + `src/styles/review-layout.css` with mobile breakpoint                                              | pending | no     | no     |
+| 45   | Add `scroll-margin-top` rule to `.section-review` for sticky offset                                                                      | pending | no     | no     |
+| 46   | Write RemoteModeApp test: error state renders friendly copy + CLI command, never raw crypto error                                        | pending | no     | no     |
+| 47   | Update `src/components/RemoteModeApp.tsx` error branch with redesigned UI                                                                | pending | no     | no     |
+| 48   | Commit: SPA light theme + mobile fixes + error UI                                                                                        | pending | no     | no     |
+| 49   | Write remoteSubscribe test: reconnects with backoff after transient drop, succeeds                                                       | pending | no     | no     |
+| 50   | Write remoteSubscribe test: 404 from relay → throws `SESSION_GONE`, no reconnect                                                         | pending | no     | no     |
+| 51   | Implement reconnect wrapper in `src/cli/remoteSubscribe.ts`                                                                              | pending | no     | no     |
+| 52   | Update `bin/md-review-plus.js` error handling to distinguish SESSION_GONE vs other failures                                              | pending | no     | no     |
+| 53   | Commit: CLI reconnect with backoff                                                                                                       | pending | no     | no     |
+| 54   | Build SPA, scp to OVH, restart relay; verify SPA index.html banner injection works                                                       | pending | no     | no     |
+| 55   | E2E via agent-browser: banner present + clickable + dismissible, mobile layout fixed, error page styled, full review loop still passes   | pending | no     | no     |
+| 56   | Update phase tracking in design doc, commit                                                                                              | pending | no     | no     |
 
 ---
 
@@ -82,6 +82,7 @@
 ## Task 1: Extend relay config
 
 **Files:**
+
 - Modify: `relay/src/config.ts`
 
 **Step 1:** Add three string-typed env reads.
@@ -115,15 +116,15 @@ function str(name: string, fallback: string): string {
 
 export function loadConfig(): RelayConfig {
   return {
-    port: num('MDRP_PORT', 8080),
-    ttlMs: num('MDRP_TTL_MS', 24 * 60 * 60 * 1000),
-    maxSessions: num('MDRP_MAX_SESSIONS', 1000),
-    rateLimitPerHour: num('MDRP_RATE_LIMIT_PER_HOUR', 30),
-    maxBodyBytes: num('MDRP_MAX_BODY_BYTES', 1_048_576),
-    maxFeedbackBytes: num('MDRP_MAX_FEEDBACK_BYTES', 262_144),
+    port: num("MDRP_PORT", 8080),
+    ttlMs: num("MDRP_TTL_MS", 24 * 60 * 60 * 1000),
+    maxSessions: num("MDRP_MAX_SESSIONS", 1000),
+    rateLimitPerHour: num("MDRP_RATE_LIMIT_PER_HOUR", 30),
+    maxBodyBytes: num("MDRP_MAX_BODY_BYTES", 1_048_576),
+    maxFeedbackBytes: num("MDRP_MAX_FEEDBACK_BYTES", 262_144),
     adminToken: process.env.MDRP_ADMIN_TOKEN ?? null,
-    ipHashSalt: str('MDRP_IP_HASH_SALT', 'dev-salt-do-not-use-in-prod'),
-    dataDir: str('MDRP_DATA_DIR', './data'),
+    ipHashSalt: str("MDRP_IP_HASH_SALT", "dev-salt-do-not-use-in-prod"),
+    dataDir: str("MDRP_DATA_DIR", "./data")
   };
 }
 ```
@@ -135,31 +136,34 @@ export function loadConfig(): RelayConfig {
 ## Task 2: Write analytics impression test (red)
 
 **Files:**
+
 - Create: `relay/test/analytics.test.ts`
 
 **Step 1:** Write the file:
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { Analytics } from '../src/analytics';
-import { rmSync } from 'node:fs';
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { Analytics } from "../src/analytics";
+import { rmSync } from "node:fs";
 
 let a: Analytics;
-const TMP = '/tmp/mdrp-analytics-test.db';
+const TMP = "/tmp/mdrp-analytics-test.db";
 
 beforeEach(() => {
-  try { rmSync(TMP); } catch {}
-  a = new Analytics({ dbPath: TMP, salt: 'test-salt' });
+  try {
+    rmSync(TMP);
+  } catch {}
+  a = new Analytics({ dbPath: TMP, salt: "test-salt" });
 });
 
 afterEach(() => {
   a.close();
 });
 
-describe('Analytics.recordImpression', () => {
-  it('increments today\'s count for a new (campaign, ip) pair', () => {
-    a.recordImpression('kisenon-launch', '1.2.3.4');
-    const stats = a.getStats('kisenon-launch');
+describe("Analytics.recordImpression", () => {
+  it("increments today's count for a new (campaign, ip) pair", () => {
+    a.recordImpression("kisenon-launch", "1.2.3.4");
+    const stats = a.getStats("kisenon-launch");
     expect(stats.allTime.impressions).toBe(1);
     expect(stats.last7d.impressions).toBe(1);
   });
@@ -174,15 +178,16 @@ Expected: FAIL — `Cannot find module '../src/analytics'`.
 ## Task 3: Create Analytics module
 
 **Files:**
+
 - Create: `relay/src/analytics.ts`
 
 **Step 1:** Write the file:
 
 ```typescript
-import { Database } from 'bun:sqlite';
-import { createHash } from 'node:crypto';
-import { mkdirSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { Database } from "bun:sqlite";
+import { createHash } from "node:crypto";
+import { mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 
 export interface AnalyticsOptions {
   dbPath: string;
@@ -238,10 +243,12 @@ export class Analytics {
   private now: () => number;
 
   constructor(opts: AnalyticsOptions) {
-    if (opts.dbPath !== ':memory:') {
+    if (opts.dbPath !== ":memory:") {
       const dir = dirname(opts.dbPath);
-      if (dir && dir !== '.') {
-        try { mkdirSync(dir, { recursive: true }); } catch {}
+      if (dir && dir !== ".") {
+        try {
+          mkdirSync(dir, { recursive: true });
+        } catch {}
       }
     }
     this.db = new Database(opts.dbPath);
@@ -251,9 +258,9 @@ export class Analytics {
   }
 
   ipHash(ip: string, day: string): string {
-    return createHash('sha256')
+    return createHash("sha256")
       .update(`${ip}:${day}:${this.salt}`)
-      .digest('hex')
+      .digest("hex")
       .slice(0, 32);
   }
 
@@ -261,14 +268,14 @@ export class Analytics {
     const day = todayUtc(this.now());
     const hash = this.ipHash(ip, day);
     const inserted = this.db.run(
-      'INSERT OR IGNORE INTO impression_dedup (campaign_id, ip_hash, day) VALUES (?, ?, ?)',
-      [campaignId, hash, day],
+      "INSERT OR IGNORE INTO impression_dedup (campaign_id, ip_hash, day) VALUES (?, ?, ?)",
+      [campaignId, hash, day]
     );
     if (inserted.changes > 0) {
       this.db.run(
         `INSERT INTO impressions (campaign_id, day, count) VALUES (?, ?, 1)
          ON CONFLICT (campaign_id, day) DO UPDATE SET count = count + 1`,
-        [campaignId, day],
+        [campaignId, day]
       );
     }
   }
@@ -278,37 +285,54 @@ export class Analytics {
     this.db.run(
       `INSERT INTO clicks (campaign_id, day, count) VALUES (?, ?, 1)
        ON CONFLICT (campaign_id, day) DO UPDATE SET count = count + 1`,
-      [campaignId, day],
+      [campaignId, day]
     );
   }
 
-  private sumWhere(table: 'impressions' | 'clicks', campaignId: string, sinceDay?: string): number {
-    const where = sinceDay
-      ? 'campaign_id = ? AND day >= ?'
-      : 'campaign_id = ?';
+  private sumWhere(
+    table: "impressions" | "clicks",
+    campaignId: string,
+    sinceDay?: string
+  ): number {
+    const where = sinceDay ? "campaign_id = ? AND day >= ?" : "campaign_id = ?";
     const params: string[] = sinceDay ? [campaignId, sinceDay] : [campaignId];
-    const row = this.db.query(`SELECT COALESCE(SUM(count),0) AS n FROM ${table} WHERE ${where}`).get(...params) as { n: number };
+    const row = this.db
+      .query(`SELECT COALESCE(SUM(count),0) AS n FROM ${table} WHERE ${where}`)
+      .get(...params) as { n: number };
     return row?.n ?? 0;
   }
 
   getStats(campaignId: string): CampaignStatsRollup {
     const now = this.now();
-    const d7 = daysAgoUtc(now, 6);  // inclusive 7-day window
+    const d7 = daysAgoUtc(now, 6); // inclusive 7-day window
     const d30 = daysAgoUtc(now, 29);
     const mk = (imps: number, clk: number): CampaignStats => ({
       impressions: imps,
       clicks: clk,
-      ctr: imps > 0 ? Math.round((clk / imps) * 10_000) / 10_000 : 0,
+      ctr: imps > 0 ? Math.round((clk / imps) * 10_000) / 10_000 : 0
     });
     return {
-      last7d: mk(this.sumWhere('impressions', campaignId, d7), this.sumWhere('clicks', campaignId, d7)),
-      last30d: mk(this.sumWhere('impressions', campaignId, d30), this.sumWhere('clicks', campaignId, d30)),
-      allTime: mk(this.sumWhere('impressions', campaignId), this.sumWhere('clicks', campaignId)),
+      last7d: mk(
+        this.sumWhere("impressions", campaignId, d7),
+        this.sumWhere("clicks", campaignId, d7)
+      ),
+      last30d: mk(
+        this.sumWhere("impressions", campaignId, d30),
+        this.sumWhere("clicks", campaignId, d30)
+      ),
+      allTime: mk(
+        this.sumWhere("impressions", campaignId),
+        this.sumWhere("clicks", campaignId)
+      )
     };
   }
 
   getAllStats(): Record<string, CampaignStatsRollup> {
-    const rows = this.db.query('SELECT DISTINCT campaign_id FROM impressions UNION SELECT DISTINCT campaign_id FROM clicks').all() as { campaign_id: string }[];
+    const rows = this.db
+      .query(
+        "SELECT DISTINCT campaign_id FROM impressions UNION SELECT DISTINCT campaign_id FROM clicks"
+      )
+      .all() as { campaign_id: string }[];
     const out: Record<string, CampaignStatsRollup> = {};
     for (const r of rows) out[r.campaign_id] = this.getStats(r.campaign_id);
     return out;
@@ -316,7 +340,9 @@ export class Analytics {
 
   sweepDedup(): number {
     const cutoff = daysAgoUtc(this.now(), 1);
-    const r = this.db.run('DELETE FROM impression_dedup WHERE day < ?', [cutoff]);
+    const r = this.db.run("DELETE FROM impression_dedup WHERE day < ?", [
+      cutoff
+    ]);
     return r.changes;
   }
 
@@ -334,23 +360,24 @@ Expected: PASS — 1 test.
 ## Task 4: Write dedup test (red)
 
 **Files:**
+
 - Modify: `relay/test/analytics.test.ts`
 
 **Step 1:** Append inside `describe('Analytics.recordImpression', ...)`:
 
 ```typescript
-  it('dedups same ip + same campaign + same day', () => {
-    a.recordImpression('kisenon-launch', '1.2.3.4');
-    a.recordImpression('kisenon-launch', '1.2.3.4');
-    a.recordImpression('kisenon-launch', '1.2.3.4');
-    expect(a.getStats('kisenon-launch').allTime.impressions).toBe(1);
-  });
+it("dedups same ip + same campaign + same day", () => {
+  a.recordImpression("kisenon-launch", "1.2.3.4");
+  a.recordImpression("kisenon-launch", "1.2.3.4");
+  a.recordImpression("kisenon-launch", "1.2.3.4");
+  expect(a.getStats("kisenon-launch").allTime.impressions).toBe(1);
+});
 
-  it('counts distinct ips as separate impressions', () => {
-    a.recordImpression('kisenon-launch', '1.2.3.4');
-    a.recordImpression('kisenon-launch', '5.6.7.8');
-    expect(a.getStats('kisenon-launch').allTime.impressions).toBe(2);
-  });
+it("counts distinct ips as separate impressions", () => {
+  a.recordImpression("kisenon-launch", "1.2.3.4");
+  a.recordImpression("kisenon-launch", "5.6.7.8");
+  expect(a.getStats("kisenon-launch").allTime.impressions).toBe(2);
+});
 ```
 
 **Step 2:** Run `cd relay && bun test analytics.test.ts`.
@@ -367,24 +394,25 @@ Expected: PASS — 3 tests. (Dedup is already implemented in Task 3 since IT WAS
 ## Task 6: Write click + getStats test
 
 **Files:**
+
 - Modify: `relay/test/analytics.test.ts`
 
 **Step 1:** Append a new describe block to the file:
 
 ```typescript
-describe('Analytics.recordClick + getStats', () => {
-  it('counts clicks and computes ctr', () => {
-    a.recordImpression('kisenon-launch', '1.2.3.4');
-    a.recordImpression('kisenon-launch', '5.6.7.8');
-    a.recordClick('kisenon-launch');
-    const s = a.getStats('kisenon-launch').allTime;
+describe("Analytics.recordClick + getStats", () => {
+  it("counts clicks and computes ctr", () => {
+    a.recordImpression("kisenon-launch", "1.2.3.4");
+    a.recordImpression("kisenon-launch", "5.6.7.8");
+    a.recordClick("kisenon-launch");
+    const s = a.getStats("kisenon-launch").allTime;
     expect(s.impressions).toBe(2);
     expect(s.clicks).toBe(1);
     expect(s.ctr).toBe(0.5);
   });
 
-  it('returns zero ctr when no impressions', () => {
-    expect(a.getStats('nobody').allTime.ctr).toBe(0);
+  it("returns zero ctr when no impressions", () => {
+    expect(a.getStats("nobody").allTime.ctr).toBe(0);
   });
 });
 ```
@@ -397,22 +425,23 @@ Expected: PASS — 5 tests.
 ## Task 7: Write sweep test
 
 **Files:**
+
 - Modify: `relay/test/analytics.test.ts`
 
 **Step 1:** Append:
 
 ```typescript
-describe('Analytics.sweepDedup', () => {
-  it('removes only stale dedup rows; today and yesterday are kept', () => {
-    let t = Date.parse('2026-05-15T12:00:00Z');
-    const a2 = new Analytics({ dbPath: ':memory:', salt: 's', now: () => t });
-    a2.recordImpression('camp', '1.1.1.1');                // day = 2026-05-15
-    t = Date.parse('2026-05-14T12:00:00Z');
-    a2.recordImpression('camp', '2.2.2.2');                // day = 2026-05-14
-    t = Date.parse('2026-05-10T12:00:00Z');
-    a2.recordImpression('camp', '3.3.3.3');                // day = 2026-05-10
-    t = Date.parse('2026-05-15T12:00:00Z');
-    const removed = a2.sweepDedup();                       // keep days >= 2026-05-14
+describe("Analytics.sweepDedup", () => {
+  it("removes only stale dedup rows; today and yesterday are kept", () => {
+    let t = Date.parse("2026-05-15T12:00:00Z");
+    const a2 = new Analytics({ dbPath: ":memory:", salt: "s", now: () => t });
+    a2.recordImpression("camp", "1.1.1.1"); // day = 2026-05-15
+    t = Date.parse("2026-05-14T12:00:00Z");
+    a2.recordImpression("camp", "2.2.2.2"); // day = 2026-05-14
+    t = Date.parse("2026-05-10T12:00:00Z");
+    a2.recordImpression("camp", "3.3.3.3"); // day = 2026-05-10
+    t = Date.parse("2026-05-15T12:00:00Z");
+    const removed = a2.sweepDedup(); // keep days >= 2026-05-14
     expect(removed).toBe(1);
     a2.close();
   });
@@ -448,6 +477,7 @@ git log --oneline -3
 ## Task 9: Create sponsors.json
 
 **Files:**
+
 - Create: `relay/sponsors.json`
 
 **Step 1:** Write the file:
@@ -480,53 +510,60 @@ git log --oneline -3
 ## Task 10: Write sponsors loader test
 
 **Files:**
+
 - Create: `relay/test/sponsors.test.ts`
 
 **Step 1:**
 
 ```typescript
-import { describe, it, expect } from 'bun:test';
-import { Sponsors } from '../src/sponsors';
-import { writeFileSync, mkdtempSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { describe, it, expect } from "bun:test";
+import { Sponsors } from "../src/sponsors";
+import { writeFileSync, mkdtempSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 function tmpJson(obj: unknown): string {
-  const dir = mkdtempSync(join(tmpdir(), 'mdrp-sponsors-'));
-  const path = join(dir, 'sponsors.json');
+  const dir = mkdtempSync(join(tmpdir(), "mdrp-sponsors-"));
+  const path = join(dir, "sponsors.json");
   writeFileSync(path, JSON.stringify(obj));
   return path;
 }
 
-describe('Sponsors', () => {
-  it('returns the active campaign when set', () => {
+describe("Sponsors", () => {
+  it("returns the active campaign when set", () => {
     const path = tmpJson({
-      active: 'k',
-      campaigns: { k: { name: 'K', tagline: 't', clickUrl: 'https://k' }, house: { name: 'H', tagline: 'h', clickUrl: '/advertise' } },
+      active: "k",
+      campaigns: {
+        k: { name: "K", tagline: "t", clickUrl: "https://k" },
+        house: { name: "H", tagline: "h", clickUrl: "/advertise" }
+      }
     });
     const s = new Sponsors(path);
     const c = s.getActive();
-    expect(c.id).toBe('k');
-    expect(c.name).toBe('K');
+    expect(c.id).toBe("k");
+    expect(c.name).toBe("K");
   });
 
-  it('returns house campaign when active is null', () => {
+  it("returns house campaign when active is null", () => {
     const path = tmpJson({
       active: null,
-      campaigns: { house: { name: 'H', tagline: 'h', clickUrl: '/advertise' } },
+      campaigns: { house: { name: "H", tagline: "h", clickUrl: "/advertise" } }
     });
     const s = new Sponsors(path);
-    expect(s.getActive().id).toBe('house');
+    expect(s.getActive().id).toBe("house");
   });
 
-  it('returns campaign by id', () => {
+  it("returns campaign by id", () => {
     const path = tmpJson({
-      active: 'k',
-      campaigns: { k: { name: 'K', tagline: 't', clickUrl: 'https://k' }, house: { name: 'H', tagline: 'h', clickUrl: '/advertise' } },
+      active: "k",
+      campaigns: {
+        k: { name: "K", tagline: "t", clickUrl: "https://k" },
+        house: { name: "H", tagline: "h", clickUrl: "/advertise" }
+      }
     });
     const s = new Sponsors(path);
-    expect(s.getById('k')?.name).toBe('K');
-    expect(s.getById('nope')).toBeUndefined();
+    expect(s.getById("k")?.name).toBe("K");
+    expect(s.getById("nope")).toBeUndefined();
   });
 });
 ```
@@ -539,12 +576,13 @@ Expected: FAIL — module not found.
 ## Task 11: Create Sponsors module
 
 **Files:**
+
 - Create: `relay/src/sponsors.ts`
 
 **Step 1:**
 
 ```typescript
-import { readFileSync, statSync } from 'node:fs';
+import { readFileSync, statSync } from "node:fs";
 
 export interface Campaign {
   id: string;
@@ -555,7 +593,10 @@ export interface Campaign {
 
 interface SponsorsFile {
   active: string | null;
-  campaigns: Record<string, { name: string; tagline: string; clickUrl: string }>;
+  campaigns: Record<
+    string,
+    { name: string; tagline: string; clickUrl: string }
+  >;
 }
 
 export class Sponsors {
@@ -569,7 +610,7 @@ export class Sponsors {
   private load(): SponsorsFile {
     const st = statSync(this.path);
     if (!this.cache || this.cache.mtimeMs !== st.mtimeMs) {
-      const raw = readFileSync(this.path, 'utf8');
+      const raw = readFileSync(this.path, "utf8");
       const data = JSON.parse(raw) as SponsorsFile;
       this.cache = { mtimeMs: st.mtimeMs, data };
     }
@@ -578,10 +619,10 @@ export class Sponsors {
 
   getActive(): Campaign {
     const f = this.load();
-    const id = f.active ?? 'house';
+    const id = f.active ?? "house";
     const c = f.campaigns[id] ?? f.campaigns.house;
     if (!c) throw new Error(`sponsors.json missing required 'house' campaign`);
-    return { id: f.active ?? 'house', ...c };
+    return { id: f.active ?? "house", ...c };
   }
 
   getById(id: string): Campaign | undefined {
@@ -599,28 +640,39 @@ export class Sponsors {
 ## Task 12: Write banner renderer test
 
 **Files:**
+
 - Create: `relay/test/banner.test.ts`
 
 **Step 1:**
 
 ```typescript
-import { describe, it, expect } from 'bun:test';
-import { renderBanner } from '../src/banner';
+import { describe, it, expect } from "bun:test";
+import { renderBanner } from "../src/banner";
 
-describe('renderBanner', () => {
-  it('emits HTML containing campaign name, tagline, click path, and impression beacon', () => {
-    const html = renderBanner({ id: 'kisenon-launch', name: 'Kisenon', tagline: 'Sleeps well', clickUrl: 'https://kisenon.com' });
-    expect(html).toContain('Kisenon');
-    expect(html).toContain('Sleeps well');
-    expect(html).toContain('/go/kisenon-launch');
-    expect(html).toContain('navigator.sendBeacon');
+describe("renderBanner", () => {
+  it("emits HTML containing campaign name, tagline, click path, and impression beacon", () => {
+    const html = renderBanner({
+      id: "kisenon-launch",
+      name: "Kisenon",
+      tagline: "Sleeps well",
+      clickUrl: "https://kisenon.com"
+    });
+    expect(html).toContain("Kisenon");
+    expect(html).toContain("Sleeps well");
+    expect(html).toContain("/go/kisenon-launch");
+    expect(html).toContain("navigator.sendBeacon");
     expect(html).toContain('"c":"kisenon-launch"');
   });
 
-  it('escapes HTML in campaign fields', () => {
-    const html = renderBanner({ id: 'x', name: '<script>evil</script>', tagline: '"hi"', clickUrl: 'https://x' });
-    expect(html).not.toContain('<script>evil</script>');
-    expect(html).toContain('&lt;script&gt;');
+  it("escapes HTML in campaign fields", () => {
+    const html = renderBanner({
+      id: "x",
+      name: "<script>evil</script>",
+      tagline: '"hi"',
+      clickUrl: "https://x"
+    });
+    expect(html).not.toContain("<script>evil</script>");
+    expect(html).toContain("&lt;script&gt;");
   });
 });
 ```
@@ -632,20 +684,21 @@ describe('renderBanner', () => {
 ## Task 13: Create banner renderer
 
 **Files:**
+
 - Create: `relay/src/banner.ts`
 
 **Step 1:**
 
 ```typescript
-import type { Campaign } from './sponsors';
+import type { Campaign } from "./sponsors";
 
 function esc(s: string): string {
   return s
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 export function renderBanner(c: Campaign): string {
@@ -653,7 +706,7 @@ export function renderBanner(c: Campaign): string {
   const name = esc(c.name);
   const tagline = esc(c.tagline);
   // CTA label: "Visit" for house, otherwise something campaign-flavored.
-  const ctaLabel = c.id === 'house' ? 'Advertise here →' : `Visit ${name} →`;
+  const ctaLabel = c.id === "house" ? "Advertise here →" : `Visit ${name} →`;
   return `
 <aside class="mdrp-banner" aria-label="Sponsored content" data-campaign="${id}">
   <div class="mdrp-banner-inner">
@@ -719,29 +772,33 @@ git log --oneline -3
 ## Task 15: Write `/api/sponsors/current` test
 
 **Files:**
+
 - Create: `relay/test/app.sponsors.test.ts`
 
 **Step 1:**
 
 ```typescript
-import { describe, it, expect, beforeEach, afterEach } from 'bun:test';
-import { createApp } from '../src/app';
-import { Sponsors } from '../src/sponsors';
-import { Analytics } from '../src/analytics';
-import { writeFileSync, mkdtempSync } from 'node:fs';
-import { join } from 'node:path';
-import { tmpdir } from 'node:os';
+import { describe, it, expect, beforeEach, afterEach } from "bun:test";
+import { createApp } from "../src/app";
+import { Sponsors } from "../src/sponsors";
+import { Analytics } from "../src/analytics";
+import { writeFileSync, mkdtempSync } from "node:fs";
+import { join } from "node:path";
+import { tmpdir } from "node:os";
 
 function tmpSponsors(): string {
-  const dir = mkdtempSync(join(tmpdir(), 'mdrp-sp-'));
-  const path = join(dir, 'sponsors.json');
-  writeFileSync(path, JSON.stringify({
-    active: 'k',
-    campaigns: {
-      k: { name: 'K', tagline: 't', clickUrl: 'https://k' },
-      house: { name: 'H', tagline: 'h', clickUrl: '/advertise' },
-    },
-  }));
+  const dir = mkdtempSync(join(tmpdir(), "mdrp-sp-"));
+  const path = join(dir, "sponsors.json");
+  writeFileSync(
+    path,
+    JSON.stringify({
+      active: "k",
+      campaigns: {
+        k: { name: "K", tagline: "t", clickUrl: "https://k" },
+        house: { name: "H", tagline: "h", clickUrl: "/advertise" }
+      }
+    })
+  );
   return path;
 }
 
@@ -750,19 +807,31 @@ let analytics: Analytics;
 
 beforeEach(() => {
   sponsors = new Sponsors(tmpSponsors());
-  analytics = new Analytics({ dbPath: ':memory:', salt: 's' });
+  analytics = new Analytics({ dbPath: ":memory:", salt: "s" });
 });
 
 afterEach(() => {
   analytics.close();
 });
 
-describe('GET /api/sponsors/current', () => {
-  it('returns the active campaign', async () => {
-    const { app } = await createApp({ ttlMs: 60_000, maxSessions: 10, rateLimit: 100, sponsors, analytics, adminToken: 'tk' });
-    const r = await app.request('/api/sponsors/current');
+describe("GET /api/sponsors/current", () => {
+  it("returns the active campaign", async () => {
+    const { app } = await createApp({
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk"
+    });
+    const r = await app.request("/api/sponsors/current");
     expect(r.status).toBe(200);
-    expect(await r.json()).toEqual({ id: 'k', name: 'K', tagline: 't', clickUrl: 'https://k' });
+    expect(await r.json()).toEqual({
+      id: "k",
+      name: "K",
+      tagline: "t",
+      clickUrl: "https://k"
+    });
   });
 });
 ```
@@ -775,13 +844,14 @@ Expected: FAIL — `createApp` doesn't accept `sponsors`/`analytics`/`adminToken
 ## Task 16: Extend createApp signature and wire `/api/sponsors/current`
 
 **Files:**
+
 - Modify: `relay/src/app.ts`
 
 **Step 1:** Add to `AppOptions` interface (near top of file):
 
 ```typescript
-import type { Sponsors } from './sponsors';
-import type { Analytics } from './analytics';
+import type { Sponsors } from "./sponsors";
+import type { Analytics } from "./analytics";
 ```
 
 ```typescript
@@ -803,11 +873,11 @@ export interface AppOptions {
 **Step 2:** Inside `createApp` (after `app.get('/api/health', ...)` near line 50), add:
 
 ```typescript
-  if (opts.sponsors) {
-    app.get('/api/sponsors/current', (c) => {
-      return c.json(opts.sponsors!.getActive());
-    });
-  }
+if (opts.sponsors) {
+  app.get("/api/sponsors/current", (c) => {
+    return c.json(opts.sponsors!.getActive());
+  });
+}
 ```
 
 **Step 3:** Run `cd relay && bun test app.sponsors.test.ts`. Expected: PASS — 1 test.
@@ -817,32 +887,53 @@ export interface AppOptions {
 ## Task 17: Write `/api/sponsors/impression` test
 
 **Files:**
+
 - Modify: `relay/test/app.sponsors.test.ts`
 
 **Step 1:** Append:
 
 ```typescript
-describe('POST /api/sponsors/impression', () => {
-  it('returns 204 and increments count for the campaign', async () => {
-    const { app } = await createApp({ ttlMs: 60_000, maxSessions: 10, rateLimit: 100, sponsors, analytics, adminToken: 'tk' });
-    const r = await app.request('/api/sponsors/impression', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-forwarded-for': '1.2.3.4' },
-      body: JSON.stringify({ c: 'k' }),
+describe("POST /api/sponsors/impression", () => {
+  it("returns 204 and increments count for the campaign", async () => {
+    const { app } = await createApp({
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk"
+    });
+    const r = await app.request("/api/sponsors/impression", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "1.2.3.4"
+      },
+      body: JSON.stringify({ c: "k" })
     });
     expect(r.status).toBe(204);
-    expect(analytics.getStats('k').allTime.impressions).toBe(1);
+    expect(analytics.getStats("k").allTime.impressions).toBe(1);
   });
 
-  it('ignores unknown campaigns (still 204, no count)', async () => {
-    const { app } = await createApp({ ttlMs: 60_000, maxSessions: 10, rateLimit: 100, sponsors, analytics, adminToken: 'tk' });
-    const r = await app.request('/api/sponsors/impression', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-forwarded-for': '1.2.3.4' },
-      body: JSON.stringify({ c: 'unknown' }),
+  it("ignores unknown campaigns (still 204, no count)", async () => {
+    const { app } = await createApp({
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk"
+    });
+    const r = await app.request("/api/sponsors/impression", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "1.2.3.4"
+      },
+      body: JSON.stringify({ c: "unknown" })
     });
     expect(r.status).toBe(204);
-    expect(analytics.getStats('unknown').allTime.impressions).toBe(0);
+    expect(analytics.getStats("unknown").allTime.impressions).toBe(0);
   });
 });
 ```
@@ -854,26 +945,28 @@ describe('POST /api/sponsors/impression', () => {
 ## Task 18: Wire `/api/sponsors/impression`
 
 **Files:**
+
 - Modify: `relay/src/app.ts`
 
 **Step 1:** After the `/api/sponsors/current` block:
 
 ```typescript
-  if (opts.analytics && opts.sponsors) {
-    app.post('/api/sponsors/impression', async (c) => {
-      try {
-        const body = (await c.req.json()) as { c?: string };
-        const id = body.c;
-        if (id && opts.sponsors!.getById(id)) {
-          const ip = c.req.header('x-forwarded-for')?.split(',')[0].trim() ?? 'unknown';
-          opts.analytics!.recordImpression(id, ip);
-        }
-      } catch {
-        /* malformed → silent 204 */
+if (opts.analytics && opts.sponsors) {
+  app.post("/api/sponsors/impression", async (c) => {
+    try {
+      const body = (await c.req.json()) as { c?: string };
+      const id = body.c;
+      if (id && opts.sponsors!.getById(id)) {
+        const ip =
+          c.req.header("x-forwarded-for")?.split(",")[0].trim() ?? "unknown";
+        opts.analytics!.recordImpression(id, ip);
       }
-      return c.body(null, 204);
-    });
-  }
+    } catch {
+      /* malformed → silent 204 */
+    }
+    return c.body(null, 204);
+  });
+}
 ```
 
 **Step 2:** Run. Expected: PASS — 3 tests in `app.sponsors.test.ts`.
@@ -883,25 +976,43 @@ describe('POST /api/sponsors/impression', () => {
 ## Task 19: Write `/go/:campaignId` test
 
 **Files:**
+
 - Modify: `relay/test/app.sponsors.test.ts`
 
 **Step 1:** Append:
 
 ```typescript
-describe('GET /go/:campaignId', () => {
-  it('302s to campaign clickUrl and records click', async () => {
-    const { app } = await createApp({ ttlMs: 60_000, maxSessions: 10, rateLimit: 100, sponsors, analytics, adminToken: 'tk' });
-    const r = await app.request('/go/k', { method: 'GET', redirect: 'manual' });
+describe("GET /go/:campaignId", () => {
+  it("302s to campaign clickUrl and records click", async () => {
+    const { app } = await createApp({
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk"
+    });
+    const r = await app.request("/go/k", { method: "GET", redirect: "manual" });
     expect(r.status).toBe(302);
-    expect(r.headers.get('location')).toBe('https://k');
-    expect(analytics.getStats('k').allTime.clicks).toBe(1);
+    expect(r.headers.get("location")).toBe("https://k");
+    expect(analytics.getStats("k").allTime.clicks).toBe(1);
   });
 
-  it('unknown campaign 302s to /', async () => {
-    const { app } = await createApp({ ttlMs: 60_000, maxSessions: 10, rateLimit: 100, sponsors, analytics, adminToken: 'tk' });
-    const r = await app.request('/go/unknown', { method: 'GET', redirect: 'manual' });
+  it("unknown campaign 302s to /", async () => {
+    const { app } = await createApp({
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk"
+    });
+    const r = await app.request("/go/unknown", {
+      method: "GET",
+      redirect: "manual"
+    });
     expect(r.status).toBe(302);
-    expect(r.headers.get('location')).toBe('/');
+    expect(r.headers.get("location")).toBe("/");
   });
 });
 ```
@@ -913,21 +1024,22 @@ describe('GET /go/:campaignId', () => {
 ## Task 20: Wire `/go/:campaignId`
 
 **Files:**
+
 - Modify: `relay/src/app.ts`
 
 **Step 1:** After the `/api/sponsors/impression` block:
 
 ```typescript
-  if (opts.analytics && opts.sponsors) {
-    app.get('/go/:campaignId', (c) => {
-      const campaign = opts.sponsors!.getById(c.req.param('campaignId'));
-      if (!campaign) {
-        return c.redirect('/', 302);
-      }
-      opts.analytics!.recordClick(campaign.id);
-      return c.redirect(campaign.clickUrl, 302);
-    });
-  }
+if (opts.analytics && opts.sponsors) {
+  app.get("/go/:campaignId", (c) => {
+    const campaign = opts.sponsors!.getById(c.req.param("campaignId"));
+    if (!campaign) {
+      return c.redirect("/", 302);
+    }
+    opts.analytics!.recordClick(campaign.id);
+    return c.redirect(campaign.clickUrl, 302);
+  });
+}
 ```
 
 **Step 2:** Run. Expected: PASS — 5 tests.
@@ -937,31 +1049,60 @@ describe('GET /go/:campaignId', () => {
 ## Task 21: Write `/api/admin/stats` test
 
 **Files:**
+
 - Modify: `relay/test/app.sponsors.test.ts`
 
 **Step 1:** Append:
 
 ```typescript
-describe('GET /api/admin/stats', () => {
-  it('401 without token', async () => {
-    const { app } = await createApp({ ttlMs: 60_000, maxSessions: 10, rateLimit: 100, sponsors, analytics, adminToken: 'tk' });
-    const r = await app.request('/api/admin/stats');
+describe("GET /api/admin/stats", () => {
+  it("401 without token", async () => {
+    const { app } = await createApp({
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk"
+    });
+    const r = await app.request("/api/admin/stats");
     expect(r.status).toBe(401);
   });
 
-  it('401 with wrong token', async () => {
-    const { app } = await createApp({ ttlMs: 60_000, maxSessions: 10, rateLimit: 100, sponsors, analytics, adminToken: 'tk' });
-    const r = await app.request('/api/admin/stats', { headers: { authorization: 'Bearer wrong' } });
+  it("401 with wrong token", async () => {
+    const { app } = await createApp({
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk"
+    });
+    const r = await app.request("/api/admin/stats", {
+      headers: { authorization: "Bearer wrong" }
+    });
     expect(r.status).toBe(401);
   });
 
-  it('200 with correct token, returns campaign stats', async () => {
-    analytics.recordImpression('k', '1.2.3.4');
-    analytics.recordClick('k');
-    const { app } = await createApp({ ttlMs: 60_000, maxSessions: 10, rateLimit: 100, sponsors, analytics, adminToken: 'tk' });
-    const r = await app.request('/api/admin/stats', { headers: { authorization: 'Bearer tk' } });
+  it("200 with correct token, returns campaign stats", async () => {
+    analytics.recordImpression("k", "1.2.3.4");
+    analytics.recordClick("k");
+    const { app } = await createApp({
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk"
+    });
+    const r = await app.request("/api/admin/stats", {
+      headers: { authorization: "Bearer tk" }
+    });
     expect(r.status).toBe(200);
-    const body = await r.json() as Record<string, { allTime: { impressions: number; clicks: number } }>;
+    const body = (await r.json()) as Record<
+      string,
+      { allTime: { impressions: number; clicks: number } }
+    >;
     expect(body.k.allTime.impressions).toBe(1);
     expect(body.k.allTime.clicks).toBe(1);
   });
@@ -975,6 +1116,7 @@ describe('GET /api/admin/stats', () => {
 ## Task 22: Wire `/api/admin/stats`
 
 **Files:**
+
 - Modify: `relay/src/app.ts`
 
 **Step 1:** Add helper at the top of the file (just after imports):
@@ -991,16 +1133,16 @@ function timingSafeEqual(a: string, b: string): boolean {
 **Step 2:** After the `/go/:campaignId` block in `createApp`:
 
 ```typescript
-  if (opts.analytics && opts.adminToken) {
-    const token = opts.adminToken;
-    app.get('/api/admin/stats', (c) => {
-      const auth = c.req.header('authorization') ?? '';
-      if (!auth.startsWith('Bearer ')) return c.body(null, 401);
-      const tok = auth.slice(7);
-      if (!timingSafeEqual(tok, token)) return c.body(null, 401);
-      return c.json(opts.analytics!.getAllStats());
-    });
-  }
+if (opts.analytics && opts.adminToken) {
+  const token = opts.adminToken;
+  app.get("/api/admin/stats", (c) => {
+    const auth = c.req.header("authorization") ?? "";
+    if (!auth.startsWith("Bearer ")) return c.body(null, 401);
+    const tok = auth.slice(7);
+    if (!timingSafeEqual(tok, token)) return c.body(null, 401);
+    return c.json(opts.analytics!.getAllStats());
+  });
+}
 ```
 
 **Step 3:** Run. Expected: PASS — 8 tests in app.sponsors.test.ts.
@@ -1030,6 +1172,7 @@ git log --oneline -3
 ## Task 24: Create landing.html (light theme + banner marker)
 
 **Files:**
+
 - Modify: `relay/static/landing.html`
 
 **Step 1:** Replace the existing file. It is large (~250 lines). For brevity in this plan, the executing agent should:
@@ -1044,37 +1187,84 @@ git log --oneline -3
 
 ```css
 .mdrp-banner {
-  position: sticky; top: 0; z-index: 100;
-  background: #0b0d12; color: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #0b0d12;
+  color: #fff;
   border-bottom: 1px solid #2a2f3a;
 }
 .mdrp-banner-inner {
-  max-width: 1200px; margin: 0 auto; padding: 12px 24px;
-  display: flex; align-items: center; gap: 12px;
-  font-size: 14px; line-height: 1.4; flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.4;
+  flex-wrap: wrap;
 }
 .mdrp-banner-label {
-  font-size: 11px; letter-spacing: 0.12em; color: #9aa1ad;
-  font-weight: 700; text-transform: uppercase;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  color: #9aa1ad;
+  font-weight: 700;
+  text-transform: uppercase;
 }
-.mdrp-banner-name { font-weight: 700; color: #fff; }
-.mdrp-banner-sep { color: #5b6577; }
-.mdrp-banner-tagline { color: #c0c5cf; }
-.mdrp-banner-spacer { flex: 1; min-width: 8px; }
+.mdrp-banner-name {
+  font-weight: 700;
+  color: #fff;
+}
+.mdrp-banner-sep {
+  color: #5b6577;
+}
+.mdrp-banner-tagline {
+  color: #c0c5cf;
+}
+.mdrp-banner-spacer {
+  flex: 1;
+  min-width: 8px;
+}
 .mdrp-banner-cta {
-  display: inline-block; padding: 6px 14px; border-radius: 5px;
-  background: #00d4aa; color: #001813; font-weight: 600; text-decoration: none;
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 5px;
+  background: #00d4aa;
+  color: #001813;
+  font-weight: 600;
+  text-decoration: none;
 }
-.mdrp-banner-cta:hover { background: #00b894; }
+.mdrp-banner-cta:hover {
+  background: #00b894;
+}
 .mdrp-banner-dismiss {
-  background: transparent; border: 0; color: #9aa1ad; cursor: pointer;
-  font-size: 20px; line-height: 1; padding: 4px 8px; margin-left: 4px;
+  background: transparent;
+  border: 0;
+  color: #9aa1ad;
+  cursor: pointer;
+  font-size: 20px;
+  line-height: 1;
+  padding: 4px 8px;
+  margin-left: 4px;
 }
-.mdrp-banner-dismiss:hover { color: #fff; }
+.mdrp-banner-dismiss:hover {
+  color: #fff;
+}
 @media (max-width: 720px) {
-  .mdrp-banner-inner { flex-direction: column; align-items: flex-start; gap: 6px; padding: 10px 16px; }
-  .mdrp-banner-spacer { display: none; }
-  .mdrp-banner-cta { align-self: stretch; text-align: center; }
+  .mdrp-banner-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 10px 16px;
+  }
+  .mdrp-banner-spacer {
+    display: none;
+  }
+  .mdrp-banner-cta {
+    align-self: stretch;
+    text-align: center;
+  }
 }
 ```
 
@@ -1085,9 +1275,11 @@ git log --oneline -3
 ## Task 25: Create advertise.html
 
 **Files:**
+
 - Create: `relay/static/advertise.html`
 
 **Step 1:** Write a static HTML page matching the design doc § "advertise.html" content. Includes:
+
 - Same `<head>` block as landing.html (meta, OG, JSON-LD with `WebPage` schema), title `Sponsor md-review-plus`
 - `<!-- BANNER -->` marker
 - Body sections: hero, audience, format, why-different, pricing, past-sponsors (placeholder showing nothing), FAQ, contact (`mailto:sponsor@md-review-plus.ai`)
@@ -1100,6 +1292,7 @@ git log --oneline -3
 ## Task 26: Create error.html
 
 **Files:**
+
 - Create: `relay/static/error.html`
 
 **Step 1:** Write:
@@ -1115,17 +1308,72 @@ git log --oneline -3
     <style>
       /* Same theme tokens + .mdrp-banner styles as landing.html */
       /* (full block copied from landing.html for self-containment) */
-      :root { --bg: #fafbfc; --fg: #0b0d12; --fg-dim: #5b6577; --accent: #008f73; --border: #e1e5ec; --bg-elev: #fff; }
-      * { box-sizing: border-box; }
-      body { margin: 0; background: var(--bg); color: var(--fg); font: 16px/1.6 -apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif; }
-      .wrap { max-width: 480px; margin: 0 auto; padding: 64px 24px; text-align: center; }
-      h1 { font-size: 28px; margin: 0 0 16px; }
-      p { color: var(--fg-dim); }
-      pre { background: var(--bg-elev); border: 1px solid var(--border); padding: 14px 18px; border-radius: 6px; text-align: left; font-family: ui-monospace,Menlo,Consolas,monospace; overflow-x: auto; }
-      .ctas { display: flex; gap: 12px; justify-content: center; margin-top: 24px; flex-wrap: wrap; }
-      .btn { padding: 10px 18px; border-radius: 6px; font-weight: 600; text-decoration: none; }
-      .btn-primary { background: var(--accent); color: #fff; }
-      .btn-ghost { background: var(--bg-elev); color: var(--fg); border: 1px solid var(--border); }
+      :root {
+        --bg: #fafbfc;
+        --fg: #0b0d12;
+        --fg-dim: #5b6577;
+        --accent: #008f73;
+        --border: #e1e5ec;
+        --bg-elev: #fff;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        font:
+          16px/1.6 -apple-system,
+          BlinkMacSystemFont,
+          Segoe UI,
+          Roboto,
+          sans-serif;
+      }
+      .wrap {
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 64px 24px;
+        text-align: center;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 16px;
+      }
+      p {
+        color: var(--fg-dim);
+      }
+      pre {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        padding: 14px 18px;
+        border-radius: 6px;
+        text-align: left;
+        font-family: ui-monospace, Menlo, Consolas, monospace;
+        overflow-x: auto;
+      }
+      .ctas {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        margin-top: 24px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 10px 18px;
+        border-radius: 6px;
+        font-weight: 600;
+        text-decoration: none;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #fff;
+      }
+      .btn-ghost {
+        background: var(--bg-elev);
+        color: var(--fg);
+        border: 1px solid var(--border);
+      }
       /* Banner styles — copy from landing.html */
     </style>
   </head>
@@ -1133,7 +1381,10 @@ git log --oneline -3
     <!-- BANNER -->
     <main class="wrap">
       <h1>Review link expired or invalid</h1>
-      <p>This link is one-time-use and expires after 24 hours. Ask the agent to generate a new one:</p>
+      <p>
+        This link is one-time-use and expires after 24 hours. Ask the agent to
+        generate a new one:
+      </p>
       <pre>md-review-plus FILE --review --remote</pre>
       <div class="ctas">
         <a class="btn btn-primary" href="/">&larr; Home</a>
@@ -1151,30 +1402,45 @@ git log --oneline -3
 ## Task 27: Write template-injection test for `GET /`
 
 **Files:**
+
 - Modify: `relay/test/app.sponsors.test.ts`
 
 **Step 1:** Append:
 
 ```typescript
-import { writeFileSync } from 'node:fs';
+import { writeFileSync } from "node:fs";
 
-describe('GET / (landing)', () => {
-  it('injects banner snippet into landing.html', async () => {
+describe("GET / (landing)", () => {
+  it("injects banner snippet into landing.html", async () => {
     // Build a fake landing.html
-    const dir = mkdtempSync(join(tmpdir(), 'mdrp-static-'));
-    writeFileSync(join(dir, 'landing.html'), '<html><body><!-- BANNER --><h1>Hi</h1></body></html>');
-    writeFileSync(join(dir, 'advertise.html'), '<html><body><!-- BANNER --></body></html>');
-    writeFileSync(join(dir, 'error.html'), '<html><body><!-- BANNER --></body></html>');
+    const dir = mkdtempSync(join(tmpdir(), "mdrp-static-"));
+    writeFileSync(
+      join(dir, "landing.html"),
+      "<html><body><!-- BANNER --><h1>Hi</h1></body></html>"
+    );
+    writeFileSync(
+      join(dir, "advertise.html"),
+      "<html><body><!-- BANNER --></body></html>"
+    );
+    writeFileSync(
+      join(dir, "error.html"),
+      "<html><body><!-- BANNER --></body></html>"
+    );
     const { app } = await createApp({
-      ttlMs: 60_000, maxSessions: 10, rateLimit: 100,
-      sponsors, analytics, adminToken: 'tk', staticAssetsRoot: dir,
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk",
+      staticAssetsRoot: dir
     });
-    const r = await app.request('/');
+    const r = await app.request("/");
     expect(r.status).toBe(200);
     const html = await r.text();
-    expect(html).toContain('mdrp-banner');
-    expect(html).toContain('Hi');
-    expect(html).not.toContain('<!-- BANNER -->');
+    expect(html).toContain("mdrp-banner");
+    expect(html).toContain("Hi");
+    expect(html).not.toContain("<!-- BANNER -->");
   });
 });
 ```
@@ -1186,31 +1452,48 @@ describe('GET / (landing)', () => {
 ## Task 28: Wire `GET /` and `GET /advertise`
 
 **Files:**
+
 - Modify: `relay/src/app.ts`
 
 **Step 1:** Add helper above `createApp`:
 
 ```typescript
-async function serveStaticWithBanner(opts: AppOptions, file: 'landing.html' | 'advertise.html' | 'error.html', status = 200) {
+async function serveStaticWithBanner(
+  opts: AppOptions,
+  file: "landing.html" | "advertise.html" | "error.html",
+  status = 200
+) {
   if (!opts.staticAssetsRoot || !opts.sponsors) {
-    return new Response('relay running; no static html configured', { status: 200 });
+    return new Response("relay running; no static html configured", {
+      status: 200
+    });
   }
-  const fs = await import('node:fs/promises');
-  const path = await import('node:path');
-  const html = await fs.readFile(path.join(opts.staticAssetsRoot, file), 'utf8');
-  const bannerHtml = (await import('./banner')).renderBanner(opts.sponsors.getActive());
-  const injected = html.replace('<!-- BANNER -->', bannerHtml);
-  return new Response(injected, { status, headers: { 'Content-Type': 'text/html; charset=UTF-8' } });
+  const fs = await import("node:fs/promises");
+  const path = await import("node:path");
+  const html = await fs.readFile(
+    path.join(opts.staticAssetsRoot, file),
+    "utf8"
+  );
+  const bannerHtml = (await import("./banner")).renderBanner(
+    opts.sponsors.getActive()
+  );
+  const injected = html.replace("<!-- BANNER -->", bannerHtml);
+  return new Response(injected, {
+    status,
+    headers: { "Content-Type": "text/html; charset=UTF-8" }
+  });
 }
 ```
 
 **Step 2:** Inside `createApp`, replace the existing `app.get('/', ...)` block (added earlier) with:
 
 ```typescript
-  if (opts.staticAssetsRoot && opts.sponsors) {
-    app.get('/', async () => serveStaticWithBanner(opts, 'landing.html'));
-    app.get('/advertise', async () => serveStaticWithBanner(opts, 'advertise.html'));
-  }
+if (opts.staticAssetsRoot && opts.sponsors) {
+  app.get("/", async () => serveStaticWithBanner(opts, "landing.html"));
+  app.get("/advertise", async () =>
+    serveStaticWithBanner(opts, "advertise.html")
+  );
+}
 ```
 
 **Step 3:** Run. Expected: PASS — 9 tests.
@@ -1220,26 +1503,41 @@ async function serveStaticWithBanner(opts: AppOptions, file: 'landing.html' | 'a
 ## Task 29: Write error-page test for missing session
 
 **Files:**
+
 - Modify: `relay/test/app.sponsors.test.ts`
 
 **Step 1:** Append:
 
 ```typescript
-describe('GET /r/:id with missing session', () => {
-  it('returns 404 with error.html (banner included)', async () => {
-    const dir = mkdtempSync(join(tmpdir(), 'mdrp-static-'));
-    writeFileSync(join(dir, 'landing.html'), '<html><body><!-- BANNER --></body></html>');
-    writeFileSync(join(dir, 'advertise.html'), '<html><body><!-- BANNER --></body></html>');
-    writeFileSync(join(dir, 'error.html'), '<html><body><!-- BANNER --><h1>Review link expired</h1></body></html>');
+describe("GET /r/:id with missing session", () => {
+  it("returns 404 with error.html (banner included)", async () => {
+    const dir = mkdtempSync(join(tmpdir(), "mdrp-static-"));
+    writeFileSync(
+      join(dir, "landing.html"),
+      "<html><body><!-- BANNER --></body></html>"
+    );
+    writeFileSync(
+      join(dir, "advertise.html"),
+      "<html><body><!-- BANNER --></body></html>"
+    );
+    writeFileSync(
+      join(dir, "error.html"),
+      "<html><body><!-- BANNER --><h1>Review link expired</h1></body></html>"
+    );
     const { app } = await createApp({
-      ttlMs: 60_000, maxSessions: 10, rateLimit: 100,
-      sponsors, analytics, adminToken: 'tk', staticAssetsRoot: dir,
+      ttlMs: 60_000,
+      maxSessions: 10,
+      rateLimit: 100,
+      sponsors,
+      analytics,
+      adminToken: "tk",
+      staticAssetsRoot: dir
     });
-    const r = await app.request('/r/does-not-exist');
+    const r = await app.request("/r/does-not-exist");
     expect(r.status).toBe(404);
     const html = await r.text();
-    expect(html).toContain('Review link expired');
-    expect(html).toContain('mdrp-banner');
+    expect(html).toContain("Review link expired");
+    expect(html).toContain("mdrp-banner");
   });
 });
 ```
@@ -1251,37 +1549,43 @@ describe('GET /r/:id with missing session', () => {
 ## Task 30: Update `/r/:id` to serve error.html on miss + inject banner on hit
 
 **Files:**
+
 - Modify: `relay/src/app.ts`
 
 **Step 1:** Replace the existing `/r/:id` handler block with:
 
 ```typescript
-  app.get('/r/:id', async (c) => {
-    const id = c.req.param('id');
-    const session = store.get(id);
-    if (!session) {
-      if (opts.staticAssetsRoot && opts.sponsors) {
-        const res = await serveStaticWithBanner(opts, 'error.html', 404);
-        return res;
-      }
-      return c.text('not found', 404);
+app.get("/r/:id", async (c) => {
+  const id = c.req.param("id");
+  const session = store.get(id);
+  if (!session) {
+    if (opts.staticAssetsRoot && opts.sponsors) {
+      const res = await serveStaticWithBanner(opts, "error.html", 404);
+      return res;
     }
-    if (opts.staticHtml) {
-      return c.html(opts.staticHtml);
+    return c.text("not found", 404);
+  }
+  if (opts.staticHtml) {
+    return c.html(opts.staticHtml);
+  }
+  if (opts.staticAssetsRoot) {
+    const fs = await import("node:fs/promises");
+    const path = await import("node:path");
+    let html = await fs.readFile(
+      path.join(opts.staticAssetsRoot, "index.html"),
+      "utf8"
+    );
+    if (opts.sponsors) {
+      const bannerHtml = (await import("./banner")).renderBanner(
+        opts.sponsors.getActive()
+      );
+      // Inject banner as first child of <body>
+      html = html.replace(/<body([^>]*)>/i, `<body$1>${bannerHtml}`);
     }
-    if (opts.staticAssetsRoot) {
-      const fs = await import('node:fs/promises');
-      const path = await import('node:path');
-      let html = await fs.readFile(path.join(opts.staticAssetsRoot, 'index.html'), 'utf8');
-      if (opts.sponsors) {
-        const bannerHtml = (await import('./banner')).renderBanner(opts.sponsors.getActive());
-        // Inject banner as first child of <body>
-        html = html.replace(/<body([^>]*)>/i, `<body$1>${bannerHtml}`);
-      }
-      return c.html(html);
-    }
-    return c.text('relay running; no static html configured', 200);
-  });
+    return c.html(html);
+  }
+  return c.text("relay running; no static html configured", 200);
+});
 ```
 
 **Step 2:** Run `cd relay && bun test`. Expected: PASS — all relay tests including the new error-page test.
@@ -1311,20 +1615,24 @@ git log --oneline -3
 ## Task 32: Update relay/src/index.ts startup wiring
 
 **Files:**
+
 - Modify: `relay/src/index.ts`
 
 **Step 1:** Replace the file with:
 
 ```typescript
-import { createApp } from './app';
-import { loadConfig } from './config';
-import { Analytics } from './analytics';
-import { Sponsors } from './sponsors';
-import { join } from 'node:path';
+import { createApp } from "./app";
+import { loadConfig } from "./config";
+import { Analytics } from "./analytics";
+import { Sponsors } from "./sponsors";
+import { join } from "node:path";
 
 const cfg = loadConfig();
-const analytics = new Analytics({ dbPath: join(cfg.dataDir, 'analytics.db'), salt: cfg.ipHashSalt });
-const sponsors = new Sponsors(join(import.meta.dir, '..', 'sponsors.json'));
+const analytics = new Analytics({
+  dbPath: join(cfg.dataDir, "analytics.db"),
+  salt: cfg.ipHashSalt
+});
+const sponsors = new Sponsors(join(import.meta.dir, "..", "sponsors.json"));
 
 const { app, store } = await createApp({
   ttlMs: cfg.ttlMs,
@@ -1335,11 +1643,11 @@ const { app, store } = await createApp({
   staticAssetsRoot: process.env.MDRP_STATIC_ROOT,
   sponsors,
   analytics,
-  adminToken: cfg.adminToken,
+  adminToken: cfg.adminToken
 });
 
 const SWEEP_INTERVAL_MS = 60_000;
-let lastSweepDay = '';
+let lastSweepDay = "";
 setInterval(() => {
   const removed = store.sweep();
   if (removed > 0) console.log(`swept ${removed} expired sessions`);
@@ -1356,7 +1664,7 @@ console.log(`md-review-plus relay listening on :${cfg.port}`);
 export default {
   port: cfg.port,
   fetch: app.fetch,
-  idleTimeout: 255,
+  idleTimeout: 255
 };
 ```
 
@@ -1476,6 +1784,7 @@ Expected: all four curl calls match described outputs.
 ## Task 35: Add nginx security headers
 
 **Files:**
+
 - Modify: `/etc/nginx/sites-available/mdrp.conf` on OVH
 
 **Step 1:** Edit the nginx file to add inside the `server { listen 443 ssl ... }` block (NOT inside individual location blocks):
@@ -1509,6 +1818,7 @@ curl -sI https://md-review-plus.ai/ | grep -iE "(strict-transport|x-content-type
 ## Task 36: Mirror nginx config and Caddyfile.sample in repo
 
 **Files:**
+
 - Modify: `relay/Caddyfile.sample`
 - Create: `relay/nginx.conf.sample`
 
@@ -1564,6 +1874,7 @@ git log --oneline -3
 ## Task 38: SPA light theme — palette swap
 
 **Files:**
+
 - Modify: `src/index.css`
 
 **Step 1:** Replace the `:root` and `.dark-mode` blocks with a single light palette (keep the existing token names so component CSS keeps working):
@@ -1593,6 +1904,7 @@ git log --oneline -3
 ## Task 39: Remove dark-mode references and ThemeToggle
 
 **Files:**
+
 - Modify: `src/App.tsx` (remove ThemeToggle import + usage)
 - Delete: `src/components/ThemeToggle.tsx`
 - Delete: `src/components/ThemeToggle.test.tsx`
@@ -1607,6 +1919,7 @@ git log --oneline -3
 ## Task 40: Write mobile SectionReview test
 
 **Files:**
+
 - Modify: `src/components/SectionReview.test.tsx`
 
 **Step 1:** Add a viewport-sensitive test using `window.matchMedia` stub:
@@ -1632,6 +1945,7 @@ it('uses stacked layout at narrow viewport', () => {
 ## Task 41: Update SectionReview.tsx DOM order (only if Task 40 fails)
 
 **Files:**
+
 - Modify: `src/components/SectionReview.tsx`
 
 **Step 1:** Ensure JSX order is: heading → content → comment → actions. From the inspection done during planning, the current order is `header > heading + actions / content / comment`. We need to lift actions OUT of the header and put them at the bottom of the card:
@@ -1661,6 +1975,7 @@ return (
 ## Task 42: Update section-review.css for mobile layout
 
 **Files:**
+
 - Modify: `src/styles/section-review.css`
 
 **Step 1:** Update existing rules and add mobile breakpoint at the end of the file:
@@ -1694,9 +2009,16 @@ return (
 }
 
 @media (max-width: 720px) {
-  .section-review-header { padding: 0.6rem 0.8rem; }
-  .section-review-actions { padding: 0.6rem 0.8rem; gap: 0.4rem; }
-  .section-action-btn { font-size: 0.95rem; }
+  .section-review-header {
+    padding: 0.6rem 0.8rem;
+  }
+  .section-review-actions {
+    padding: 0.6rem 0.8rem;
+    gap: 0.4rem;
+  }
+  .section-action-btn {
+    font-size: 0.95rem;
+  }
 }
 ```
 
@@ -1707,6 +2029,7 @@ return (
 ## Task 43: Slim sticky top bar on mobile
 
 **Files:**
+
 - Modify: `src/styles/section-nav.css` AND `src/styles/review-layout.css`
 
 **Step 1:** Find the existing top-bar selectors in both files. Add mobile rules at the end:
@@ -1714,10 +2037,19 @@ return (
 ```css
 @media (max-width: 720px) {
   /* Replace selectors below with the real top-bar class names from the codebase */
-  .review-toolbar { padding: 8px 12px; }
-  .review-toolbar-row { gap: 8px; }
-  .review-toolbar .clear-all { font-size: 12px; font-weight: 400; }
-  .review-toolbar-hint { display: none; }
+  .review-toolbar {
+    padding: 8px 12px;
+  }
+  .review-toolbar-row {
+    gap: 8px;
+  }
+  .review-toolbar .clear-all {
+    font-size: 12px;
+    font-weight: 400;
+  }
+  .review-toolbar-hint {
+    display: none;
+  }
 }
 ```
 
@@ -1728,6 +2060,7 @@ return (
 ## Task 44: Write friendly-error-UI test
 
 **Files:**
+
 - Modify: `src/components/RemoteModeApp.test.tsx` (or create if missing)
 
 **Step 1:** Check if test exists. If not:
@@ -1765,26 +2098,79 @@ describe('RemoteModeApp error state', () => {
 ## Task 45: Update RemoteModeApp error branch
 
 **Files:**
+
 - Modify: `src/components/RemoteModeApp.tsx` (lines 41-46 approximately)
 
 **Step 1:** Replace the error branch:
 
 ```tsx
-if (session.state === 'error' || !session.content || !session.filename) {
+if (session.state === "error" || !session.content || !session.filename) {
   // Log raw error to console only; never show crypto details to the user.
-  if (session.error) console.error('decrypt error:', session.error);
+  if (session.error) console.error("decrypt error:", session.error);
   return (
-    <main style={{ maxWidth: 480, margin: '0 auto', padding: '64px 24px', textAlign: 'center' }}>
-      <h1 style={{ fontSize: 28, marginBottom: 16 }}>Review link expired or invalid</h1>
-      <p style={{ color: 'var(--text-secondary)' }}>
-        This link is one-time-use and expires after 24 hours. Ask the agent to generate a new one:
+    <main
+      style={{
+        maxWidth: 480,
+        margin: "0 auto",
+        padding: "64px 24px",
+        textAlign: "center"
+      }}
+    >
+      <h1 style={{ fontSize: 28, marginBottom: 16 }}>
+        Review link expired or invalid
+      </h1>
+      <p style={{ color: "var(--text-secondary)" }}>
+        This link is one-time-use and expires after 24 hours. Ask the agent to
+        generate a new one:
       </p>
-      <pre style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-primary)', padding: '14px 18px', borderRadius: 6, textAlign: 'left', overflowX: 'auto' }}>
+      <pre
+        style={{
+          background: "var(--bg-tertiary)",
+          border: "1px solid var(--border-primary)",
+          padding: "14px 18px",
+          borderRadius: 6,
+          textAlign: "left",
+          overflowX: "auto"
+        }}
+      >
         <code>md-review-plus FILE --review --remote</code>
       </pre>
-      <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 24, flexWrap: 'wrap' }}>
-        <a href="/" style={{ padding: '10px 18px', borderRadius: 6, background: 'var(--link-color)', color: '#fff', textDecoration: 'none', fontWeight: 600 }}>← Home</a>
-        <a href="/#privacy" style={{ padding: '10px 18px', borderRadius: 6, background: 'var(--bg-secondary)', color: 'var(--text-primary)', textDecoration: 'none', fontWeight: 600, border: '1px solid var(--border-primary)' }}>Learn more</a>
+      <div
+        style={{
+          display: "flex",
+          gap: 12,
+          justifyContent: "center",
+          marginTop: 24,
+          flexWrap: "wrap"
+        }}
+      >
+        <a
+          href="/"
+          style={{
+            padding: "10px 18px",
+            borderRadius: 6,
+            background: "var(--link-color)",
+            color: "#fff",
+            textDecoration: "none",
+            fontWeight: 600
+          }}
+        >
+          ← Home
+        </a>
+        <a
+          href="/#privacy"
+          style={{
+            padding: "10px 18px",
+            borderRadius: 6,
+            background: "var(--bg-secondary)",
+            color: "var(--text-primary)",
+            textDecoration: "none",
+            fontWeight: 600,
+            border: "1px solid var(--border-primary)"
+          }}
+        >
+          Learn more
+        </a>
       </div>
     </main>
   );
@@ -1821,34 +2207,42 @@ git log --oneline -3
 ## Task 47: Write SSE reconnect test (red)
 
 **Files:**
+
 - Modify: `src/cli/remoteSubscribe.test.ts`
 
 **Step 1:** Append:
 
 ```typescript
-it('reconnects after a transient disconnect and resolves on the retry', async () => {
+it("reconnects after a transient disconnect and resolves on the retry", async () => {
   let calls = 0;
   const fakeFetch: typeof fetch = async () => {
     calls++;
-    if (calls === 1) return sseResponse([': connected\n\n'], 0); // closes with no data
-    return sseResponse([': connected\n\n', 'data: {"iv":"I","ct":"C"}\n\n']);
+    if (calls === 1) return sseResponse([": connected\n\n"], 0); // closes with no data
+    return sseResponse([": connected\n\n", 'data: {"iv":"I","ct":"C"}\n\n']);
   };
   const out = await subscribeFeedback({
-    relay: 'https://r', id: 'abc', fetchFn: fakeFetch,
-    backoffMs: () => 0, // immediate reconnect for the test
+    relay: "https://r",
+    id: "abc",
+    fetchFn: fakeFetch,
+    backoffMs: () => 0 // immediate reconnect for the test
   });
   expect(calls).toBe(2);
-  expect(out).toEqual({ iv: 'I', ct: 'C' });
+  expect(out).toEqual({ iv: "I", ct: "C" });
 });
 
-it('throws SESSION_GONE on 404, does not reconnect', async () => {
+it("throws SESSION_GONE on 404, does not reconnect", async () => {
   let calls = 0;
   const fakeFetch: typeof fetch = async () => {
     calls++;
-    return new Response('', { status: 404 });
+    return new Response("", { status: 404 });
   };
   await expect(
-    subscribeFeedback({ relay: 'https://r', id: 'abc', fetchFn: fakeFetch, backoffMs: () => 0 })
+    subscribeFeedback({
+      relay: "https://r",
+      id: "abc",
+      fetchFn: fakeFetch,
+      backoffMs: () => 0
+    })
   ).rejects.toThrow(/SESSION_GONE|404/);
   expect(calls).toBe(1);
 });
@@ -1861,6 +2255,7 @@ it('throws SESSION_GONE on 404, does not reconnect', async () => {
 ## Task 48: Implement SSE reconnect wrapper
 
 **Files:**
+
 - Modify: `src/cli/remoteSubscribe.ts`
 
 **Step 1:** Replace the file with:
@@ -1882,8 +2277,8 @@ export interface FeedbackEnvelope {
 
 export class SessionGoneError extends Error {
   constructor() {
-    super('SESSION_GONE');
-    this.name = 'SessionGoneError';
+    super("SESSION_GONE");
+    this.name = "SessionGoneError";
   }
 }
 
@@ -1891,40 +2286,47 @@ const DEFAULT_BACKOFF = [1000, 2000, 5000, 10000, 30000];
 
 async function openOnce(args: SubscribeArgs): Promise<FeedbackEnvelope> {
   const f = args.fetchFn ?? fetch;
-  const url = `${args.relay.replace(/\/$/, '')}/api/sessions/${args.id}/feedback`;
+  const url = `${args.relay.replace(/\/$/, "")}/api/sessions/${args.id}/feedback`;
   const res = await f(url, {
-    method: 'GET',
-    headers: { accept: 'text/event-stream' },
-    signal: args.signal,
+    method: "GET",
+    headers: { accept: "text/event-stream" },
+    signal: args.signal
   });
   if (res.status === 404) throw new SessionGoneError();
   if (!res.ok) throw new Error(`relay ${res.status}`);
-  if (!res.body) throw new Error('relay returned empty body');
+  if (!res.body) throw new Error("relay returned empty body");
 
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
-  let buffer = '';
+  let buffer = "";
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
-    const events = buffer.split('\n\n');
-    buffer = events.pop() ?? '';
+    const events = buffer.split("\n\n");
+    buffer = events.pop() ?? "";
     for (const evt of events) {
-      const dataLines = evt.split('\n').filter((l) => l.startsWith('data: ')).map((l) => l.slice(6));
+      const dataLines = evt
+        .split("\n")
+        .filter((l) => l.startsWith("data: "))
+        .map((l) => l.slice(6));
       if (dataLines.length === 0) continue;
-      const payload = dataLines.join('\n');
+      const payload = dataLines.join("\n");
       return JSON.parse(payload) as FeedbackEnvelope;
     }
   }
-  throw new Error('SSE closed without feedback');
+  throw new Error("SSE closed without feedback");
 }
 
-export async function subscribeFeedback(args: SubscribeArgs): Promise<FeedbackEnvelope> {
-  const backoff = args.backoffMs ?? ((a) => DEFAULT_BACKOFF[Math.min(a, DEFAULT_BACKOFF.length - 1)]);
+export async function subscribeFeedback(
+  args: SubscribeArgs
+): Promise<FeedbackEnvelope> {
+  const backoff =
+    args.backoffMs ??
+    ((a) => DEFAULT_BACKOFF[Math.min(a, DEFAULT_BACKOFF.length - 1)]);
   let attempt = 0;
   while (true) {
-    if (args.signal?.aborted) throw new Error('aborted');
+    if (args.signal?.aborted) throw new Error("aborted");
     try {
       return await openOnce(args);
     } catch (e) {
@@ -1944,6 +2346,7 @@ export async function subscribeFeedback(args: SubscribeArgs): Promise<FeedbackEn
 ## Task 49: Update bin/md-review-plus.js to handle SESSION_GONE
 
 **Files:**
+
 - Modify: `bin/md-review-plus.js` (the `--remote` subscribe block, around lines 240-250)
 
 **Step 1:** Where the catch block currently writes "review session ended without feedback: ${e.message}", branch on the SESSION_GONE shape:
@@ -1954,11 +2357,14 @@ try {
   envelope = await cli.subscribeFeedback({
     relay,
     id: upload.id,
-    signal: ac.signal,
+    signal: ac.signal
   });
 } catch (e) {
-  if (e?.name === 'SessionGoneError' || /SESSION_GONE|404/.test(e?.message || '')) {
-    console.error('Error: review session expired without submit.');
+  if (
+    e?.name === "SessionGoneError" ||
+    /SESSION_GONE|404/.test(e?.message || "")
+  ) {
+    console.error("Error: review session expired without submit.");
   } else {
     console.error(`Error: review session ended without feedback: ${e.message}`);
   }
@@ -2097,6 +2503,7 @@ Verify section headings are NOT truncated; buttons are 50/50 split full-width; s
 **Step 8: Full review loop still passes (regression)**
 
 Same flow as the manual test we did earlier:
+
 - Click "Approve All" then "Submit Review"
 - CLI exits 0 with structured JSON
 
@@ -2114,6 +2521,7 @@ Expected: JSON with `kisenon-launch` impressions > 0 and clicks > 0 (you've now 
 ## Task 53: Update design doc phase tracking, commit
 
 **Files:**
+
 - Modify: `docs/plans/2026-05-15-ad-banner-light-theme-redesign.md`
 
 **Step 1:** Flip Status / Tested / Pushed columns in the Phase tracking table for phases 1-8 from `pending`/`no`/`no` to `done`/`yes`/`yes`.

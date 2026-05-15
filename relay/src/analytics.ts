@@ -74,10 +74,7 @@ export class Analytics {
   }
 
   ipHash(ip: string, day: string): string {
-    return createHash('sha256')
-      .update(`${ip}:${day}:${this.salt}`)
-      .digest('hex')
-      .slice(0, 32);
+    return createHash('sha256').update(`${ip}:${day}:${this.salt}`).digest('hex').slice(0, 32);
   }
 
   recordImpression(campaignId: string, ip: string): void {
@@ -105,11 +102,7 @@ export class Analytics {
     );
   }
 
-  private sumWhere(
-    table: 'impressions' | 'clicks',
-    campaignId: string,
-    sinceDay?: string,
-  ): number {
+  private sumWhere(table: 'impressions' | 'clicks', campaignId: string, sinceDay?: string): number {
     const where = sinceDay ? 'campaign_id = ? AND day >= ?' : 'campaign_id = ?';
     const params: string[] = sinceDay ? [campaignId, sinceDay] : [campaignId];
     const row = this.db
@@ -136,10 +129,7 @@ export class Analytics {
         this.sumWhere('impressions', campaignId, d30),
         this.sumWhere('clicks', campaignId, d30),
       ),
-      allTime: mk(
-        this.sumWhere('impressions', campaignId),
-        this.sumWhere('clicks', campaignId),
-      ),
+      allTime: mk(this.sumWhere('impressions', campaignId), this.sumWhere('clicks', campaignId)),
     };
   }
 
