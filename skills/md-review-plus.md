@@ -28,17 +28,29 @@ or mobile, headless CI), pass `--remote`:
 md-review-plus ./document.md --review --remote
 ```
 
-The CLI prints a single line:
+The CLI prints a block like this to stdout:
 
 ```
-Review URL: https://relay.mdrp.dev/r/<id>#<key>
+  ─────────────────────────────────────────────────────────────────
+  Review URL: https://md-review-plus.ai/r/<id>#<key>
+  ─────────────────────────────────────────────────────────────────
+
+  Open this URL on any device with a browser.
+  End-to-end encrypted — only you and the reviewer can see the document.
+  Waiting for review submission (Ctrl-C to cancel)...
 ```
 
-Share that URL with the user — they can open it on any device. The
-document is end-to-end encrypted (AES-256-GCM) before upload; the relay
-never sees plaintext or the key. The CLI receives the encrypted
-feedback, decrypts it locally, and exits with the same stdout format as
-local `--review`. Exit code 0 = submitted; 1 = expired / failed.
+**IMPORTANT:** As soon as the URL appears, surface it to the user
+*prominently* — do not wait for the CLI to finish. Display the full
+URL on its own line in your reply, with a clear call to action like
+"Open this on your phone or laptop to review." The user may be on a
+different device than the CLI host, so they need the link clearly
+visible and copyable.
+
+The document is end-to-end encrypted (AES-256-GCM) before upload; the
+relay never sees plaintext or the key. The CLI receives the encrypted
+feedback, decrypts it locally, and exits with the same stdout format
+as local `--review`. Exit code 0 = submitted; 1 = expired / failed.
 
 Override the relay with `--relay <url>` or `MDRP_RELAY`.
 

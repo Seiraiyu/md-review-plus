@@ -5,7 +5,7 @@ memory (24h TTL), so cold restarts drop in-flight sessions.
 
 ## Prerequisites
 
-- A host with a public IP and a DNS record (e.g. `relay.mdrp.dev`).
+- A host with a public IP and a DNS record (e.g. `md-review-plus.ai`).
 - [Caddy](https://caddyserver.com/) for TLS + HTTP/2.
 - Bun 1.x.
 
@@ -46,17 +46,17 @@ memory (24h TTL), so cold restarts drop in-flight sessions.
 
 4.  **Smoke test:**
 
-    curl https://relay.mdrp.dev/api/health
+    curl https://md-review-plus.ai/api/health
 
     # → {"status":"ok","sessions":0}
 
-    curl -X POST https://relay.mdrp.dev/api/sessions \
+    curl -X POST https://md-review-plus.ai/api/sessions \
      -H 'content-type: application/json' \
      -d '{"v":1,"iv":"AAA","ct":"AQID","filename":"t.md"}'
 
     # → {"id":"...","expiresAt":...}
 
-    curl https://relay.mdrp.dev/api/sessions/<id>
+    curl https://md-review-plus.ai/api/sessions/<id>
 
     # → echoes the iv/ct/filename
 
