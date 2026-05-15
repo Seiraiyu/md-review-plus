@@ -10,10 +10,6 @@ vi.mock('mermaid', () => ({
   },
 }));
 
-vi.mock('../hooks/useDarkMode', () => ({
-  useDarkMode: () => ({ isDark: false }),
-}));
-
 describe('MermaidBlock', () => {
   beforeEach(() => {
     vi.clearAllMocks();

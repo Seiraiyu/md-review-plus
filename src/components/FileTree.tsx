@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import { ThemeToggle } from './ThemeToggle';
 import '../styles/filetree.css';
 
 interface FileInfo {
@@ -197,7 +196,6 @@ export const FileTree = ({
           </span>
         </div>
         <div className="file-tree-header-actions">
-          <ThemeToggle />
           {onToggleSidebar && (
             <button
               className="sidebar-collapse-button"

@@ -3,6 +3,7 @@
   border-radius: 8px;
   overflow: hidden;
   margin: 1.5rem 0;
+  scroll-margin-top: 140px;
   transition:
     border-color 0.2s ease,
     background-color 0.2s ease;
@@ -44,12 +45,6 @@
   white-space: nowrap;
 }
 
-.section-review-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
 /* Action buttons with text labels */
 .section-action-btn {
   display: inline-flex;
@@ -66,6 +61,19 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.15s ease;
+  justify-content: center;
+}
+
+.section-review-actions {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-color, #d0d7de);
+  background: var(--bg-secondary, #f6f8fa);
+}
+
+.section-review-actions .section-action-btn {
+  flex: 1;
   justify-content: center;
 }
 
@@ -137,18 +145,28 @@
   box-shadow: 0 0 0 3px rgb(9 105 218 / 30%);
 }
 
-/* Dark mode */
-.dark-mode .section-review {
-  --border-color: #30363d;
-  --bg-secondary: #161b22;
-  --bg-primary: #0d1117;
-  --text-primary: #e6edf3;
-}
+@media (width <= 720px) {
+  .section-review-heading {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
 
-.dark-mode .section-review.section-approved {
-  background: rgb(45 164 78 / 8%);
-}
+  .section-review-header {
+    padding: 0.6rem 0.8rem;
+  }
 
-.dark-mode .section-review.section-rejected {
-  background: rgb(207 34 46 / 8%);
+  .section-review-actions {
+    padding: 0.6rem 0.8rem;
+    border-top: 1px solid var(--border-color, #d0d7de);
+    background: var(--bg-secondary, #f6f8fa);
+    gap: 0.4rem;
+  }
+
+  .section-review-actions .section-action-btn {
+    flex: 1;
+    min-height: 44px;
+    min-width: 0;
+    justify-content: center;
+  }
 }

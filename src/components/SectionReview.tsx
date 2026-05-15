@@ -28,26 +28,6 @@ export function SectionReview({
     <div className={`section-review ${statusClass}`} id={section.id} data-section-id={section.id}>
       <div className="section-review-header">
         <h2 className="section-review-heading">{section.heading}</h2>
-        <div className="section-review-actions">
-          <button
-            className={`section-action-btn section-action-btn-approve ${section.status === 'approved' ? 'active' : ''}`}
-            onClick={onApprove}
-            aria-label="Approve"
-            title="Approve this section"
-          >
-            <span className="section-action-icon">&#x2713;</span>
-            Approve
-          </button>
-          <button
-            className={`section-action-btn section-action-btn-reject ${section.status === 'rejected' ? 'active' : ''}`}
-            onClick={onReject}
-            aria-label="Reject"
-            title="Reject this section"
-          >
-            <span className="section-action-icon">&#x2717;</span>
-            Reject
-          </button>
-        </div>
       </div>
       <div className="section-review-content">{children}</div>
       <div className="section-review-comment">
@@ -60,6 +40,26 @@ export function SectionReview({
           onChange={(e) => onComment(e.target.value)}
           rows={section.status === 'rejected' ? 3 : 2}
         />
+      </div>
+      <div className="section-review-actions">
+        <button
+          className={`section-action-btn section-action-btn-approve ${section.status === 'approved' ? 'active' : ''}`}
+          onClick={onApprove}
+          aria-label="Approve"
+          title="Approve this section"
+        >
+          <span className="section-action-icon">&#x2713;</span>
+          Approve
+        </button>
+        <button
+          className={`section-action-btn section-action-btn-reject ${section.status === 'rejected' ? 'active' : ''}`}
+          onClick={onReject}
+          aria-label="Reject"
+          title="Reject this section"
+        >
+          <span className="section-action-icon">&#x2717;</span>
+          Reject
+        </button>
       </div>
     </div>
   );

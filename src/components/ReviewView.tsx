@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { useSections } from '../hooks/useSections';
 import { useFeedback } from '../hooks/useFeedback';
-import { useDarkMode } from '../hooks/useDarkMode';
 import { MarkdownPreview } from './MarkdownPreview';
 import { MarkdownSection } from './MarkdownSection';
 import { SectionReview } from './SectionReview';
@@ -9,7 +8,6 @@ import { SelectionPopover } from './SelectionPopover';
 import { CommentList, Comment } from './CommentList';
 import { useResizable } from '../hooks/useResizable';
 import 'highlight.js/styles/github.css';
-import 'highlight.js/styles/github-dark.css';
 import '../styles/review-layout.css';
 import '../styles/markdown.css';
 
@@ -36,22 +34,6 @@ export function ReviewView({ content, filename, reviewMode, onSubmit }: ReviewVi
   const [comments, setComments] = useState<Comment[]>([]);
   const [copied, setCopied] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const { isDark } = useDarkMode();
-
-  useEffect(() => {
-    const lightTheme = document.querySelector('link[href*="github.css"]');
-    const darkTheme = document.querySelector('link[href*="github-dark.css"]');
-
-    if (lightTheme && darkTheme) {
-      if (isDark) {
-        (lightTheme as HTMLLinkElement).disabled = true;
-        (darkTheme as HTMLLinkElement).disabled = false;
-      } else {
-        (lightTheme as HTMLLinkElement).disabled = false;
-        (darkTheme as HTMLLinkElement).disabled = true;
-      }
-    }
-  }, [isDark]);
 
   const { intro, sections, approve, reject, approveAll, clearAll, setComment } = useSections(
     content,

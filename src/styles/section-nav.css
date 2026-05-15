@@ -78,10 +78,17 @@
   font-size: 0.875rem;
 }
 
-/* Dark mode */
-.dark-mode .section-nav {
-  --border-color: #30363d;
-  --text-primary: #e6edf3;
-  --text-secondary: #8b949e;
-  --bg-hover: #161b22;
+@media (width <= 720px) {
+  .section-nav {
+    padding: 0.4rem 0;
+    font-size: 0.85rem;
+  }
+
+  .section-nav-summary {
+    padding: 0.25rem 0.75rem;
+  }
+
+  .section-nav-link {
+    padding: 0.4rem 0.75rem;
+  }
 }

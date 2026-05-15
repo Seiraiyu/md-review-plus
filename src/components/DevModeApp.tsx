@@ -8,7 +8,6 @@ import { FileTree } from './FileTree';
 import { MarkdownPreview } from './MarkdownPreview';
 import { ErrorDisplay } from './ErrorDisplay';
 import { Comment } from './CommentList';
-import { ThemeToggle } from './ThemeToggle';
 import '../styles/devmode.css';
 
 export const DevModeApp = () => {
@@ -123,7 +122,6 @@ export const DevModeApp = () => {
                 />
               </svg>
             </button>
-            <ThemeToggle />
             <div className="icon-bar-spacer" />
             <a
               href="https://github.com/ryo-manba/md-review"

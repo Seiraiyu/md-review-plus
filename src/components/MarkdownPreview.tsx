@@ -1,15 +1,13 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 import ReactMarkdown, { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkBreaks from 'remark-breaks';
 import rehypeHighlight from 'rehype-highlight';
 import 'highlight.js/styles/github.css';
-import 'highlight.js/styles/github-dark.css';
 import '../styles/markdown.css';
 import { SelectionPopover } from './SelectionPopover';
 import { CommentList, Comment } from './CommentList';
 import { MermaidBlock } from './MermaidBlock';
-import { useDarkMode } from '../hooks/useDarkMode';
 import { useResizable } from '../hooks/useResizable';
 
 interface MarkdownPreviewProps {
@@ -122,7 +120,6 @@ export const MarkdownPreview = ({
   onCommentsChange,
 }: MarkdownPreviewProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const { isDark } = useDarkMode();
   const {
     width: commentsSidebarWidth,
     isResizing,
@@ -138,22 +135,6 @@ export const MarkdownPreview = ({
     collapsible: true,
     collapseThreshold: 70,
   });
-
-  // Update highlight.js theme based on dark mode
-  useEffect(() => {
-    const lightTheme = document.querySelector('link[href*="github.css"]');
-    const darkTheme = document.querySelector('link[href*="github-dark.css"]');
-
-    if (lightTheme && darkTheme) {
-      if (isDark) {
-        (lightTheme as HTMLLinkElement).disabled = true;
-        (darkTheme as HTMLLinkElement).disabled = false;
-      } else {
-        (lightTheme as HTMLLinkElement).disabled = false;
-        (darkTheme as HTMLLinkElement).disabled = true;
-      }
-    }
-  }, [isDark]);
 
   const handleSubmitComment = (
     comment: string,

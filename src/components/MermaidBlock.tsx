@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
-import { useDarkMode } from '../hooks/useDarkMode';
 
 interface MermaidBlockProps {
   code: string;
@@ -10,7 +9,6 @@ export const MermaidBlock = ({ code }: MermaidBlockProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const { isDark } = useDarkMode();
 
   useEffect(() => {
     let cancelled = false;
@@ -19,7 +17,7 @@ export const MermaidBlock = ({ code }: MermaidBlockProps) => {
       try {
         mermaid.initialize({
           startOnLoad: false,
-          theme: isDark ? 'dark' : 'default',
+          theme: 'default',
           securityLevel: 'strict',
         });
 
@@ -43,7 +41,7 @@ export const MermaidBlock = ({ code }: MermaidBlockProps) => {
     return () => {
       cancelled = true;
     };
-  }, [code, isDark]);
+  }, [code]);
 
   if (error) {
     return (
