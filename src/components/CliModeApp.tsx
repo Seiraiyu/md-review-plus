@@ -83,11 +83,6 @@ export const CliModeApp = () => {
   }
 
   return (
-    <ReviewView
-      content={content}
-      filename={filename}
-      reviewMode={reviewMode}
-      onSubmit={doSubmit}
-    />
+    <ReviewView content={content} filename={filename} reviewMode={reviewMode} onSubmit={doSubmit} />
   );
 };

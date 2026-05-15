@@ -156,4 +156,3 @@ submit, and does not log request bodies or URL fragments.
 
 md-review-plus is a fork of [md-review](https://github.com/ryo-manba/md-review)
 by Ryo Matsukawa. Thanks for the foundation.
-

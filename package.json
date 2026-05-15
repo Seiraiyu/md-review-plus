@@ -54,7 +54,10 @@
   ],
   "author": "David Stonely <david.stonely@seiraiyu.com>",
   "contributors": [
-    { "name": "Ryo Matsukawa", "url": "https://github.com/ryo-manba" }
+    {
+      "name": "Ryo Matsukawa",
+      "url": "https://github.com/ryo-manba"
+    }
   ],
   "license": "MIT",
   "dependencies": {

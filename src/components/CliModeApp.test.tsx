@@ -25,9 +25,7 @@ beforeEach(() => {
     if (typeof url === 'string' && url.includes('/api/submit')) {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     }
-    return originalFetch
-      ? (originalFetch as typeof fetch)(url)
-      : new Response('', { status: 404 });
+    return originalFetch ? (originalFetch as typeof fetch)(url) : new Response('', { status: 404 });
   }) as typeof fetch;
 });
 
@@ -41,9 +39,7 @@ describe('CliModeApp submit flow', () => {
   it('shows SubmittedScreen after a successful submit', async () => {
     render(<CliModeApp />);
     await submitReview();
-    await waitFor(() =>
-      expect(screen.getByText(/Review submitted/i)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/Review submitted/i)).toBeInTheDocument());
     expect(screen.queryByText(/Submit Review/i)).not.toBeInTheDocument();
   });
 
@@ -59,9 +55,7 @@ describe('CliModeApp submit flow', () => {
     }) as typeof fetch;
     render(<CliModeApp />);
     await submitReview();
-    await waitFor(() =>
-      expect(screen.getByText(/Couldn.t submit review/i)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/Couldn.t submit review/i)).toBeInTheDocument());
     expect(screen.getByText(/500/)).toBeInTheDocument();
     expect(screen.getByText(/Retry/i)).toBeInTheDocument();
   });
@@ -75,9 +69,7 @@ describe('CliModeApp submit flow', () => {
     }) as typeof fetch;
     render(<CliModeApp />);
     await submitReview();
-    await waitFor(() =>
-      expect(screen.getByText(/Couldn.t submit review/i)).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText(/Couldn.t submit review/i)).toBeInTheDocument());
     expect(screen.getByText(/network blew up/i)).toBeInTheDocument();
   });
 
