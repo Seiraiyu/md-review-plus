@@ -606,14 +606,14 @@ Phase tracking is in the next section. Quick file inventory:
 
 | Phase | Description | Status | Tested | Pushed |
 |-------|-------------|--------|--------|--------|
-| 1 | SQLite analytics module + sponsors config: `relay/src/analytics.ts`, `relay/src/sponsors.ts`, `sponsors.json`, schema migrations, IP hashing. Unit tests. | pending | no | no |
-| 2 | Banner renderer + new endpoints: `relay/src/banner.ts`, `/api/sponsors/current`, `/api/sponsors/impression`, `/go/:id`, `/api/admin/stats`. Bearer-token guard. Integration tests. | pending | no | no |
-| 3 | New light-themed static pages: `landing.html` (replace), `advertise.html`, `error.html`. Banner injected via template marker. | pending | no | no |
-| 4 | Relay route wiring + systemd env vars: `app.ts` extensions, `index.ts` SQLite open + sweep, MDRP_ADMIN_TOKEN + MDRP_IP_HASH_SALT, data dir, ReadWritePaths. | pending | no | no |
-| 5 | Nginx security headers: HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, CSP (pragmatic). Smoke-tested via curl. | pending | no | no |
-| 6 | SPA light theme + mobile section layout fix + slim sticky top bar + scroll-margin-top + friendly decrypt-failure UI. | pending | no | no |
-| 7 | CLI silent SSE reconnect with backoff (1s/2s/5s/10s/30s). Vitest coverage for retry → success and retry → SESSION_GONE. | pending | no | no |
-| 8 | Deploy + E2E verification: rebuild SPA, scp/git pull on OVH, restart service, run agent-browser smoke through all surfaces (landing, /advertise, /r/:id, error page, mobile viewport). | pending | no | no |
+| 1 | SQLite analytics module + sponsors config: `relay/src/analytics.ts`, `relay/src/sponsors.ts`, `sponsors.json`, schema migrations, IP hashing. Unit tests. | done | yes | yes |
+| 2 | Banner renderer + new endpoints: `relay/src/banner.ts`, `/api/sponsors/current`, `/api/sponsors/impression`, `/go/:id`, `/api/admin/stats`. Bearer-token guard. Integration tests. | done | yes | yes |
+| 3 | New light-themed static pages: `landing.html` (replace), `advertise.html`, `error.html`. Banner injected via template marker. | done | yes | yes |
+| 4 | Relay route wiring + systemd env vars: `app.ts` extensions, `index.ts` SQLite open + sweep, MDRP_ADMIN_TOKEN + MDRP_IP_HASH_SALT, data dir, ReadWritePaths. | done | yes | yes |
+| 5 | Nginx security headers: HSTS, X-Content-Type-Options, X-Frame-Options, Referrer-Policy, Permissions-Policy, CSP (pragmatic). Smoke-tested via curl. | done | yes | yes |
+| 6 | SPA light theme + mobile section layout fix + slim sticky top bar + scroll-margin-top + friendly decrypt-failure UI. | done | yes | yes |
+| 7 | CLI silent SSE reconnect with backoff (1s/2s/5s/10s/30s). Vitest coverage for retry → success and retry → SESSION_GONE. | done | yes | yes |
+| 8 | Deploy + E2E verification: rebuild SPA, scp/git pull on OVH, restart service, run agent-browser smoke through all surfaces (landing, /advertise, /r/:id, error page, mobile viewport). | done | yes | yes |
 
 ## Open items for later passes (out of scope here)
 
