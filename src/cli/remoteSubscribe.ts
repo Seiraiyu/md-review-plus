@@ -3,6 +3,8 @@ export interface SubscribeArgs {
   id: string;
   fetchFn?: typeof fetch;
   signal?: AbortSignal;
+  /** Custom backoff function — receives attempt (0-based), returns ms. Default 1/2/5/10/30s. */
+  backoffMs?: (attempt: number) => number;
 }
 
 export interface FeedbackEnvelope {
@@ -10,7 +12,16 @@ export interface FeedbackEnvelope {
   ct: string;
 }
 
-export async function subscribeFeedback(args: SubscribeArgs): Promise<FeedbackEnvelope> {
+export class SessionGoneError extends Error {
+  constructor() {
+    super('SESSION_GONE');
+    this.name = 'SessionGoneError';
+  }
+}
+
+const DEFAULT_BACKOFF = [1000, 2000, 5000, 10000, 30000];
+
+async function openOnce(args: SubscribeArgs): Promise<FeedbackEnvelope> {
   const f = args.fetchFn ?? fetch;
   const url = `${args.relay.replace(/\/$/, '')}/api/sessions/${args.id}/feedback`;
   const res = await f(url, {
@@ -18,6 +29,7 @@ export async function subscribeFeedback(args: SubscribeArgs): Promise<FeedbackEn
     headers: { accept: 'text/event-stream' },
     signal: args.signal,
   });
+  if (res.status === 404) throw new SessionGoneError();
   if (!res.ok) throw new Error(`relay ${res.status}`);
   if (!res.body) throw new Error('relay returned empty body');
 
@@ -43,4 +55,21 @@ export async function subscribeFeedback(args: SubscribeArgs): Promise<FeedbackEn
     }
   }
   throw new Error('SSE closed without feedback');
+}
+
+export async function subscribeFeedback(args: SubscribeArgs): Promise<FeedbackEnvelope> {
+  const backoff =
+    args.backoffMs ?? ((a) => DEFAULT_BACKOFF[Math.min(a, DEFAULT_BACKOFF.length - 1)]);
+  let attempt = 0;
+  while (true) {
+    if (args.signal?.aborted) throw new Error('aborted');
+    try {
+      return await openOnce(args);
+    } catch (e) {
+      if (e instanceof SessionGoneError) throw e;
+      if (args.signal?.aborted) throw e;
+      const wait = backoff(attempt++);
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
 }

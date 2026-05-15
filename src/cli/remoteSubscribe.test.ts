@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { subscribeFeedback } from './remoteSubscribe';
+import { subscribeFeedback, SessionGoneError } from './remoteSubscribe';
 
 function sseResponse(messages: string[], delayMs = 0): Response {
   const enc = new TextEncoder();
@@ -29,17 +29,37 @@ describe('subscribeFeedback', () => {
     expect(out).toEqual({ iv: 'I', ct: 'C' });
   });
 
-  it('throws on 404', async () => {
-    const fakeFetch: typeof fetch = async () => new Response('', { status: 404 });
-    await expect(
-      subscribeFeedback({ relay: 'https://r', id: 'abc', fetchFn: fakeFetch }),
-    ).rejects.toThrow(/404/);
+  it('reconnects after a transient disconnect and resolves on the retry', async () => {
+    let calls = 0;
+    const fakeFetch: typeof fetch = async () => {
+      calls++;
+      if (calls === 1) return sseResponse([': connected\n\n']); // closes with no data
+      return sseResponse([': connected\n\n', 'data: {"iv":"I","ct":"C"}\n\n']);
+    };
+    const out = await subscribeFeedback({
+      relay: 'https://r',
+      id: 'abc',
+      fetchFn: fakeFetch,
+      backoffMs: () => 0,
+    });
+    expect(calls).toBe(2);
+    expect(out).toEqual({ iv: 'I', ct: 'C' });
   });
 
-  it('throws when stream closes with no data', async () => {
-    const fakeFetch: typeof fetch = async () => sseResponse([': connected\n\n']);
+  it('throws SessionGoneError on 404, does not reconnect', async () => {
+    let calls = 0;
+    const fakeFetch: typeof fetch = async () => {
+      calls++;
+      return new Response('', { status: 404 });
+    };
     await expect(
-      subscribeFeedback({ relay: 'https://r', id: 'abc', fetchFn: fakeFetch }),
-    ).rejects.toThrow(/closed|no feedback/i);
+      subscribeFeedback({
+        relay: 'https://r',
+        id: 'abc',
+        fetchFn: fakeFetch,
+        backoffMs: () => 0,
+      }),
+    ).rejects.toBeInstanceOf(SessionGoneError);
+    expect(calls).toBe(1);
   });
 });

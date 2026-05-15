@@ -182,7 +182,7 @@ if (args.remote) {
   }
   const filePath = process.env.MARKDOWN_FILE_PATH;
   const filename = filePath.split(/[\\/]/).pop();
-  const relay = args.relay || process.env.MDRP_RELAY || 'https://relay.mdrp.dev';
+  const relay = args.relay || process.env.MDRP_RELAY || 'https://md-review-plus.ai';
 
   if (
     !/^https:/i.test(relay) &&
@@ -220,7 +220,15 @@ if (args.remote) {
 
   const keyB64 = cli.keyToBase64Url(key);
   const reviewUrl = `${relay.replace(/\/$/, '')}/r/${upload.id}#${keyB64}`;
-  console.log(`Review URL: ${reviewUrl}`);
+  console.log('');
+  console.log('  ─────────────────────────────────────────────────────────────────');
+  console.log(`  Review URL: ${reviewUrl}`);
+  console.log('  ─────────────────────────────────────────────────────────────────');
+  console.log('');
+  console.log('  Open this URL on any device with a browser.');
+  console.log('  End-to-end encrypted — only you and the reviewer can see the document.');
+  console.log('  Waiting for review submission (Ctrl-C to cancel)...');
+  console.log('');
 
   const ac = new AbortController();
   const onSigint = async () => {
@@ -245,7 +253,11 @@ if (args.remote) {
       signal: ac.signal,
     });
   } catch (e) {
-    console.error(`Error: review session ended without feedback: ${e.message}`);
+    if (e?.name === 'SessionGoneError' || /SESSION_GONE/.test(e?.message || '')) {
+      console.error('Error: review session expired without submit.');
+    } else {
+      console.error(`Error: review session ended without feedback: ${e.message}`);
+    }
     process.exit(1);
   }
 
