@@ -143,4 +143,43 @@ describe('useSections', () => {
     expect(result.current.sections).toHaveLength(0);
     expect(result.current.intro).toBe('');
   });
+
+  it('preserves section state when headings are reordered', () => {
+    const before = `# Title\n\n## Alpha\n\nA body.\n\n## Beta\n\nB body.\n`;
+    const after = `# Title\n\n## Beta\n\nB body.\n\n## Alpha\n\nA body.\n`;
+    const { result, rerender } = renderHook(({ content }) => useSections(content), {
+      initialProps: { content: before },
+    });
+    act(() => result.current.approve(result.current.sections[0].id));
+    expect(result.current.sections[0].status).toBe('approved');
+
+    rerender({ content: after });
+    const alpha = result.current.sections.find((s) => s.heading === 'Alpha');
+    expect(alpha?.status).toBe('approved');
+  });
+
+  it('preserves section state when a new heading is inserted above an in-progress section', () => {
+    const before = `# Title\n\n## Architecture\n\nbody\n`;
+    const after = `# Title\n\n## Goals\n\nnew section\n\n## Architecture\n\nbody\n`;
+    const { result, rerender } = renderHook(({ content }) => useSections(content), {
+      initialProps: { content: before },
+    });
+    act(() => result.current.approve(result.current.sections[0].id));
+    expect(result.current.sections[0].status).toBe('approved');
+
+    rerender({ content: after });
+    const arch = result.current.sections.find((s) => s.heading === 'Architecture');
+    expect(arch?.status).toBe('approved');
+  });
+
+  it('assigns distinct deterministic IDs to duplicate headings', () => {
+    const content = `# Title\n\n## Notes\n\nfirst\n\n## Notes\n\nsecond\n`;
+    const { result } = renderHook(() => useSections(content));
+    expect(result.current.sections).toHaveLength(2);
+    expect(result.current.sections[0].id).not.toBe(result.current.sections[1].id);
+
+    act(() => result.current.approve(result.current.sections[0].id));
+    expect(result.current.sections[0].status).toBe('approved');
+    expect(result.current.sections[1].status).toBe('pending');
+  });
 });

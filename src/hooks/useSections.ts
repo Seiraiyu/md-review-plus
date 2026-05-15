@@ -15,8 +15,17 @@ interface ParsedContent {
   sections: Section[];
 }
 
-function generateId(heading: string, index: number): string {
-  return `section-${index}-${heading.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
+function slugify(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'section';
+}
+
+function generateIds(headings: string[]): string[] {
+  const counts: Record<string, number> = {};
+  return headings.map((h) => {
+    const slug = slugify(h);
+    counts[slug] = (counts[slug] ?? 0) + 1;
+    return counts[slug] === 1 ? `section-${slug}` : `section-${slug}-${counts[slug]}`;
+  });
 }
 
 function parseMarkdownSections(
@@ -45,7 +54,7 @@ function parseMarkdownSections(
         intro: '',
         sections: [
           {
-            id: generateId(heading, 0),
+            id: generateIds([heading])[0],
             heading,
             startLine: 1,
             endLine: lines.length,
@@ -61,20 +70,22 @@ function parseMarkdownSections(
 
   const intro = lines.slice(0, sectionStarts[0]).join('\n');
 
+  const headings = sectionStarts.map((start) => lines[start].replace(/^## /, ''));
+  const ids = generateIds(headings);
+
   const sections: Section[] = sectionStarts.map((start, i) => {
     const end = i + 1 < sectionStarts.length ? sectionStarts[i + 1] : lines.length;
-    const heading = lines[start].replace(/^## /, '');
+    const heading = headings[i];
     const sectionLines = lines.slice(start, end);
-    // Remove trailing empty lines from section content for endLine calculation
     while (sectionLines.length > 0 && sectionLines[sectionLines.length - 1] === '') {
       sectionLines.pop();
     }
 
     return {
-      id: generateId(heading, i),
+      id: ids[i],
       heading,
-      startLine: start + 1, // 1-based
-      endLine: start + sectionLines.length, // 1-based, inclusive
+      startLine: start + 1,
+      endLine: start + sectionLines.length,
       content: lines.slice(start, end).join('\n'),
       status: 'pending' as const,
       comment: '',
