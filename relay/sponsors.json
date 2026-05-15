@@ -1,0 +1,20 @@
+{
+  "active": "kisenon-launch",
+  "campaigns": {
+    "kisenon-launch": {
+      "name": "Kisenon",
+      "tagline": "Postgres that sleeps when you do",
+      "clickUrl": "https://kisenon.com/docs/alpha?utm_source=mdrp&utm_medium=sponsor&utm_campaign=launch"
+    },
+    "subaya-dev-launch": {
+      "name": "Subaya",
+      "tagline": "Subaya — pending tagline",
+      "clickUrl": "https://subaya-dev.com/?utm_source=mdrp&utm_medium=sponsor&utm_campaign=launch"
+    },
+    "house": {
+      "name": "Sponsor this slot",
+      "tagline": "Reach developers using AI coding agents",
+      "clickUrl": "/advertise"
+    }
+  }
+}
