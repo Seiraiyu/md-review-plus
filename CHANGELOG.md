@@ -1,5 +1,27 @@
 # Changelog
 
+## [1.2.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.1.0...v1.2.0) (2026-05-15)
+
+
+### Features
+
+* **cli:** --remote flag for end-to-end encrypted relay review ([9f5b166](https://github.com/Seiraiyu/md-review-plus/commit/9f5b166714e902559a8a2ac49606c711197e024d))
+* **cli:** silent SSE reconnect with exponential backoff ([0dd30de](https://github.com/Seiraiyu/md-review-plus/commit/0dd30de4abc23cf00e335ddfe610200408a81055))
+* **relay:** boot Analytics + Sponsors, schedule daily dedup sweep ([1815785](https://github.com/Seiraiyu/md-review-plus/commit/1815785d3e70f2ccd07116e174f60e9ead0749d7))
+* **relay:** E2E-encrypted ephemeral relay service ([e964162](https://github.com/Seiraiyu/md-review-plus/commit/e9641620d242421dd37006652f44b294b4ee4b7a))
+* **relay:** light-themed static pages + banner marker ([66c29d2](https://github.com/Seiraiyu/md-review-plus/commit/66c29d20d1b11796b91021795ad7e9df98573a34))
+* **relay:** sponsor + analytics endpoints ([af68177](https://github.com/Seiraiyu/md-review-plus/commit/af681777ea79ea86fd9c32af8f3ec5a72a88bb3a))
+* **relay:** sponsors config + banner renderer ([33092a9](https://github.com/Seiraiyu/md-review-plus/commit/33092a9e9a435fef47166dd2b9402456135d91ee))
+* **relay:** SQLite-backed analytics module with IP-hash dedup ([b17f40f](https://github.com/Seiraiyu/md-review-plus/commit/b17f40f876c08246facce0732e91fae582136dbf))
+* **web,relay,docs:** mobile responsiveness, deploy runbook, --remote docs ([9817151](https://github.com/Seiraiyu/md-review-plus/commit/9817151ab6c95e88a1e1e8b6d0bf5c22de24b8b9))
+* **web:** /r/:id remote review route with E2E decryption ([9cd7579](https://github.com/Seiraiyu/md-review-plus/commit/9cd7579df70f3abe874b95c064c227a433142d75))
+* **web:** light-theme-only, mobile review layout, friendly error UI ([a9ccd41](https://github.com/Seiraiyu/md-review-plus/commit/a9ccd4157ef68c93bea55366e958964dcf47507b))
+
+
+### Bug Fixes
+
+* **relay:** split relayStaticRoot from staticAssetsRoot for landing/advertise/error ([8de4687](https://github.com/Seiraiyu/md-review-plus/commit/8de4687a93bfd698bf3ac5255702c790eb447afd))
+
 ## [1.1.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.0.2...v1.1.0) (2026-03-13)
 
 
