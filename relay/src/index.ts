@@ -18,6 +18,7 @@ const { app, store } = await createApp({
   maxBodyBytes: cfg.maxBodyBytes,
   maxFeedbackBytes: cfg.maxFeedbackBytes,
   staticAssetsRoot: process.env.MDRP_STATIC_ROOT,
+  relayStaticRoot: join(import.meta.dir, '..', 'static'),
   sponsors,
   analytics,
   adminToken: cfg.adminToken,

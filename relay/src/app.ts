@@ -14,6 +14,7 @@ export interface AppOptions {
   maxFeedbackBytes?: number;
   staticHtml?: string;
   staticAssetsRoot?: string;
+  relayStaticRoot?: string;
   sponsors?: Sponsors;
   analytics?: Analytics;
   adminToken?: string | null;
@@ -40,14 +41,19 @@ async function readStatic(
   opts: AppOptions,
   file: 'landing.html' | 'advertise.html' | 'error.html',
 ): Promise<string | null> {
-  if (!opts.staticAssetsRoot) return null;
   const fs = await import('node:fs/promises');
   const path = await import('node:path');
-  try {
-    return await fs.readFile(path.join(opts.staticAssetsRoot, file), 'utf8');
-  } catch {
-    return null;
+  const roots = [opts.relayStaticRoot, opts.staticAssetsRoot].filter(
+    (r): r is string => !!r,
+  );
+  for (const root of roots) {
+    try {
+      return await fs.readFile(path.join(root, file), 'utf8');
+    } catch {
+      /* try next root */
+    }
   }
+  return null;
 }
 
 async function serveStaticWithBanner(
@@ -335,7 +341,7 @@ export async function createApp(opts: AppOptions): Promise<AppHandle> {
     const id = c.req.param('id');
     const session = store.get(id);
     if (!session) {
-      if (opts.staticAssetsRoot && opts.sponsors) {
+      if ((opts.relayStaticRoot || opts.staticAssetsRoot) && opts.sponsors) {
         return serveStaticWithBanner(opts, 'error.html', 404);
       }
       return c.text('not found', 404);
@@ -356,7 +362,7 @@ export async function createApp(opts: AppOptions): Promise<AppHandle> {
     return c.text('relay running; no static html configured', 200);
   });
 
-  if (opts.staticAssetsRoot && opts.sponsors) {
+  if ((opts.relayStaticRoot || opts.staticAssetsRoot) && opts.sponsors) {
     app.get('/', async () => serveStaticWithBanner(opts, 'landing.html'));
     app.get('/advertise', async () => serveStaticWithBanner(opts, 'advertise.html'));
   } else {
