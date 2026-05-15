@@ -13,7 +13,6 @@ Section-level approval, structured feedback output, and Claude Code integration.
 - **Claude Code skill**: Install as a skill so Claude Code can request human reviews
 - **Inline line comments**: Select text to add comments to specific lines
 - **Full-width layout**: Cards fill the available viewport width
-- **Dark mode support**: Follows system preferences
 - **Hot reload**: Live updates when markdown files change
 - Select files from tree view (directory mode)
 
@@ -152,3 +151,9 @@ submit, and does not log request bodies or URL fragments.
 ## License
 
 [MIT](./LICENSE)
+
+## Credits
+
+md-review-plus is a fork of [md-review](https://github.com/ryo-manba/md-review)
+by Ryo Matsukawa. Thanks for the foundation.
+

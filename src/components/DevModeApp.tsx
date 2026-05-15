@@ -124,7 +124,7 @@ export const DevModeApp = () => {
             </button>
             <div className="icon-bar-spacer" />
             <a
-              href="https://github.com/ryo-manba/md-review"
+              href="https://github.com/Seiraiyu/md-review-plus"
               target="_blank"
               rel="noopener noreferrer"
               className="icon-bar-item"
@@ -155,7 +155,7 @@ export const DevModeApp = () => {
       <div className="dev-main">
         {!selectedFile ? (
           <div className="dev-placeholder">
-            <h2>Welcome to md-review</h2>
+            <h2>Welcome to md-review-plus</h2>
             <p>Select a markdown file from the sidebar to preview</p>
             <p className="file-count">{files.length} markdown files found</p>
           </div>

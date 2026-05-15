@@ -52,9 +52,11 @@
     "feedback",
     "comments"
   ],
-  "author": "ryo-manba",
+  "author": "David Stonely <david.stonely@seiraiyu.com>",
+  "contributors": [
+    { "name": "Ryo Matsukawa", "url": "https://github.com/ryo-manba" }
+  ],
   "license": "MIT",
-  "funding": "https://github.com/ryo-manba/md-review?sponsor=1",
   "dependencies": {
     "@hono/node-server": "^1.19.6",
     "@vitejs/plugin-react": "^4.3.4",

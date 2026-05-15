@@ -244,7 +244,7 @@ export const FileTree = ({
       </div>
       <div className="file-tree-footer">
         <a
-          href="https://github.com/ryo-manba/md-review"
+          href="https://github.com/Seiraiyu/md-review-plus"
           target="_blank"
           rel="noopener noreferrer"
           className="github-link"
