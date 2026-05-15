@@ -5,6 +5,9 @@ export interface RelayConfig {
   rateLimitPerHour: number;
   maxBodyBytes: number;
   maxFeedbackBytes: number;
+  adminToken: string | null;
+  ipHashSalt: string;
+  dataDir: string;
 }
 
 function num(name: string, fallback: number): number {
@@ -15,6 +18,10 @@ function num(name: string, fallback: number): number {
   return n;
 }
 
+function str(name: string, fallback: string): string {
+  return process.env[name] ?? fallback;
+}
+
 export function loadConfig(): RelayConfig {
   return {
     port: num('MDRP_PORT', 8080),
@@ -23,5 +30,8 @@ export function loadConfig(): RelayConfig {
     rateLimitPerHour: num('MDRP_RATE_LIMIT_PER_HOUR', 30),
     maxBodyBytes: num('MDRP_MAX_BODY_BYTES', 1_048_576),
     maxFeedbackBytes: num('MDRP_MAX_FEEDBACK_BYTES', 262_144),
+    adminToken: process.env.MDRP_ADMIN_TOKEN ?? null,
+    ipHashSalt: str('MDRP_IP_HASH_SALT', 'dev-salt-do-not-use-in-prod'),
+    dataDir: str('MDRP_DATA_DIR', './data'),
   };
 }
