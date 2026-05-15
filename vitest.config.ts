@@ -9,7 +9,7 @@ export default mergeConfig(
       environment: 'jsdom',
       setupFiles: ['./src/test/setup.ts'],
       css: true,
-      include: ['src/**/*.{test,spec}.{ts,tsx}'],
+      include: ['src/**/*.{test,spec}.{ts,tsx}', 'bin/**/*.{test,spec}.{js,ts}'],
       exclude: ['node_modules/**', 'dist/**', 'relay/**', 'e2e/**'],
       coverage: {
         provider: 'v8',

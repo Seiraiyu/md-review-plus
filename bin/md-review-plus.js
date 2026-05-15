@@ -5,6 +5,7 @@ import { resolve, dirname } from 'path';
 import { existsSync, readFileSync, statSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import mri from 'mri';
+import { validateHost } from './host-validate.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -39,9 +40,10 @@ const args = mri(process.argv.slice(2), {
   default: {
     port: '3030',
     open: true,
+    host: '127.0.0.1',
   },
   boolean: ['help', 'version', 'open', 'review', 'skills', 'global', 'remote', 'force'],
-  string: ['relay'],
+  string: ['relay', 'host'],
 });
 
 // Install skills subcommand
@@ -95,6 +97,8 @@ Usage:
 
 Options:
   -p, --port <port>      Server port (default: 3030)
+  --host <addr>          Bind address (default: 127.0.0.1).
+                         Use 0.0.0.0 for LAN access; prefer --remote for cross-machine review.
   --review               Enable review mode (blocks until submit)
   --remote               Use remote relay for review (works over SSH, mobile, cloud CC)
   --relay <url>          Override relay URL (env: MDRP_RELAY)
@@ -122,6 +126,12 @@ if (args.version) {
 
 const file = args._[0];
 let port = validatePort(args.port, 'port');
+const hostError = validateHost(args.host);
+if (hostError) {
+  console.error(`Error: ${hostError}`);
+  process.exit(1);
+}
+process.env.API_HOST = args.host;
 const shouldOpen = args.open;
 const reviewMode = args.review;
 

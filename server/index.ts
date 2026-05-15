@@ -43,6 +43,7 @@ async function startServer(app: Hono, port: number, maxRetries: number = 10): Pr
       const server = await new Promise<ServerType>((resolve, reject) => {
         const server = serve({
           fetch: app.fetch,
+          hostname: HOST,
           port: tryPort,
         });
         server.once('listening', () => resolve(server));
@@ -74,6 +75,7 @@ const PORT = validatePort(process.env.API_PORT || '3030');
 const MARKDOWN_FILE_PATH: string | undefined = process.env.MARKDOWN_FILE_PATH;
 const BASE_DIR: string = process.env.BASE_DIR || process.cwd();
 const REVIEW_MODE: boolean = process.env.REVIEW_MODE === 'true';
+const HOST: string = process.env.API_HOST || '127.0.0.1';
 
 // Store SSE clients
 const sseClients = new Set<SSEClient>();
@@ -471,6 +473,9 @@ if (process.send) {
 startServer(app, PORT)
   .then((actualPort: number) => {
     console.log(`API Server running on http://localhost:${actualPort}`);
+    if (HOST !== '127.0.0.1' && HOST !== 'localhost') {
+      console.log(`(Bound to ${HOST})`);
+    }
     console.log(`Watching for file changes in: ${watchTarget}`);
     console.log(SERVER_READY_MESSAGE);
   })
