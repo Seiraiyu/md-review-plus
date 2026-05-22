@@ -22,9 +22,9 @@ describe('CLI crypto', () => {
     expect(back).toEqual(k);
   });
 
-  it('encrypts a document so WebCrypto can decrypt it', async () => {
+  it('encrypts a document so WebCrypto can decrypt it (new envelope form)', async () => {
     const k = generateKey();
-    const { iv, ct } = encryptDocument(k, '# hello\n');
+    const { iv, ct } = encryptDocument(k, 'markdown', '# hello\n');
 
     const cryptoKey = await webcrypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, [
       'decrypt',
@@ -34,7 +34,45 @@ describe('CLI crypto', () => {
       cryptoKey,
       Buffer.from(ct, 'base64'),
     );
-    expect(new TextDecoder().decode(plain)).toBe('# hello\n');
+    expect(JSON.parse(new TextDecoder().decode(plain))).toEqual({
+      kind: 'markdown',
+      content: '# hello\n',
+    });
+  });
+
+  it('legacy 2-arg call still works (treated as markdown)', async () => {
+    const k = generateKey();
+    const { iv, ct } = encryptDocument(k, '# old');
+
+    const cryptoKey = await webcrypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, [
+      'decrypt',
+    ]);
+    const plain = await webcrypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: Buffer.from(iv, 'base64') },
+      cryptoKey,
+      Buffer.from(ct, 'base64'),
+    );
+    expect(JSON.parse(new TextDecoder().decode(plain))).toEqual({
+      kind: 'markdown',
+      content: '# old',
+    });
+  });
+
+  it('encrypts html artifacts in the envelope', async () => {
+    const k = generateKey();
+    const { iv, ct } = encryptDocument(k, 'html', '<p>x</p>');
+    const cryptoKey = await webcrypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, [
+      'decrypt',
+    ]);
+    const plain = await webcrypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: Buffer.from(iv, 'base64') },
+      cryptoKey,
+      Buffer.from(ct, 'base64'),
+    );
+    expect(JSON.parse(new TextDecoder().decode(plain))).toEqual({
+      kind: 'html',
+      content: '<p>x</p>',
+    });
   });
 
   it('decrypts feedback that was encrypted with WebCrypto', async () => {

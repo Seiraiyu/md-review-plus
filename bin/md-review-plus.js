@@ -247,9 +247,7 @@ if (args.remote) {
   }
 
   const key = cli.generateKey();
-  // Phase 6 will switch to envelope form: cli.encryptDocument(key, kind, content)
-  void kind;
-  const { iv, ct } = cli.encryptDocument(key, content);
+  const { iv, ct } = cli.encryptDocument(key, kind, content);
 
   let upload;
   try {

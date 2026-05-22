@@ -16,12 +16,25 @@ export function keyFromBase64Url(s: string): Uint8Array {
   return new Uint8Array(Buffer.from(s, 'base64url'));
 }
 
-export function encryptDocument(key: Uint8Array, plaintext: string): { iv: string; ct: string } {
+export type ArtifactKind = 'markdown' | 'html';
+
+export function encryptDocument(
+  key: Uint8Array,
+  kindOrContent: ArtifactKind | string,
+  maybeContent?: string,
+): { iv: string; ct: string } {
+  // Backward-compat overload: (key, plaintext) → assume markdown.
+  // New form: (key, kind, content) → encrypts {kind, content} envelope.
+  let payload: string;
+  if (maybeContent === undefined) {
+    payload = JSON.stringify({ kind: 'markdown', content: kindOrContent });
+  } else {
+    payload = JSON.stringify({ kind: kindOrContent, content: maybeContent });
+  }
   const iv = randomBytes(IV_BYTES);
   const cipher = createCipheriv(AES_GCM, key, iv);
-  const enc = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()]);
+  const enc = Buffer.concat([cipher.update(payload, 'utf8'), cipher.final()]);
   const tag = cipher.getAuthTag();
-  // Browser SubtleCrypto expects ciphertext||tag. Concatenate.
   const ct = Buffer.concat([enc, tag]);
   return { iv: iv.toString('base64'), ct: ct.toString('base64') };
 }

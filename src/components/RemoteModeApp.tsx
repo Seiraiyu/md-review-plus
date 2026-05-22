@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useRemoteSession } from '../hooks/useRemoteSession';
 import { ReviewView, SubmitPayload } from './ReviewView';
+import { ArtifactModeApp } from './ArtifactModeApp';
 
 interface RemoteModeAppProps {
   id: string;
@@ -115,12 +116,23 @@ export function RemoteModeApp({ id, keyBase64Url }: RemoteModeAppProps) {
           Submit failed: {submitError}
         </div>
       )}
-      <ReviewView
-        content={session.content}
-        filename={session.filename}
-        reviewMode={true}
-        onSubmit={submit}
-      />
+      {session.kind === 'html' ? (
+        <ArtifactModeApp
+          injectedArtifact={{
+            kind: 'html',
+            content: session.content,
+            filename: session.filename,
+          }}
+          onSubmit={submit}
+        />
+      ) : (
+        <ReviewView
+          content={session.content}
+          filename={session.filename}
+          reviewMode={true}
+          onSubmit={submit}
+        />
+      )}
     </>
   );
 }
