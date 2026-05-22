@@ -1,0 +1,973 @@
+<!--
+mdrp:template name=design-kit
+purpose: Review a design SYSTEM (tokens + component specimens) holistically.
+  Renders a palette, type ramp, spacing ruler, radii, shadows, and a
+  component library. Reviewer tunes global brand tokens and the whole kit
+  re-renders live. Each section is independently approve/rejectable; per-
+  swatch / per-component click pins individual notes; reactions per section.
+fillins:
+  - TITLE / PREAMBLE: header text
+  - TOKENS (optional): override starting brand tokens
+      { primary, accent, neutralHue, fontFamily, scaleRatio, spacingUnit, radiusStyle }
+  - SECTIONS (optional): override which sections render. Defaults to all.
+submit-shape: chrome:'host'. Section status reflects approve/reject on each
+  section card. mdrp.update fires with {tokens, pins, reactions}. Click pins
+  go through mdrp.addComment(anchor='token:<id>'). Reactions are per section.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>design kit</title>
+    <style>
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: #f7f8fa;
+        color: #0f172a;
+      }
+      header.top {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 24px 24px 8px;
+      }
+      header.top h1 { margin: 0 0 4px; font-size: 22px; letter-spacing: -0.01em; }
+      header.top p { margin: 0; color: #64748b; font-size: 13.5px; line-height: 1.5; max-width: 720px; }
+      .layout {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 12px 24px 96px;
+        display: grid;
+        grid-template-columns: 260px 1fr;
+        gap: 18px;
+        align-items: start;
+      }
+      aside.tokens {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px;
+        position: sticky;
+        top: 14px;
+      }
+      aside.tokens h2 {
+        margin: 0 0 8px;
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+      }
+      .token-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 4px 0;
+        font-size: 12.5px;
+      }
+      .token-row label { flex: 1; }
+      .token-row input[type=color] {
+        width: 32px;
+        height: 22px;
+        padding: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .token-row select {
+        flex: 1;
+        padding: 4px 6px;
+        font: inherit;
+        font-size: 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        background: #fff;
+      }
+      .token-row input[type=range] {
+        width: 110px;
+        accent-color: var(--primary, #2563eb);
+      }
+      .token-row .v {
+        font-size: 11px;
+        color: #64748b;
+        font-variant-numeric: tabular-nums;
+        min-width: 36px;
+        text-align: right;
+      }
+      main.sections { display: flex; flex-direction: column; gap: 14px; }
+      .section {
+        background: #fff;
+        border: 2px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 16px 18px 18px;
+        transition: border-color 0.15s;
+      }
+      .section.approved { border-color: #16a34a; }
+      .section.rejected { border-color: #dc2626; }
+      .section-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 10px;
+        flex-wrap: wrap;
+      }
+      .section-head h2 {
+        margin: 0;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .section-head .spacer { flex: 1; }
+      .section-head .react-chip {
+        padding: 2px 8px;
+        font-size: 13px;
+        border: 1px solid #e2e8f0;
+        border-radius: 999px;
+        background: #fff;
+        cursor: pointer;
+        user-select: none;
+        font-family: inherit;
+      }
+      .section-head .react-chip.on { background: #fef3c7; border-color: #f59e0b; }
+      .section-head .react-chip .count {
+        margin-left: 3px;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: #64748b;
+      }
+      .section-head .actions { display: flex; gap: 6px; }
+      .section-head .actions button {
+        padding: 3px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .section-head .actions button.active.approve { background: #16a34a; color: #fff; border-color: #16a34a; }
+      .section-head .actions button.active.reject { background: #dc2626; color: #fff; border-color: #dc2626; }
+      .specimen { padding: 6px 0 0; }
+      .pin-target { cursor: pointer; position: relative; }
+      .pin-target.pinned { outline: 2px dashed #f59e0b; outline-offset: 3px; }
+      .pin-badge {
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #f59e0b;
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      }
+      .palette {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(82px, 1fr));
+        gap: 8px;
+      }
+      .swatch {
+        height: 64px;
+        border-radius: 6px;
+        position: relative;
+        border: 1px solid rgba(0,0,0,0.06);
+        cursor: pointer;
+      }
+      .swatch .label {
+        position: absolute;
+        bottom: 4px;
+        left: 6px;
+        font-size: 10.5px;
+        font-weight: 600;
+        background: rgba(255,255,255,0.85);
+        padding: 1px 4px;
+        border-radius: 3px;
+        color: #0f172a;
+      }
+      .swatch.dark .label { background: rgba(0,0,0,0.6); color: #fff; }
+      .type-ramp { display: flex; flex-direction: column; gap: 6px; }
+      .type-row { display: flex; align-items: baseline; gap: 12px; }
+      .type-row .name {
+        width: 64px;
+        font-size: 11px;
+        color: #64748b;
+        font-variant-numeric: tabular-nums;
+      }
+      .type-row .demo { font-family: var(--font-family); color: #0f172a; }
+      .spacing-ruler { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; }
+      .spacing-cell {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        font-size: 11px;
+        color: #64748b;
+        font-variant-numeric: tabular-nums;
+        cursor: pointer;
+      }
+      .spacing-cell .bar { background: var(--primary, #2563eb); border-radius: 3px; }
+      .radii {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+        gap: 10px;
+      }
+      .radius-cell {
+        height: 60px;
+        background: var(--primary, #2563eb);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11.5px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .shadows { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 14px; }
+      .shadow-cell {
+        background: #fff;
+        border-radius: 10px;
+        padding: 14px;
+        font-size: 12px;
+        color: #64748b;
+        text-align: center;
+        cursor: pointer;
+      }
+      .shadow-cell .label-row { font-weight: 600; color: #0f172a; margin-bottom: 4px; font-size: 12px; }
+      .components {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        --primary: #2563eb;
+        --accent: #16a34a;
+        --neutral-bg: #ffffff;
+        --neutral-fg: #0f172a;
+        --neutral-border: #e2e8f0;
+        --neutral-soft: #f1f5f9;
+        --radius-md: 8px;
+      }
+      .comp-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .demo-btn {
+        padding: 8px 16px;
+        border-radius: var(--radius-md);
+        font-weight: 600;
+        cursor: pointer;
+        font-family: inherit;
+        font-size: 13px;
+        border: 0;
+      }
+      .demo-btn.primary { background: var(--primary); color: #fff; }
+      .demo-btn.secondary { background: var(--neutral-soft); color: var(--neutral-fg); border: 1px solid var(--neutral-border); }
+      .demo-btn.ghost { background: transparent; color: var(--neutral-fg); border: 1px solid var(--neutral-border); }
+      .demo-btn.sm { padding: 4px 10px; font-size: 11.5px; }
+      .demo-btn.lg { padding: 11px 22px; font-size: 14.5px; }
+      .demo-input {
+        padding: 8px 12px;
+        border: 1px solid var(--neutral-border);
+        border-radius: var(--radius-md);
+        font: inherit;
+        font-size: 13px;
+        min-width: 200px;
+      }
+      .demo-badge {
+        display: inline-flex;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+      }
+      .demo-badge.info { background: #dbeafe; color: #1e3a8a; }
+      .demo-badge.success { background: #dcfce7; color: #14532d; }
+      .demo-badge.warn { background: #fef3c7; color: #713f12; }
+      .demo-badge.error { background: #fee2e2; color: #7f1d1d; }
+      .demo-alert {
+        padding: 10px 14px;
+        border-left: 4px solid;
+        border-radius: var(--radius-md);
+        font-size: 13px;
+      }
+      .demo-alert.info { background: #eff6ff; border-color: #2563eb; color: #1e3a8a; }
+      .demo-alert.success { background: #f0fdf4; border-color: #16a34a; color: #14532d; }
+      .demo-alert.warn { background: #fffbeb; border-color: #f59e0b; color: #713f12; }
+      .demo-alert.error { background: #fef2f2; border-color: #dc2626; color: #7f1d1d; }
+      .demo-card {
+        padding: 16px;
+        border: 1px solid var(--neutral-border);
+        border-radius: var(--radius-md);
+        background: var(--neutral-bg);
+        min-width: 220px;
+      }
+      .demo-card h4 { margin: 0 0 4px; font-size: 14px; }
+      .demo-card p { margin: 0; color: var(--neutral-fg); opacity: 0.75; font-size: 12.5px; line-height: 1.5; }
+      footer.bottom {
+        max-width: 1280px;
+        margin: 0 auto;
+        padding: 0 24px 96px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .panel h3 {
+        margin: 0 0 6px;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+      }
+      .panel textarea {
+        width: 100%;
+        min-height: 70px;
+        padding: 8px 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font: inherit;
+        font-size: 13px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      .question-row { display: flex; gap: 6px; margin-top: 6px; }
+      .question-row textarea { flex: 1; min-height: 36px; }
+      .question-row button {
+        padding: 6px 12px;
+        background: #2563eb;
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        align-self: flex-end;
+      }
+      .qlist { list-style: none; padding: 0; margin: 6px 0 0; }
+      .qlist li {
+        background: #f1f5f9;
+        padding: 5px 8px;
+        border-radius: 5px;
+        font-size: 12px;
+        margin: 0 0 4px;
+      }
+      .qlist li::before { content: 'Q: '; font-weight: 700; color: #2563eb; }
+      .pin-popover {
+        position: fixed;
+        z-index: 200;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 10px 32px rgba(0,0,0,0.15);
+        padding: 8px;
+        width: 280px;
+      }
+      .pin-popover .target {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 11px;
+        color: #64748b;
+        background: #f1f5f9;
+        padding: 3px 6px;
+        border-radius: 3px;
+        margin-bottom: 6px;
+      }
+      .pin-popover textarea {
+        width: 100%;
+        min-height: 56px;
+        padding: 6px 8px;
+        font: inherit;
+        font-size: 12.5px;
+        border: 1px solid #e2e8f0;
+        border-radius: 5px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      .pin-popover .row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .pin-popover button {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .pin-popover button.primary {
+        background: #2563eb;
+        color: #fff;
+        border-color: #2563eb;
+      }
+      @media (max-width: 880px) {
+        .layout { grid-template-columns: 1fr; }
+        aside.tokens { position: static; }
+        footer.bottom { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <h1 id="title">Design kit review</h1>
+      <p id="preamble"></p>
+    </header>
+
+    <div class="layout">
+      <aside class="tokens" id="tokens">
+        <h2>Global tokens</h2>
+        <div class="token-row">
+          <label>Primary</label>
+          <input type="color" data-token="primary" />
+        </div>
+        <div class="token-row">
+          <label>Accent</label>
+          <input type="color" data-token="accent" />
+        </div>
+        <div class="token-row">
+          <label>Neutral hue</label>
+          <select data-token="neutralHue">
+            <option value="slate">Slate (cool)</option>
+            <option value="gray">Gray (neutral)</option>
+            <option value="zinc">Zinc (warm-ish)</option>
+            <option value="stone">Stone (warm)</option>
+          </select>
+        </div>
+        <div class="token-row">
+          <label>Type family</label>
+          <select data-token="fontFamily">
+            <option value="-apple-system, BlinkMacSystemFont, sans-serif">System</option>
+            <option value="'Inter', system-ui, sans-serif">Inter</option>
+            <option value="Georgia, 'Times New Roman', serif">Serif</option>
+            <option value="ui-monospace, SFMono-Regular, Menlo, monospace">Mono</option>
+          </select>
+        </div>
+        <div class="token-row">
+          <label>Type ratio</label>
+          <input type="range" data-token="scaleRatio" min="1.1" max="1.5" step="0.025" />
+          <span class="v" data-display="scaleRatio"></span>
+        </div>
+        <div class="token-row">
+          <label>Spacing unit</label>
+          <input type="range" data-token="spacingUnit" min="2" max="8" step="1" />
+          <span class="v" data-display="spacingUnit"></span>
+        </div>
+        <div class="token-row">
+          <label>Radius style</label>
+          <select data-token="radiusStyle">
+            <option value="sharp">Sharp (0)</option>
+            <option value="soft">Soft (6)</option>
+            <option value="rounded">Rounded (12)</option>
+            <option value="pill">Pill (999)</option>
+          </select>
+        </div>
+      </aside>
+
+      <main class="sections" id="sections"></main>
+    </div>
+
+    <footer class="bottom">
+      <div class="panel">
+        <h3>Notes</h3>
+        <textarea id="notes" placeholder="Cross-cutting notes on the kit as a whole"></textarea>
+      </div>
+      <div class="panel">
+        <h3>Questions for the agent</h3>
+        <div class="question-row">
+          <textarea id="globalQ" placeholder="e.g. is the accent color readable at small sizes?"></textarea>
+          <button id="askBtn">Ask</button>
+        </div>
+        <ul class="qlist" id="qlist"></ul>
+      </div>
+    </footer>
+
+    <script>
+      // FILLIN
+      const TEMPLATE_DATA = {
+        title: 'Design kit review',
+        preamble:
+          'Tune the global tokens on the left. Approve/reject each section in the kit. Click any swatch, type sample, or component to pin a note to it. Reactions per section. Submit when done.',
+        tokens: {
+          primary: '#2563eb',
+          accent: '#16a34a',
+          neutralHue: 'slate',
+          fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+          scaleRatio: 1.25,
+          spacingUnit: 4,
+          radiusStyle: 'soft',
+        },
+        sections: ['palette', 'typography', 'spacing', 'radii', 'shadows', 'components'],
+      };
+
+      const REACTIONS = ['👍', '👎', '🤔', '❤️', '🎉'];
+      const RADIUS_VALUES = { sharp: 0, soft: 6, rounded: 12, pill: 999 };
+      const NEUTRAL_HUES = {
+        slate: ['#f8fafc','#f1f5f9','#e2e8f0','#cbd5e1','#94a3b8','#64748b','#475569','#334155','#1e293b','#0f172a'],
+        gray:  ['#f9fafb','#f3f4f6','#e5e7eb','#d1d5db','#9ca3af','#6b7280','#4b5563','#374151','#1f2937','#111827'],
+        zinc:  ['#fafafa','#f4f4f5','#e4e4e7','#d4d4d8','#a1a1aa','#71717a','#52525b','#3f3f46','#27272a','#18181b'],
+        stone: ['#fafaf9','#f5f5f4','#e7e5e4','#d6d3d1','#a8a29e','#78716c','#57534e','#44403c','#292524','#1c1917'],
+      };
+
+      document.getElementById('title').textContent = TEMPLATE_DATA.title;
+      document.getElementById('preamble').textContent = TEMPLATE_DATA.preamble;
+
+      const state = {
+        tokens: { ...TEMPLATE_DATA.tokens },
+        sectionStatus: {},
+        reactions: {},
+        pins: [],
+        notes: '',
+      };
+      let pinCounter = 0;
+      let openPopover = null;
+
+      const sectionsRoot = document.getElementById('sections');
+      const sectionDefs = [
+        { id: 'palette',    heading: 'Color palette' },
+        { id: 'typography', heading: 'Typography' },
+        { id: 'spacing',    heading: 'Spacing scale' },
+        { id: 'radii',      heading: 'Radius scale' },
+        { id: 'shadows',    heading: 'Shadows' },
+        { id: 'components', heading: 'Components' },
+      ].filter((s) => TEMPLATE_DATA.sections.includes(s.id));
+
+      function tokenCSS() {
+        const t = state.tokens;
+        const neutrals = NEUTRAL_HUES[t.neutralHue] || NEUTRAL_HUES.slate;
+        return {
+          primary: t.primary,
+          accent: t.accent,
+          neutralBg: neutrals[0],
+          neutralFg: neutrals[9],
+          neutralBorder: neutrals[2],
+          neutralSoft: neutrals[1],
+          neutrals,
+          fontFamily: t.fontFamily,
+          scaleRatio: t.scaleRatio,
+          spacingUnit: t.spacingUnit,
+          radiusMd: RADIUS_VALUES[t.radiusStyle],
+        };
+      }
+
+      function buildPalette() {
+        const c = tokenCSS();
+        const swatches = [
+          { id: 'primary',   color: c.primary, label: 'primary',  dark: true },
+          { id: 'accent',    color: c.accent,  label: 'accent',   dark: true },
+          ...c.neutrals.map((color, i) => ({
+            id: 'neutral-' + (i * 100 || 50),
+            color,
+            label: 'n' + (i * 100 || 50),
+            dark: i > 4,
+          })),
+          { id: 'success', color: '#16a34a', label: 'success', dark: true },
+          { id: 'warn',    color: '#f59e0b', label: 'warn',    dark: true },
+          { id: 'error',   color: '#dc2626', label: 'error',   dark: true },
+        ];
+        const palette = document.createElement('div');
+        palette.className = 'palette';
+        swatches.forEach((s) => {
+          const sw = document.createElement('div');
+          sw.className = 'swatch pin-target' + (s.dark ? ' dark' : '');
+          sw.style.background = s.color;
+          sw.dataset.tokenId = 'palette:' + s.id;
+          sw.innerHTML = '<span class="label"></span>';
+          sw.querySelector('.label').textContent = s.label + ' ' + s.color;
+          palette.appendChild(sw);
+        });
+        return palette;
+      }
+
+      function buildTypography() {
+        const c = tokenCSS();
+        const ramp = [
+          { name: 'display', scale: 4 },
+          { name: 'h1',      scale: 3 },
+          { name: 'h2',      scale: 2 },
+          { name: 'h3',      scale: 1 },
+          { name: 'body',    scale: 0 },
+          { name: 'small',   scale: -1 },
+          { name: 'mono',    scale: -1, mono: true },
+        ];
+        const wrap = document.createElement('div');
+        wrap.className = 'type-ramp';
+        ramp.forEach((r) => {
+          const row = document.createElement('div');
+          row.className = 'type-row pin-target';
+          row.dataset.tokenId = 'type:' + r.name;
+          const sizePx = 16 * Math.pow(c.scaleRatio, r.scale);
+          row.innerHTML =
+            '<span class="name"></span>' +
+            '<span class="demo" style="font-size:' + sizePx.toFixed(1) + 'px"></span>';
+          row.querySelector('.name').textContent = r.name + ' · ' + sizePx.toFixed(0) + 'px';
+          const demo = row.querySelector('.demo');
+          if (r.mono) demo.style.fontFamily = 'ui-monospace, SFMono-Regular, Menlo, monospace';
+          demo.textContent = r.name === 'mono' ? 'const x = 42;' : 'Pack my box with five dozen liquor jugs.';
+          wrap.appendChild(row);
+        });
+        return wrap;
+      }
+
+      function buildSpacing() {
+        const c = tokenCSS();
+        const scales = [1, 2, 3, 4, 6, 8, 12, 16, 24];
+        const wrap = document.createElement('div');
+        wrap.className = 'spacing-ruler';
+        scales.forEach((s) => {
+          const cell = document.createElement('div');
+          cell.className = 'spacing-cell pin-target';
+          cell.dataset.tokenId = 'space:' + s;
+          const px = s * c.spacingUnit;
+          cell.innerHTML =
+            '<div class="bar" style="width: 20px; height: ' + Math.min(px, 96) + 'px"></div>' +
+            '<span>' + s + ' · ' + px + 'px</span>';
+          wrap.appendChild(cell);
+        });
+        return wrap;
+      }
+
+      function buildRadii() {
+        const radii = [0, 2, 4, 8, 12, 24, 9999];
+        const wrap = document.createElement('div');
+        wrap.className = 'radii';
+        radii.forEach((r) => {
+          const cell = document.createElement('div');
+          cell.className = 'radius-cell pin-target';
+          cell.dataset.tokenId = 'radius:' + r;
+          cell.style.borderRadius = r + 'px';
+          cell.style.background = state.tokens.primary;
+          cell.textContent = r === 9999 ? '999' : String(r);
+          wrap.appendChild(cell);
+        });
+        return wrap;
+      }
+
+      function buildShadows() {
+        const shadows = [
+          { name: 'sm', value: '0 1px 2px rgba(0,0,0,0.05)' },
+          { name: 'md', value: '0 4px 8px rgba(0,0,0,0.08)' },
+          { name: 'lg', value: '0 8px 24px rgba(0,0,0,0.12)' },
+          { name: 'xl', value: '0 16px 48px rgba(0,0,0,0.16)' },
+        ];
+        const wrap = document.createElement('div');
+        wrap.className = 'shadows';
+        shadows.forEach((s) => {
+          const cell = document.createElement('div');
+          cell.className = 'shadow-cell pin-target';
+          cell.dataset.tokenId = 'shadow:' + s.name;
+          cell.style.boxShadow = s.value;
+          cell.innerHTML = '<div class="label-row"></div><div class="v"></div>';
+          cell.querySelector('.label-row').textContent = 'shadow.' + s.name;
+          cell.querySelector('.v').textContent = s.value;
+          wrap.appendChild(cell);
+        });
+        return wrap;
+      }
+
+      function buildComponents() {
+        const wrap = document.createElement('div');
+        wrap.className = 'components';
+
+        const r = (cls) => {
+          const row = document.createElement('div');
+          row.className = 'comp-row';
+          row.innerHTML = cls;
+          // make each immediate child a pin target
+          Array.from(row.children).forEach((ch) => {
+            ch.classList.add('pin-target');
+            ch.dataset.tokenId = 'component:' + (ch.className.replace(/\s+pin-target$/, '') || ch.tagName.toLowerCase());
+          });
+          return row;
+        };
+
+        wrap.appendChild(
+          r(
+            '<button class="demo-btn primary sm">Primary sm</button>' +
+            '<button class="demo-btn primary">Primary</button>' +
+            '<button class="demo-btn primary lg">Primary lg</button>',
+          ),
+        );
+        wrap.appendChild(
+          r(
+            '<button class="demo-btn secondary">Secondary</button>' +
+            '<button class="demo-btn ghost">Ghost</button>',
+          ),
+        );
+        wrap.appendChild(
+          r(
+            '<input class="demo-input" placeholder="Input placeholder" />' +
+            '<span class="demo-badge info">info</span>' +
+            '<span class="demo-badge success">success</span>' +
+            '<span class="demo-badge warn">warn</span>' +
+            '<span class="demo-badge error">error</span>',
+          ),
+        );
+        wrap.appendChild(
+          r(
+            '<div class="demo-alert info">Heads up: this is an info alert.</div>',
+          ),
+        );
+        wrap.appendChild(
+          r(
+            '<div class="demo-alert success">Saved successfully.</div>' +
+            '<div class="demo-alert warn">Almost out of credits.</div>',
+          ),
+        );
+        wrap.appendChild(
+          r(
+            '<div class="demo-card"><h4>Card title</h4><p>Description text that demonstrates the card body type at default size.</p></div>' +
+            '<div class="demo-card"><h4>Another card</h4><p>Cards share radius and border tokens with the rest of the kit.</p></div>',
+          ),
+        );
+
+        return wrap;
+      }
+
+      const BUILDERS = {
+        palette: buildPalette,
+        typography: buildTypography,
+        spacing: buildSpacing,
+        radii: buildRadii,
+        shadows: buildShadows,
+        components: buildComponents,
+      };
+
+      function applyTokens() {
+        const c = tokenCSS();
+        document.querySelectorAll('.components').forEach((root) => {
+          root.style.setProperty('--primary', c.primary);
+          root.style.setProperty('--accent', c.accent);
+          root.style.setProperty('--neutral-bg', c.neutralBg);
+          root.style.setProperty('--neutral-fg', c.neutralFg);
+          root.style.setProperty('--neutral-border', c.neutralBorder);
+          root.style.setProperty('--neutral-soft', c.neutralSoft);
+          root.style.setProperty('--radius-md', c.radiusMd + 'px');
+          root.style.fontFamily = c.fontFamily;
+        });
+        // Top-level CSS var for sliders / ruler color
+        document.body.style.setProperty('--primary', c.primary);
+      }
+
+      function rebuildSection(sectionId) {
+        const oldEl = document.querySelector('.section[data-id="' + sectionId + '"] .specimen');
+        if (!oldEl) return;
+        const fresh = BUILDERS[sectionId]();
+        oldEl.replaceWith(Object.assign(document.createElement('div'), { className: 'specimen' }));
+        const newSpec = document.querySelector('.section[data-id="' + sectionId + '"] .specimen');
+        newSpec.appendChild(fresh);
+        applyTokens();
+        wirePinTargets(newSpec);
+      }
+
+      function wirePinTargets(scope) {
+        scope.querySelectorAll('.pin-target').forEach((el) => {
+          el.addEventListener('click', (ev) => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            openPinPopover(ev.clientX, ev.clientY, el);
+          });
+        });
+      }
+
+      // Build each section card.
+      sectionDefs.forEach((sd) => {
+        state.sectionStatus[sd.id] = 'pending';
+        state.reactions[sd.id] = {};
+        const el = document.createElement('section');
+        el.className = 'section';
+        el.dataset.id = sd.id;
+        el.innerHTML =
+          '<div class="section-head">' +
+          '  <h2></h2>' +
+          '  <div class="spacer"></div>' +
+          '  <div class="rxn"></div>' +
+          '  <div class="actions">' +
+          '    <button class="approve">Approve</button>' +
+          '    <button class="reject">Reject</button>' +
+          '  </div>' +
+          '</div>' +
+          '<div class="specimen"></div>';
+        el.querySelector('h2').textContent = sd.heading;
+        const spec = el.querySelector('.specimen');
+        spec.appendChild(BUILDERS[sd.id]());
+        wirePinTargets(spec);
+
+        // Reaction chips
+        const rxn = el.querySelector('.rxn');
+        REACTIONS.forEach((emoji) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'react-chip';
+          chip.dataset.emoji = emoji;
+          chip.innerHTML = '<span class="emoji">' + emoji + '</span><span class="count"></span>';
+          chip.addEventListener('click', () => {
+            state.reactions[sd.id][emoji] = (state.reactions[sd.id][emoji] || 0) + 1;
+            chip.classList.add('on');
+            chip.querySelector('.count').textContent = state.reactions[sd.id][emoji];
+            window.mdrp.addReaction({ targetId: sd.id, emoji });
+            pushState();
+          });
+          rxn.appendChild(chip);
+        });
+
+        const approve = el.querySelector('.approve');
+        const reject = el.querySelector('.reject');
+        function setStatus(next) {
+          state.sectionStatus[sd.id] = next;
+          el.classList.toggle('approved', next === 'approved');
+          el.classList.toggle('rejected', next === 'rejected');
+          approve.classList.toggle('active', next === 'approved');
+          reject.classList.toggle('active', next === 'rejected');
+          window.mdrp.setSectionStatus(sd.id, next);
+          pushState();
+        }
+        approve.addEventListener('click', () => setStatus('approved'));
+        reject.addEventListener('click', () => setStatus('rejected'));
+
+        sectionsRoot.appendChild(el);
+      });
+
+      function pushState() {
+        window.mdrp.update({
+          tokens: state.tokens,
+          sectionStatus: state.sectionStatus,
+          reactions: state.reactions,
+          pins: state.pins,
+          notes: document.getElementById('notes').value || '',
+        });
+      }
+
+      // Token controls
+      document.querySelectorAll('[data-token]').forEach((el) => {
+        const key = el.dataset.token;
+        if (el.tagName === 'INPUT' && el.type === 'color') {
+          el.value = state.tokens[key];
+          el.addEventListener('input', () => {
+            state.tokens[key] = el.value;
+            ['palette', 'radii', 'spacing'].forEach(rebuildSection);
+            applyTokens();
+            pushState();
+          });
+        } else if (el.tagName === 'INPUT' && el.type === 'range') {
+          el.value = state.tokens[key];
+          const display = document.querySelector('[data-display="' + key + '"]');
+          if (display) display.textContent = String(state.tokens[key]);
+          el.addEventListener('input', () => {
+            state.tokens[key] = parseFloat(el.value);
+            if (display) display.textContent = el.value;
+            if (key === 'scaleRatio') rebuildSection('typography');
+            if (key === 'spacingUnit') rebuildSection('spacing');
+            pushState();
+          });
+        } else if (el.tagName === 'SELECT') {
+          el.value = state.tokens[key];
+          el.addEventListener('change', () => {
+            state.tokens[key] = el.value;
+            if (key === 'neutralHue') rebuildSection('palette');
+            if (key === 'radiusStyle') applyTokens();
+            if (key === 'fontFamily') applyTokens();
+            pushState();
+          });
+        }
+      });
+
+      function openPinPopover(x, y, target) {
+        if (openPopover) openPopover.remove();
+        const tokenId = target.dataset.tokenId || 'unknown';
+        const pop = document.createElement('div');
+        pop.className = 'pin-popover';
+        pop.style.left = Math.min(x + 8, window.innerWidth - 300) + 'px';
+        pop.style.top = Math.min(y + 8, window.innerHeight - 160) + 'px';
+        pop.innerHTML =
+          '<div class="target"></div>' +
+          '<textarea placeholder="What about this token?"></textarea>' +
+          '<div class="row">' +
+          '  <button data-act="cancel">Cancel</button>' +
+          '  <button class="primary" data-act="ok">Pin</button>' +
+          '</div>';
+        pop.querySelector('.target').textContent = tokenId;
+        document.body.appendChild(pop);
+        openPopover = pop;
+        const ta = pop.querySelector('textarea');
+        ta.focus();
+        pop.querySelector('[data-act=cancel]').addEventListener('click', () => {
+          pop.remove();
+          openPopover = null;
+        });
+        pop.querySelector('[data-act=ok]').addEventListener('click', () => {
+          const text = ta.value.trim();
+          if (!text) {
+            pop.remove();
+            openPopover = null;
+            return;
+          }
+          pinCounter += 1;
+          state.pins.push({ idx: pinCounter, tokenId, text });
+          target.classList.add('pinned');
+          const badge = document.createElement('span');
+          badge.className = 'pin-badge';
+          badge.textContent = String(pinCounter);
+          // Many specimens position relative; if not, force it.
+          const cs = getComputedStyle(target);
+          if (cs.position === 'static') target.style.position = 'relative';
+          target.appendChild(badge);
+          // Find which section this pin belongs to
+          const sectionEl = target.closest('.section');
+          const sectionId = sectionEl ? sectionEl.dataset.id : null;
+          window.mdrp.addComment({
+            sectionId,
+            anchor: 'token:' + tokenId,
+            text,
+          });
+          pushState();
+          pop.remove();
+          openPopover = null;
+        });
+      }
+
+      document.addEventListener('click', (ev) => {
+        if (
+          openPopover &&
+          !openPopover.contains(ev.target) &&
+          !ev.target.closest('.pin-target')
+        ) {
+          openPopover.remove();
+          openPopover = null;
+        }
+      });
+
+      // Notes + Q&A
+      document.getElementById('notes').addEventListener('blur', () => pushState());
+      const askBtn = document.getElementById('askBtn');
+      const globalQ = document.getElementById('globalQ');
+      const qlist = document.getElementById('qlist');
+      askBtn.addEventListener('click', () => {
+        const text = globalQ.value.trim();
+        if (!text) return;
+        window.mdrp.askQuestion({ text });
+        const li = document.createElement('li');
+        li.textContent = text;
+        qlist.appendChild(li);
+        globalQ.value = '';
+      });
+
+      applyTokens();
+
+      window.mdrp.ready({
+        title: TEMPLATE_DATA.title,
+        chrome: 'host',
+        sections: sectionDefs.map((s) => ({ id: s.id, heading: s.heading })),
+      });
+      pushState();
+    </script>
+  </body>
+</html>
