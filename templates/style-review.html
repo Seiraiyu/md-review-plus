@@ -1,0 +1,825 @@
+<!--
+mdrp:template name=style-review
+purpose: Page-level style review. Renders a generated web page in a preview
+  pane and exposes a side panel of styling axes (colors, typography, spacing,
+  radius, density, dark mode) that drive the preview via CSS variables.
+  Reviewer can also click any element in the preview to pin a comment to it.
+fillins:
+  - TITLE: short heading
+  - PREAMBLE: 1-2 sentence description of what's being reviewed
+  - PAGE_HTML: the actual page HTML. Use CSS variables for tunable values:
+    --primary, --accent, --bg, --fg, --muted, --border, --radius, --spacing,
+    --font-family, --font-scale, --line-height. Keep all CSS inside <style>
+    blocks within PAGE_HTML so it's a self-contained snippet.
+  - PAGE_CSS (optional): extra CSS that complements PAGE_HTML; gets injected
+    inside the preview's scope.
+  - INITIAL: starting values for each control (any subset; rest defaults).
+submit-shape: chrome:'none'. mdrp.update fires on every control change with
+  {styles: {...}, pins: [{selector, text}], summary?}. Host's floating Submit
+  captures the latest. Click-to-pin comments flow through mdrp.addComment
+  with anchor='element:<selector>'. Reactions go through mdrp.addReaction.
+  Questions flow through mdrp.askQuestion.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>style review</title>
+    <style>
+      :root {
+        --panel-bg: #f7f8fa;
+        --panel-fg: #0f172a;
+        --panel-dim: #64748b;
+        --panel-border: #e2e8f0;
+        --panel-soft: #f1f5f9;
+        --panel-accent: #2563eb;
+        --panel-good: #16a34a;
+        --panel-pin: #f59e0b;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--panel-bg);
+        color: var(--panel-fg);
+        -webkit-font-smoothing: antialiased;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        grid-template-rows: 1fr auto;
+        height: 100vh;
+      }
+      .controls {
+        background: #fff;
+        border-right: 1px solid var(--panel-border);
+        padding: 18px 20px 96px;
+        overflow-y: auto;
+        grid-row: 1 / 3;
+      }
+      .controls h1 { margin: 0 0 4px; font-size: 17px; letter-spacing: -0.01em; }
+      .controls .preamble {
+        font-size: 12.5px;
+        color: var(--panel-dim);
+        line-height: 1.5;
+        margin: 0 0 14px;
+      }
+      .group { margin: 12px 0 18px; }
+      .group h2 {
+        margin: 0 0 8px;
+        font-size: 10.5px;
+        color: var(--panel-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .control {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+      }
+      .control label {
+        flex: 1;
+        font-size: 12.5px;
+        color: var(--panel-fg);
+      }
+      .control input[type=color] {
+        width: 36px;
+        height: 24px;
+        padding: 0;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        background: transparent;
+        cursor: pointer;
+      }
+      .control input[type=range] {
+        width: 110px;
+        accent-color: var(--panel-accent);
+      }
+      .control .value {
+        font-size: 11px;
+        color: var(--panel-dim);
+        font-variant-numeric: tabular-nums;
+        min-width: 36px;
+        text-align: right;
+      }
+      .control select {
+        flex: 1;
+        padding: 4px 6px;
+        font: inherit;
+        font-size: 12px;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        background: #fff;
+      }
+      .seg {
+        display: flex;
+        border: 1px solid var(--panel-border);
+        border-radius: 5px;
+        overflow: hidden;
+      }
+      .seg button {
+        flex: 1;
+        padding: 4px 0;
+        font-size: 11.5px;
+        font-weight: 600;
+        background: #fff;
+        color: var(--panel-fg);
+        border: 0;
+        border-right: 1px solid var(--panel-border);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .seg button:last-child { border-right: 0; }
+      .seg button.on {
+        background: var(--panel-accent);
+        color: #fff;
+      }
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 5px 0;
+      }
+      .toggle input[type=checkbox] {
+        accent-color: var(--panel-accent);
+      }
+      .reactions-row {
+        display: flex;
+        gap: 5px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+      }
+      .react-chip {
+        padding: 3px 9px;
+        font-size: 13px;
+        border: 1px solid var(--panel-border);
+        border-radius: 999px;
+        background: #fff;
+        cursor: pointer;
+        user-select: none;
+        font-family: inherit;
+      }
+      .react-chip:hover { border-color: var(--panel-dim); }
+      .react-chip.on { background: #fef3c7; border-color: #f59e0b; }
+      .react-chip .count {
+        margin-left: 3px;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--panel-dim);
+      }
+      .react-chip.on .count { color: #92400e; }
+
+      .preview-wrap {
+        position: relative;
+        overflow: hidden;
+        background: var(--bg, #fff);
+        grid-column: 2;
+        grid-row: 1;
+      }
+      .preview-scroll {
+        position: absolute;
+        inset: 0;
+        overflow-y: auto;
+      }
+      .preview-root {
+        --primary: #2563eb;
+        --accent: #16a34a;
+        --bg: #ffffff;
+        --fg: #0f172a;
+        --muted: #64748b;
+        --border: #e2e8f0;
+        --radius: 8px;
+        --spacing: 1;
+        --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        --font-scale: 1;
+        --line-height: 1.5;
+
+        background: var(--bg);
+        color: var(--fg);
+        font-family: var(--font-family);
+        font-size: calc(16px * var(--font-scale));
+        line-height: var(--line-height);
+        min-height: 100%;
+        transition: background 0.15s, color 0.15s;
+      }
+      .preview-root.crosshair, .preview-root.crosshair * { cursor: crosshair !important; }
+      .preview-root .mdrp-pin-marker {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--panel-pin);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: translate(-50%, -50%);
+        z-index: 1000;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        cursor: pointer;
+        pointer-events: auto;
+      }
+      .preview-root .mdrp-pinned-el {
+        outline: 2px dashed var(--panel-pin);
+        outline-offset: 2px;
+      }
+
+      .footer-bar {
+        grid-column: 2;
+        grid-row: 2;
+        background: #fff;
+        border-top: 1px solid var(--panel-border);
+        padding: 12px 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr 220px;
+        gap: 14px;
+        align-items: stretch;
+      }
+      .footer-bar .field h3 {
+        margin: 0 0 4px;
+        font-size: 10.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--panel-dim);
+      }
+      .footer-bar textarea {
+        width: 100%;
+        min-height: 50px;
+        padding: 6px 8px;
+        font: inherit;
+        font-size: 12.5px;
+        border: 1px solid var(--panel-border);
+        border-radius: 5px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      .footer-bar .pins-summary {
+        font-size: 12px;
+        color: var(--panel-dim);
+        background: var(--panel-soft);
+        border-radius: 5px;
+        padding: 8px 10px;
+        overflow-y: auto;
+        max-height: 80px;
+      }
+      .footer-bar .pins-summary .pin-item {
+        padding: 2px 0;
+      }
+      .footer-bar .pins-summary .badge {
+        display: inline-flex;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: var(--panel-pin);
+        color: #fff;
+        font-size: 9.5px;
+        font-weight: 700;
+        align-items: center;
+        justify-content: center;
+        margin-right: 4px;
+        vertical-align: middle;
+      }
+      .pin-popover {
+        position: fixed;
+        z-index: 200;
+        background: #fff;
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        box-shadow: 0 10px 32px rgba(0,0,0,0.15);
+        padding: 8px;
+        width: 280px;
+      }
+      .pin-popover .target {
+        font-size: 11px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        color: var(--panel-dim);
+        background: var(--panel-soft);
+        padding: 3px 6px;
+        border-radius: 3px;
+        margin-bottom: 6px;
+        word-break: break-all;
+      }
+      .pin-popover textarea {
+        width: 100%;
+        min-height: 58px;
+        font: inherit;
+        font-size: 12.5px;
+        border: 1px solid var(--panel-border);
+        border-radius: 5px;
+        padding: 6px 8px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      .pin-popover .row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .pin-popover button {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .pin-popover button.primary {
+        background: var(--panel-accent);
+        color: #fff;
+        border-color: var(--panel-accent);
+      }
+
+      .pin-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 6px 10px;
+        margin-top: 6px;
+        background: var(--panel-soft);
+        border-radius: 5px;
+        font-size: 12px;
+      }
+      .pin-toggle.on { background: #fef3c7; color: #92400e; }
+      .pin-toggle button {
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        background: #fff;
+        border: 1px solid var(--panel-border);
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .pin-toggle.on button { border-color: #f59e0b; color: #92400e; }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <aside class="controls">
+        <h1 id="title">Tune the page</h1>
+        <p class="preamble" id="preamble"></p>
+
+        <div class="pin-toggle" id="pinToggle">
+          <span id="pinToggleLabel">Click-to-pin: off</span>
+          <button id="pinToggleBtn">Turn on</button>
+        </div>
+
+        <div class="group">
+          <h2>Colors</h2>
+          <div class="control">
+            <label>Primary</label>
+            <input type="color" data-style="primary" />
+          </div>
+          <div class="control">
+            <label>Accent</label>
+            <input type="color" data-style="accent" />
+          </div>
+          <div class="control">
+            <label>Background</label>
+            <input type="color" data-style="bg" />
+          </div>
+          <div class="control">
+            <label>Text</label>
+            <input type="color" data-style="fg" />
+          </div>
+          <div class="toggle">
+            <input type="checkbox" id="dark" />
+            <label for="dark" style="font-size:12.5px">Dark mode (swap bg/fg)</label>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Typography</h2>
+          <div class="control">
+            <label>Family</label>
+            <select data-style="fontFamily">
+              <option value="-apple-system, BlinkMacSystemFont, sans-serif">System</option>
+              <option value="'Inter', system-ui, sans-serif">Inter</option>
+              <option value="Georgia, 'Times New Roman', serif">Serif</option>
+              <option value="ui-monospace, SFMono-Regular, Menlo, monospace">Mono</option>
+              <option value="'Playfair Display', Georgia, serif">Display</option>
+            </select>
+          </div>
+          <div class="control">
+            <label>Size scale</label>
+            <input type="range" data-style="fontScale" min="0.85" max="1.3" step="0.05" />
+            <span class="value" data-display="fontScale"></span>
+          </div>
+          <div class="control">
+            <label>Line height</label>
+            <input type="range" data-style="lineHeight" min="1.2" max="1.9" step="0.05" />
+            <span class="value" data-display="lineHeight"></span>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Layout</h2>
+          <div class="control">
+            <label>Spacing scale</label>
+            <input type="range" data-style="spacing" min="0.6" max="1.6" step="0.05" />
+            <span class="value" data-display="spacing"></span>
+          </div>
+          <div class="control">
+            <label>Radius</label>
+            <input type="range" data-style="radius" min="0" max="32" step="1" />
+            <span class="value" data-display="radius"></span>
+          </div>
+          <div class="control">
+            <label>Density</label>
+            <div class="seg" data-style="density">
+              <button data-value="compact">Compact</button>
+              <button data-value="normal">Normal</button>
+              <button data-value="spacious">Spacious</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="group">
+          <h2>Overall reaction</h2>
+          <div class="reactions-row" id="reactionsRow"></div>
+        </div>
+      </aside>
+
+      <div class="preview-wrap">
+        <div class="preview-scroll">
+          <div class="preview-root" id="preview"></div>
+        </div>
+      </div>
+
+      <div class="footer-bar">
+        <div class="field">
+          <h3>Reviewer notes</h3>
+          <textarea id="notes" placeholder="Overall impressions, missing pieces, anything cross-cutting…"></textarea>
+        </div>
+        <div class="field">
+          <h3>Ask a question</h3>
+          <textarea id="question" placeholder="e.g. is the contrast meeting WCAG? what type ramp is this?"></textarea>
+        </div>
+        <div class="field">
+          <h3>Pins</h3>
+          <div class="pins-summary" id="pinsSummary">
+            <em style="font-style: italic;">No pinned comments yet. Toggle click-to-pin and tap an element.</em>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // FILLIN
+      const TEMPLATE_DATA = {
+        title: 'Tune the landing page',
+        preamble:
+          'Drag the controls to restyle the preview live. Toggle "Click-to-pin" to tap any element and leave a note on it. Reactions and a question box are below.',
+        initial: {
+          primary: '#2563eb',
+          accent: '#16a34a',
+          bg: '#ffffff',
+          fg: '#0f172a',
+          fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+          fontScale: 1,
+          lineHeight: 1.5,
+          spacing: 1,
+          radius: 8,
+          density: 'normal',
+          dark: false,
+        },
+        // Page HTML — anything goes. Use CSS variables for tunables.
+        pageHtml:
+          '<style>' +
+          '.page { padding: calc(24px * var(--spacing)); max-width: 960px; margin: 0 auto; }' +
+          '.nav { display: flex; align-items: center; gap: 16px; padding: calc(12px * var(--spacing)) 0; border-bottom: 1px solid var(--border); }' +
+          '.nav .brand { font-weight: 800; font-size: 1.05em; color: var(--fg); }' +
+          '.nav .links { display: flex; gap: 14px; margin-left: auto; }' +
+          '.nav a { color: var(--muted); text-decoration: none; font-size: 0.92em; }' +
+          '.nav a:hover { color: var(--fg); }' +
+          '.hero { padding: calc(64px * var(--spacing)) 0 calc(40px * var(--spacing)); }' +
+          '.hero h1 { font-size: 2.4em; line-height: 1.1; margin: 0 0 0.4em; letter-spacing: -0.02em; }' +
+          '.hero p { font-size: 1.1em; color: var(--muted); margin: 0 0 1em; max-width: 520px; }' +
+          '.btn { display: inline-block; padding: calc(10px * var(--spacing)) calc(20px * var(--spacing)); ' +
+          '       border-radius: var(--radius); font-weight: 700; cursor: pointer; ' +
+          '       text-decoration: none; font-size: 0.95em; }' +
+          '.btn.primary { background: var(--primary); color: #fff; border: 0; }' +
+          '.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--border); margin-left: 8px; }' +
+          '.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: calc(16px * var(--spacing)); margin-top: calc(24px * var(--spacing)); }' +
+          '.card { border: 1px solid var(--border); border-radius: var(--radius); padding: calc(18px * var(--spacing)); }' +
+          '.card h3 { margin: 0 0 0.3em; font-size: 1.05em; }' +
+          '.card p { margin: 0; font-size: 0.92em; color: var(--muted); line-height: var(--line-height); }' +
+          '.cta { background: var(--primary); color: #fff; padding: calc(40px * var(--spacing)); border-radius: var(--radius); margin: calc(48px * var(--spacing)) 0 calc(24px * var(--spacing)); text-align: center; }' +
+          '.cta h2 { margin: 0 0 0.3em; }' +
+          '.cta p { margin: 0 0 1em; opacity: 0.92; }' +
+          '.cta .btn.primary { background: var(--accent); color: #fff; }' +
+          '.footer { padding: calc(24px * var(--spacing)) 0; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.85em; display: flex; justify-content: space-between; }' +
+          '</style>' +
+          '<div class="page">' +
+          '  <nav class="nav">' +
+          '    <span class="brand">acme</span>' +
+          '    <div class="links"><a>Product</a><a>Pricing</a><a>Docs</a><a>Sign in</a></div>' +
+          '  </nav>' +
+          '  <section class="hero">' +
+          '    <h1>Ship great work, faster.</h1>' +
+          '    <p>The collaboration tool your AI agent actually wants to use. End-to-end encrypted. Open source. Self-hostable.</p>' +
+          '    <a class="btn primary">Start free</a><a class="btn ghost">Read the docs →</a>' +
+          '  </section>' +
+          '  <section class="features">' +
+          '    <div class="grid">' +
+          '      <div class="card"><h3>Per-section review</h3><p>Approve or reject each part of a generated artifact, with structured stdout.</p></div>' +
+          '      <div class="card"><h3>Interactive artifacts</h3><p>Sliders, drag-and-drop, click-to-pin — all in the same review surface.</p></div>' +
+          '      <div class="card"><h3>Ask the agent back</h3><p>Reviewers can attach questions to specific sections and the agent answers next round.</p></div>' +
+          '    </div>' +
+          '  </section>' +
+          '  <section class="cta">' +
+          '    <h2>One CLI, every collab surface.</h2>' +
+          '    <p>Install once. Skill teaches your agent when to use it.</p>' +
+          '    <a class="btn primary">Get started →</a>' +
+          '  </section>' +
+          '  <footer class="footer"><span>© acme inc.</span><span>privacy · terms · contact</span></footer>' +
+          '</div>',
+      };
+
+      const REACTIONS = ['👍', '👎', '🤔', '❤️', '🎉'];
+      const DENSITY_TO_SPACING = { compact: 0.75, normal: 1, spacious: 1.3 };
+
+      document.getElementById('title').textContent = TEMPLATE_DATA.title;
+      document.getElementById('preamble').textContent = TEMPLATE_DATA.preamble;
+
+      const state = {
+        styles: { ...TEMPLATE_DATA.initial },
+        pins: [], // { idx, selector, text }
+        reactions: {},
+      };
+      let pinCounter = 0;
+      let pinMode = false;
+      let openPopover = null;
+
+      const preview = document.getElementById('preview');
+      preview.innerHTML = TEMPLATE_DATA.pageHtml;
+
+      function applyStyles() {
+        const s = state.styles;
+        const root = preview;
+        const bg = s.dark ? darken(s.bg) : s.bg;
+        const fg = s.dark ? lighten(s.fg) : s.fg;
+        root.style.setProperty('--primary', s.primary);
+        root.style.setProperty('--accent', s.accent);
+        root.style.setProperty('--bg', s.dark ? '#0a0a0b' : s.bg);
+        root.style.setProperty('--fg', s.dark ? '#fafafa' : s.fg);
+        root.style.setProperty('--muted', s.dark ? '#9ca3af' : '#64748b');
+        root.style.setProperty('--border', s.dark ? '#27272a' : '#e2e8f0');
+        root.style.setProperty('--radius', s.radius + 'px');
+        root.style.setProperty(
+          '--spacing',
+          String(s.spacing * (DENSITY_TO_SPACING[s.density] || 1)),
+        );
+        root.style.setProperty('--font-family', s.fontFamily);
+        root.style.setProperty('--font-scale', String(s.fontScale));
+        root.style.setProperty('--line-height', String(s.lineHeight));
+        void bg; void fg; // for future use
+      }
+
+      function darken(hex) { return hex; }
+      function lighten(hex) { return hex; }
+
+      function pushState() {
+        window.mdrp.update({
+          styles: state.styles,
+          pins: state.pins,
+          reactions: state.reactions,
+          notes: document.getElementById('notes').value || '',
+        });
+      }
+
+      // Wire controls
+      document.querySelectorAll('[data-style]').forEach((el) => {
+        const key = el.dataset.style;
+        if (el.tagName === 'INPUT' && el.type === 'color') {
+          el.value = state.styles[key];
+          el.addEventListener('input', () => {
+            state.styles[key] = el.value;
+            applyStyles();
+            pushState();
+          });
+        } else if (el.tagName === 'INPUT' && el.type === 'range') {
+          el.value = state.styles[key];
+          const display = document.querySelector('[data-display="' + key + '"]');
+          if (display) display.textContent = String(state.styles[key]);
+          el.addEventListener('input', () => {
+            state.styles[key] = parseFloat(el.value);
+            if (display) display.textContent = el.value;
+            applyStyles();
+            pushState();
+          });
+        } else if (el.tagName === 'SELECT') {
+          el.value = state.styles[key];
+          el.addEventListener('change', () => {
+            state.styles[key] = el.value;
+            applyStyles();
+            pushState();
+          });
+        } else if (el.classList.contains('seg')) {
+          const setActive = () => {
+            el.querySelectorAll('button').forEach((b) =>
+              b.classList.toggle('on', b.dataset.value === state.styles[key]),
+            );
+          };
+          el.querySelectorAll('button').forEach((b) => {
+            b.addEventListener('click', () => {
+              state.styles[key] = b.dataset.value;
+              setActive();
+              applyStyles();
+              pushState();
+            });
+          });
+          setActive();
+        }
+      });
+
+      document.getElementById('dark').checked = state.styles.dark;
+      document.getElementById('dark').addEventListener('change', (e) => {
+        state.styles.dark = e.target.checked;
+        applyStyles();
+        pushState();
+      });
+
+      // Reactions
+      const reactRow = document.getElementById('reactionsRow');
+      REACTIONS.forEach((emoji) => {
+        const chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'react-chip';
+        chip.dataset.emoji = emoji;
+        chip.innerHTML = '<span class="emoji">' + emoji + '</span><span class="count"></span>';
+        chip.addEventListener('click', () => {
+          state.reactions[emoji] = (state.reactions[emoji] || 0) + 1;
+          chip.classList.add('on');
+          chip.querySelector('.count').textContent = state.reactions[emoji];
+          window.mdrp.addReaction({ targetId: 'page', emoji });
+          pushState();
+        });
+        reactRow.appendChild(chip);
+      });
+
+      // Pin mode
+      const pinToggle = document.getElementById('pinToggle');
+      const pinToggleLabel = document.getElementById('pinToggleLabel');
+      const pinToggleBtn = document.getElementById('pinToggleBtn');
+      function setPinMode(on) {
+        pinMode = on;
+        pinToggle.classList.toggle('on', on);
+        pinToggleLabel.textContent = on ? 'Click-to-pin: ON — tap an element' : 'Click-to-pin: off';
+        pinToggleBtn.textContent = on ? 'Turn off' : 'Turn on';
+        preview.classList.toggle('crosshair', on);
+      }
+      pinToggleBtn.addEventListener('click', () => setPinMode(!pinMode));
+
+      function selectorFor(el) {
+        if (el === preview) return '#preview';
+        const parts = [];
+        let cur = el;
+        while (cur && cur !== preview && parts.length < 5) {
+          let part = cur.tagName.toLowerCase();
+          if (cur.id) {
+            part += '#' + cur.id;
+            parts.unshift(part);
+            break;
+          }
+          if (cur.classList.length) {
+            part += '.' + Array.from(cur.classList).filter((c) => !c.startsWith('mdrp-')).slice(0, 2).join('.');
+          }
+          parts.unshift(part);
+          cur = cur.parentElement;
+        }
+        return parts.join(' > ');
+      }
+
+      function placePinMarker(el, idx) {
+        const r = el.getBoundingClientRect();
+        const containerR = preview.getBoundingClientRect();
+        const marker = document.createElement('div');
+        marker.className = 'mdrp-pin-marker';
+        marker.textContent = String(idx);
+        marker.style.left = (r.left - containerR.left + r.width - 6) + 'px';
+        marker.style.top = (r.top - containerR.top + 6) + 'px';
+        marker.dataset.idx = String(idx);
+        preview.appendChild(marker);
+        el.classList.add('mdrp-pinned-el');
+      }
+
+      preview.addEventListener(
+        'click',
+        (ev) => {
+          if (!pinMode) return;
+          ev.preventDefault();
+          ev.stopPropagation();
+          const target = ev.target;
+          if (!target || target === preview) return;
+          openPinPopover(ev.clientX, ev.clientY, target);
+        },
+        true,
+      );
+
+      function openPinPopover(x, y, target) {
+        if (openPopover) openPopover.remove();
+        const sel = selectorFor(target);
+        const pop = document.createElement('div');
+        pop.className = 'pin-popover';
+        pop.style.left = Math.min(x + 8, window.innerWidth - 300) + 'px';
+        pop.style.top = Math.min(y + 8, window.innerHeight - 160) + 'px';
+        pop.innerHTML =
+          '<div class="target"></div>' +
+          '<textarea placeholder="What about this element?"></textarea>' +
+          '<div class="row">' +
+          '  <button data-act="cancel">Cancel</button>' +
+          '  <button class="primary" data-act="ok">Pin</button>' +
+          '</div>';
+        pop.querySelector('.target').textContent = sel;
+        document.body.appendChild(pop);
+        openPopover = pop;
+        const ta = pop.querySelector('textarea');
+        ta.focus();
+        pop.querySelector('[data-act=cancel]').addEventListener('click', () => {
+          pop.remove();
+          openPopover = null;
+        });
+        pop.querySelector('[data-act=ok]').addEventListener('click', () => {
+          const text = ta.value.trim();
+          if (!text) {
+            pop.remove();
+            openPopover = null;
+            return;
+          }
+          pinCounter += 1;
+          const idx = pinCounter;
+          state.pins.push({ idx, selector: sel, text });
+          placePinMarker(target, idx);
+          renderPinsSummary();
+          window.mdrp.addComment({
+            sectionId: 'page',
+            anchor: 'element:' + sel,
+            text,
+          });
+          pushState();
+          pop.remove();
+          openPopover = null;
+        });
+      }
+
+      document.addEventListener('click', (ev) => {
+        if (
+          openPopover &&
+          !openPopover.contains(ev.target) &&
+          !preview.contains(ev.target)
+        ) {
+          openPopover.remove();
+          openPopover = null;
+        }
+      });
+
+      function renderPinsSummary() {
+        const box = document.getElementById('pinsSummary');
+        if (state.pins.length === 0) {
+          box.innerHTML =
+            '<em style="font-style: italic;">No pinned comments yet. Toggle click-to-pin and tap an element.</em>';
+          return;
+        }
+        box.innerHTML = state.pins
+          .map(
+            (p) =>
+              '<div class="pin-item"><span class="badge">' +
+              p.idx +
+              '</span><span class="pcontent"></span></div>',
+          )
+          .join('');
+        const contents = box.querySelectorAll('.pcontent');
+        state.pins.forEach((p, i) => {
+          contents[i].textContent = p.text + ' — ' + p.selector;
+        });
+      }
+
+      // Notes + question
+      document.getElementById('notes').addEventListener('blur', () => pushState());
+      const questionEl = document.getElementById('question');
+      questionEl.addEventListener('blur', () => {
+        const text = questionEl.value.trim();
+        if (!text) return;
+        window.mdrp.askQuestion({ text });
+        questionEl.value = '';
+        questionEl.placeholder = 'Asked. Type another to add more…';
+      });
+
+      applyStyles();
+
+      window.mdrp.ready({
+        title: TEMPLATE_DATA.title,
+        chrome: 'none',
+        sections: [{ id: 'page', heading: 'Page' }],
+        schema: { summary: 'styled page' },
+      });
+      pushState();
+    </script>
+  </body>
+</html>
