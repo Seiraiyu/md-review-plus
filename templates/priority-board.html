@@ -1,0 +1,564 @@
+<!--
+mdrp:template name=priority-board
+purpose: Prioritize a set of work items into Now / Next / Later / Cut columns by
+  drag-and-drop. Per-card editable title, comment, effort + impact chips, and
+  ask-the-agent question. Bottom: summary and global Q&A.
+fillins:
+  - TITLE: short heading
+  - PREAMBLE: 1-2 sentences explaining the prioritization brief
+  - CARDS: array of { id, title, blurb?, initialColumn: 'now'|'next'|'later'|'cut',
+    effort?: 's'|'m'|'l', impact?: 'low'|'med'|'high' }
+submit-shape: chrome:'none'. mdrp.update fires on every change with
+  {columns:{now:[ids], next:[ids], later:[ids], cut:[ids]}, cards:{id:{title,
+  comment, effort, impact, question}}}. Host Submit captures the latest. Per-card
+  questions go through mdrp.askQuestion with sectionId=cardId. Section status:
+  Now=approved, Cut=rejected, Next/Later=pending.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>priority board</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --card-bg: #ffffff;
+        --fg: #0f172a;
+        --fg-dim: #64748b;
+        --accent: #2563eb;
+        --border: #e2e8f0;
+        --soft: #f1f5f9;
+        --now-bg: #ecfdf5;
+        --now-bd: #16a34a;
+        --next-bg: #fef9c3;
+        --next-bd: #ca8a04;
+        --later-bg: #e0e7ff;
+        --later-bd: #4f46e5;
+        --cut-bg: #fee2e2;
+        --cut-bd: #dc2626;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        -webkit-font-smoothing: antialiased;
+      }
+      header.top {
+        padding: 24px 24px 12px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      header.top h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.01em; }
+      header.top p { margin: 0; color: var(--fg-dim); font-size: 14px; line-height: 1.5; max-width: 720px; }
+      .board {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        padding: 8px 24px 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+        align-items: stretch;
+      }
+      .column {
+        background: var(--card-bg);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        display: flex;
+        flex-direction: column;
+        min-height: 320px;
+        position: relative;
+      }
+      .column.dropping { border-color: var(--accent); }
+      .column-head {
+        padding: 12px 14px 8px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        border-bottom: 1px solid var(--border);
+      }
+      .column-head .pip {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .column.now .pip { background: var(--now-bd); }
+      .column.next .pip { background: var(--next-bd); }
+      .column.later .pip { background: var(--later-bd); }
+      .column.cut .pip { background: var(--cut-bd); }
+      .column-head h2 {
+        margin: 0;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .column-head .count {
+        margin-left: auto;
+        font-size: 12px;
+        font-variant-numeric: tabular-nums;
+        color: var(--fg-dim);
+      }
+      .cards {
+        flex: 1;
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 10px 12px;
+        cursor: grab;
+        position: relative;
+        font-size: 13px;
+        transition: transform 0.08s, box-shadow 0.08s;
+      }
+      .card:active { cursor: grabbing; }
+      .card.dragging { opacity: 0.5; transform: rotate(-1deg); }
+      .card .title {
+        font-weight: 700;
+        font-size: 13.5px;
+        margin-bottom: 4px;
+        outline: none;
+      }
+      .card .title[contenteditable=true]:focus {
+        background: #fffbe6;
+        border-radius: 3px;
+      }
+      .card .blurb {
+        color: var(--fg-dim);
+        font-size: 12.5px;
+        line-height: 1.45;
+        margin-bottom: 8px;
+      }
+      .card .chips {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-bottom: 6px;
+      }
+      .chip-group {
+        display: inline-flex;
+        gap: 0;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .chip-group button {
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        background: #fff;
+        border: 0;
+        border-right: 1px solid var(--border);
+        cursor: pointer;
+        color: var(--fg-dim);
+        font-family: inherit;
+      }
+      .chip-group button:last-child { border-right: 0; }
+      .chip-group button.on { background: var(--accent); color: #fff; }
+      .chip-label {
+        font-size: 10px;
+        color: var(--fg-dim);
+        align-self: center;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        margin-right: 2px;
+      }
+      .card .toggles {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 6px;
+      }
+      .card .toggles button {
+        padding: 3px 8px;
+        font-size: 11px;
+        font-weight: 600;
+        background: var(--soft);
+        border: 0;
+        border-radius: 4px;
+        cursor: pointer;
+        color: var(--fg-dim);
+        font-family: inherit;
+      }
+      .card .toggles button:hover { background: var(--border); }
+      .card .toggles button.on { background: var(--fg); color: #fff; }
+      .card .field {
+        margin-top: 6px;
+      }
+      .card textarea {
+        width: 100%;
+        padding: 5px 7px;
+        font: inherit;
+        font-size: 11.5px;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        resize: vertical;
+        min-height: 28px;
+        background: #fbfcfe;
+        box-sizing: border-box;
+        display: none;
+      }
+      .card.expanded textarea { display: block; }
+      footer.bottom {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 0 24px 96px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .panel {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+      }
+      .panel h2 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+      }
+      .panel textarea {
+        width: 100%;
+        min-height: 80px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font: inherit;
+        font-size: 13px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      .question-row { display: flex; gap: 6px; margin-top: 6px; }
+      .question-row textarea { flex: 1; min-height: 36px; }
+      .question-row button {
+        padding: 6px 12px;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        align-self: flex-end;
+      }
+      .question-list { margin: 8px 0 0; padding: 0; list-style: none; }
+      .question-list li {
+        background: var(--soft);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        margin-bottom: 6px;
+      }
+      .question-list li::before {
+        content: 'Q: ';
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .empty-hint {
+        text-align: center;
+        color: #cbd5e1;
+        font-size: 11.5px;
+        padding: 20px 0;
+        font-style: italic;
+      }
+      @media (max-width: 980px) {
+        .board { grid-template-columns: repeat(2, 1fr); }
+      }
+      @media (max-width: 600px) {
+        .board { grid-template-columns: 1fr; }
+        footer.bottom { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <h1 id="title">Prioritize the queue</h1>
+      <p id="preamble"></p>
+    </header>
+    <section class="board" id="board">
+      <div class="column now" data-col="now">
+        <div class="column-head"><span class="pip"></span><h2>Now</h2><span class="count">0</span></div>
+        <div class="cards" data-col="now"></div>
+      </div>
+      <div class="column next" data-col="next">
+        <div class="column-head"><span class="pip"></span><h2>Next</h2><span class="count">0</span></div>
+        <div class="cards" data-col="next"></div>
+      </div>
+      <div class="column later" data-col="later">
+        <div class="column-head"><span class="pip"></span><h2>Later</h2><span class="count">0</span></div>
+        <div class="cards" data-col="later"></div>
+      </div>
+      <div class="column cut" data-col="cut">
+        <div class="column-head"><span class="pip"></span><h2>Cut</h2><span class="count">0</span></div>
+        <div class="cards" data-col="cut"></div>
+      </div>
+    </section>
+    <footer class="bottom">
+      <div class="panel">
+        <h2>Rationale</h2>
+        <textarea id="rationale" placeholder="Why this ranking? Constraints to consider?"></textarea>
+      </div>
+      <div class="panel">
+        <h2>Questions for the agent</h2>
+        <div class="question-row">
+          <textarea id="globalQ" placeholder="Want me to dig into any of these before next iteration?"></textarea>
+          <button id="askBtn">Ask</button>
+        </div>
+        <ul class="question-list" id="qList"></ul>
+      </div>
+    </footer>
+
+    <script>
+      // FILLIN
+      const TEMPLATE_DATA = {
+        title: 'Prioritize the queue',
+        preamble:
+          'Drag items between columns to set ranking. Tap a card to expand its comment box; click the title to edit it. Anything in Cut is gone for this round.',
+        cards: [
+          { id: 'c1', title: 'HTML artifact mode',                       blurb: 'New review surface for non-markdown content.', initialColumn: 'now',   effort: 'l', impact: 'high' },
+          { id: 'c2', title: 'Skill polish (URL surfacing)',             blurb: 'Make Claude reliably surface the Review URL.', initialColumn: 'now',   effort: 's', impact: 'med' },
+          { id: 'c3', title: 'Inline comments on HTML artifacts',        blurb: 'Cross-iframe selection popover via shim.',     initialColumn: 'next',  effort: 'l', impact: 'high' },
+          { id: 'c4', title: 'Voice notes',                              blurb: 'Record audio comments per section.',           initialColumn: 'later', effort: 'l', impact: 'med' },
+          { id: 'c5', title: 'Realtime co-review',                       blurb: 'Two browsers, same session, live cursors.',    initialColumn: 'later', effort: 'l', impact: 'med' },
+          { id: 'c6', title: 'Auto-attach screenshots to comments',      blurb: 'Drag-drop image into comment textarea.',       initialColumn: 'cut',   effort: 'm', impact: 'low' },
+        ],
+      };
+
+      const EFFORTS = [
+        { value: 's', label: 'S' },
+        { value: 'm', label: 'M' },
+        { value: 'l', label: 'L' },
+      ];
+      const IMPACTS = [
+        { value: 'low', label: 'low' },
+        { value: 'med', label: 'med' },
+        { value: 'high', label: 'high' },
+      ];
+
+      document.getElementById('title').textContent = TEMPLATE_DATA.title;
+      document.getElementById('preamble').textContent = TEMPLATE_DATA.preamble;
+
+      const state = {
+        columns: { now: [], next: [], later: [], cut: [] },
+        cards: {},
+        rationale: '',
+      };
+
+      function pushState() {
+        // Mirror column placement onto section status: now=approved, cut=rejected,
+        // next/later=pending.
+        for (const col of ['now', 'next', 'later', 'cut']) {
+          for (const cid of state.columns[col]) {
+            const status =
+              col === 'now' ? 'approved' : col === 'cut' ? 'rejected' : 'pending';
+            window.mdrp.setSectionStatus(cid, status);
+          }
+        }
+        window.mdrp.update({
+          columns: state.columns,
+          cards: state.cards,
+          rationale: document.getElementById('rationale').value || '',
+        });
+      }
+
+      function renderCounts() {
+        document.querySelectorAll('.column').forEach((col) => {
+          const which = col.dataset.col;
+          col.querySelector('.count').textContent = state.columns[which].length;
+        });
+      }
+
+      function makeCard(card) {
+        const el = document.createElement('article');
+        el.className = 'card';
+        el.dataset.id = card.id;
+        el.draggable = true;
+        el.innerHTML =
+          '<div class="title" contenteditable="true" spellcheck="false"></div>' +
+          '<div class="blurb"></div>' +
+          '<div class="chips">' +
+          '  <span class="chip-label">Effort</span>' +
+          '  <div class="chip-group effort"></div>' +
+          '  <span class="chip-label">Impact</span>' +
+          '  <div class="chip-group impact"></div>' +
+          '</div>' +
+          '<div class="toggles">' +
+          '  <button data-toggle="comment">+ Comment</button>' +
+          '  <button data-toggle="question">+ Ask</button>' +
+          '</div>' +
+          '<div class="field"><textarea data-field="comment" placeholder="Comment on this card"></textarea></div>' +
+          '<div class="field"><textarea data-field="question" placeholder="Question for the agent"></textarea></div>';
+
+        const titleEl = el.querySelector('.title');
+        titleEl.textContent = card.title;
+        titleEl.addEventListener('blur', () => {
+          const v = titleEl.textContent.trim();
+          if (v && state.cards[card.id].title !== v) {
+            state.cards[card.id].title = v;
+            pushState();
+          }
+        });
+
+        if (card.blurb) {
+          el.querySelector('.blurb').textContent = card.blurb;
+        } else {
+          el.querySelector('.blurb').remove();
+        }
+
+        const effortGroup = el.querySelector('.chip-group.effort');
+        EFFORTS.forEach((e) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = e.label;
+          if (state.cards[card.id].effort === e.value) b.classList.add('on');
+          b.addEventListener('click', () => {
+            state.cards[card.id].effort = e.value;
+            effortGroup.querySelectorAll('button').forEach((x) => x.classList.remove('on'));
+            b.classList.add('on');
+            pushState();
+          });
+          effortGroup.appendChild(b);
+        });
+
+        const impactGroup = el.querySelector('.chip-group.impact');
+        IMPACTS.forEach((i) => {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.textContent = i.label;
+          if (state.cards[card.id].impact === i.value) b.classList.add('on');
+          b.addEventListener('click', () => {
+            state.cards[card.id].impact = i.value;
+            impactGroup.querySelectorAll('button').forEach((x) => x.classList.remove('on'));
+            b.classList.add('on');
+            pushState();
+          });
+          impactGroup.appendChild(b);
+        });
+
+        const toggles = el.querySelectorAll('.toggles button');
+        toggles.forEach((t) => {
+          t.addEventListener('click', () => {
+            const field = t.dataset.toggle;
+            const ta = el.querySelector('textarea[data-field="' + field + '"]');
+            t.classList.toggle('on');
+            el.classList.add('expanded');
+            ta.style.display = t.classList.contains('on') ? 'block' : 'none';
+            if (t.classList.contains('on')) ta.focus();
+          });
+        });
+
+        const commentEl = el.querySelector('textarea[data-field="comment"]');
+        commentEl.addEventListener('blur', () => {
+          const text = commentEl.value.trim();
+          if (state.cards[card.id].comment !== text) {
+            state.cards[card.id].comment = text;
+            if (text) window.mdrp.addComment({ sectionId: card.id, text });
+            pushState();
+          }
+        });
+
+        const questionEl = el.querySelector('textarea[data-field="question"]');
+        questionEl.addEventListener('blur', () => {
+          const text = questionEl.value.trim();
+          if (state.cards[card.id].question !== text) {
+            state.cards[card.id].question = text;
+            if (text) window.mdrp.askQuestion({ sectionId: card.id, text });
+            pushState();
+          }
+        });
+
+        el.addEventListener('dragstart', (ev) => {
+          el.classList.add('dragging');
+          ev.dataTransfer.setData('text/plain', card.id);
+          ev.dataTransfer.effectAllowed = 'move';
+        });
+        el.addEventListener('dragend', () => el.classList.remove('dragging'));
+
+        return el;
+      }
+
+      function placeCard(cardId, col) {
+        // Remove from current column.
+        for (const c of ['now', 'next', 'later', 'cut']) {
+          const idx = state.columns[c].indexOf(cardId);
+          if (idx >= 0) state.columns[c].splice(idx, 1);
+        }
+        state.columns[col].push(cardId);
+        const sourceEl = document.querySelector('.card[data-id="' + cardId + '"]');
+        const target = document.querySelector('.cards[data-col="' + col + '"]');
+        if (sourceEl && target) target.appendChild(sourceEl);
+        renderCounts();
+        pushState();
+      }
+
+      // Seed state + render.
+      TEMPLATE_DATA.cards.forEach((c) => {
+        state.cards[c.id] = {
+          title: c.title,
+          comment: '',
+          question: '',
+          effort: c.effort || null,
+          impact: c.impact || null,
+        };
+        const cardEl = makeCard(c);
+        const target = document.querySelector('.cards[data-col="' + c.initialColumn + '"]');
+        if (target) {
+          target.appendChild(cardEl);
+          state.columns[c.initialColumn].push(c.id);
+        } else {
+          state.columns.next.push(c.id);
+          document.querySelector('.cards[data-col="next"]').appendChild(cardEl);
+        }
+      });
+      renderCounts();
+
+      // Wire drop zones on each column body.
+      document.querySelectorAll('.cards').forEach((zone) => {
+        const colEl = zone.closest('.column');
+        zone.addEventListener('dragover', (ev) => {
+          ev.preventDefault();
+          colEl.classList.add('dropping');
+          ev.dataTransfer.dropEffect = 'move';
+        });
+        zone.addEventListener('dragleave', () => colEl.classList.remove('dropping'));
+        zone.addEventListener('drop', (ev) => {
+          ev.preventDefault();
+          colEl.classList.remove('dropping');
+          const id = ev.dataTransfer.getData('text/plain');
+          if (!id) return;
+          placeCard(id, zone.dataset.col);
+        });
+      });
+
+      // Rationale changes
+      document.getElementById('rationale').addEventListener('blur', () => pushState());
+
+      // Global Q&A
+      document.getElementById('askBtn').addEventListener('click', () => {
+        const ta = document.getElementById('globalQ');
+        const text = ta.value.trim();
+        if (!text) return;
+        window.mdrp.askQuestion({ text });
+        const li = document.createElement('li');
+        li.textContent = text;
+        document.getElementById('qList').appendChild(li);
+        ta.value = '';
+      });
+
+      window.mdrp.ready({
+        title: TEMPLATE_DATA.title,
+        chrome: 'none',
+        sections: TEMPLATE_DATA.cards.map((c) => ({ id: c.id, heading: c.title })),
+      });
+
+      // Seed initial state to host.
+      pushState();
+    </script>
+  </body>
+</html>
