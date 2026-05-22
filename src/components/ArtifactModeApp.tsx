@@ -265,6 +265,24 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
     void runSubmit(lastUpdate);
   }, [runSubmit, lastUpdate]);
 
+  const handleApproveAll = useCallback(() => {
+    if (!ready) return;
+    setSectionStatus((prev) => {
+      const next: Record<string, SectionStatus> = { ...prev };
+      for (const s of ready.sections) next[s.id] = 'approved';
+      return next;
+    });
+  }, [ready]);
+
+  const handleClearAll = useCallback(() => {
+    if (!ready) return;
+    setSectionStatus((prev) => {
+      const next: Record<string, SectionStatus> = { ...prev };
+      for (const s of ready.sections) next[s.id] = 'pending';
+      return next;
+    });
+  }, [ready]);
+
   const handleRetry = useCallback(() => {
     if (!lastPayloadRef.current) return;
     setSubmit({ state: 'submitting' });
@@ -338,6 +356,42 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
             </span>
           )}
           <div style={{ flex: 1 }} />
+          {sectionsList.length > 0 && (
+            <>
+              <button
+                data-testid="artifact-host-approve-all"
+                onClick={handleApproveAll}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 6,
+                  background: 'transparent',
+                  color: 'var(--text-primary, #111)',
+                  fontWeight: 600,
+                  border: '1px solid var(--border-color, #d4d4d8)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                }}
+              >
+                Approve All
+              </button>
+              <button
+                data-testid="artifact-host-clear-all"
+                onClick={handleClearAll}
+                style={{
+                  padding: '6px 14px',
+                  borderRadius: 6,
+                  background: 'transparent',
+                  color: 'var(--text-primary, #111)',
+                  fontWeight: 600,
+                  border: '1px solid var(--border-color, #d4d4d8)',
+                  cursor: 'pointer',
+                  fontSize: 13,
+                }}
+              >
+                Clear All
+              </button>
+            </>
+          )}
           {reviewMode && (
             <button
               data-testid="artifact-host-submit"

@@ -106,6 +106,65 @@ describe('ArtifactModeApp', () => {
     });
   });
 
+  it('Approve All flips every section to approved; Clear All resets to pending', async () => {
+    render(<ArtifactModeApp />);
+    await waitFor(() => screen.getByTestId('artifact-iframe'));
+
+    postFromIframe({
+      type: 'mdrp.ready',
+      v: 1,
+      title: 't',
+      chrome: 'host',
+      sections: [
+        { id: 'a', heading: 'A' },
+        { id: 'b', heading: 'B' },
+        { id: 'c', heading: 'C' },
+      ],
+    });
+    await waitFor(() => screen.getByText('0/3 reviewed'));
+
+    act(() => {
+      (screen.getByTestId('artifact-host-approve-all') as HTMLButtonElement).click();
+    });
+    await waitFor(() => screen.getByText('3/3 reviewed'));
+
+    act(() => {
+      (screen.getByTestId('artifact-host-clear-all') as HTMLButtonElement).click();
+    });
+    await waitFor(() => screen.getByText('0/3 reviewed'));
+  });
+
+  it('Approve All payload marks every section approved on submit', async () => {
+    const onSubmit = vi.fn(async (payload: SubmitPayload) => {
+      void payload;
+    });
+    render(<ArtifactModeApp onSubmit={onSubmit} />);
+    await waitFor(() => screen.getByTestId('artifact-iframe'));
+    postFromIframe({
+      type: 'mdrp.ready',
+      v: 1,
+      title: 't',
+      chrome: 'host',
+      sections: [
+        { id: 'a', heading: 'A' },
+        { id: 'b', heading: 'B' },
+      ],
+    });
+    await waitFor(() => screen.getByTestId('artifact-host-approve-all'));
+    act(() => {
+      (screen.getByTestId('artifact-host-approve-all') as HTMLButtonElement).click();
+    });
+    await act(async () => {
+      (screen.getByTestId('artifact-host-submit') as HTMLButtonElement).click();
+    });
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const payload = onSubmit.mock.calls[0]?.[0] as SubmitPayload | undefined;
+    expect(payload!.sections).toEqual([
+      { heading: 'A', status: 'approved', comment: '' },
+      { heading: 'B', status: 'approved', comment: '' },
+    ]);
+  });
+
   it('hides host chrome and shows floating submit when chrome="none"', async () => {
     render(<ArtifactModeApp />);
     await waitFor(() => screen.getByTestId('artifact-iframe'));
