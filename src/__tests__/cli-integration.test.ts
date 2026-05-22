@@ -1,7 +1,9 @@
 import { spawn } from 'child_process';
 import type { ChildProcess } from 'child_process';
 import { resolve } from 'path';
-import { existsSync } from 'fs';
+import { existsSync, mkdtempSync, writeFileSync, rmSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { describe, it, expect, afterEach } from 'vitest';
 
 const SERVER_SCRIPT = resolve(__dirname, '../../dist/server.js');
@@ -99,4 +101,46 @@ describe('CLI integration', () => {
     },
     STARTUP_TIMEOUT + 5_000,
   );
+
+  describe('html artifact routing', () => {
+    let tmp: string | null = null;
+
+    afterEach(() => {
+      if (tmp) {
+        rmSync(tmp, { recursive: true, force: true });
+        tmp = null;
+      }
+    });
+
+    it(
+      'routes .html via MDRP_ARTIFACT_PATH and serves /api/artifact',
+      async () => {
+        tmp = mkdtempSync(join(tmpdir(), 'mdrp-cli-'));
+        const htmlPath = join(tmp, 'demo.html');
+        writeFileSync(htmlPath, '<h1>hi</h1>');
+
+        serverProc = spawnServer({ MDRP_ARTIFACT_PATH: htmlPath });
+        const port = await waitForReady(serverProc);
+
+        const artifactRes = await fetch(`http://localhost:${port}/api/artifact`);
+        expect(artifactRes.ok).toBe(true);
+        const artifactBody = await artifactRes.json();
+        expect(artifactBody.kind).toBe('html');
+        expect(artifactBody.content).toBe('<h1>hi</h1>');
+        expect(artifactBody.filename).toBe('demo.html');
+
+        const filesRes = await fetch(`http://localhost:${port}/api/files`);
+        const filesBody = await filesRes.json();
+        expect(filesBody.mode).toBe('cli');
+        expect(filesBody.kind).toBe('html');
+
+        // /api/markdown should fail because MARKDOWN_FILE_PATH is unset
+        const mdRes = await fetch(`http://localhost:${port}/api/markdown`);
+        expect(mdRes.status).toBe(500);
+
+        await shutdownAndWait(serverProc);
+      },
+      STARTUP_TIMEOUT + 5_000,
+    );
+  });
 });

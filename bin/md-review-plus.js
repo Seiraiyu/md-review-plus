@@ -6,6 +6,7 @@ import { existsSync, readFileSync, statSync } from 'fs';
 import { fileURLToPath, pathToFileURL } from 'url';
 import mri from 'mri';
 import { validateHost } from './host-validate.js';
+import { detectArtifactKind } from './artifact-kind.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -23,11 +24,6 @@ function validatePort(value, name) {
     process.exit(1);
   }
   return port;
-}
-
-// Check if file has markdown extension
-function isMarkdownFile(filePath) {
-  return filePath.endsWith('.md') || filePath.endsWith('.markdown');
 }
 
 // Parse arguments
@@ -85,15 +81,17 @@ async function installSkills(global, force) {
 // Help message
 if (args.help) {
   console.log(`
-md-review-plus - Review and annotate Markdown files with comments
+md-review-plus - Review markdown and HTML artifacts with comments
 
 Usage:
   md-review-plus [options]              Start in dev mode (browse all markdown files)
-  md-review-plus <file> [options]       Preview a specific markdown file (.md or .markdown)
+  md-review-plus <file> [options]       Preview a file (.md, .markdown, or .html)
   md-review-plus <directory> [options]  Browse markdown files in a specific directory
   md-review-plus <file> --review        Review mode (blocks, outputs feedback)
   md-review-plus install --skills       Install Claude Code skill (project-local)
   md-review-plus install --skills --global  Install Claude Code skill (global)
+
+HTML artifacts go through the same review loop with structured stdout output.
 
 Options:
   -p, --port <port>      Server port (default: 3030)
@@ -152,12 +150,17 @@ if (file) {
     console.log(`Directory: ${filePath}`);
   } else {
     // File mode
-    if (!isMarkdownFile(filePath)) {
-      console.error(`Error: File must have .md or .markdown extension: ${filePath}`);
+    const kind = detectArtifactKind(filePath);
+    if (!kind) {
+      console.error(`Error: File must be .md, .markdown, or .html: ${filePath}`);
       process.exit(1);
     }
 
-    process.env.MARKDOWN_FILE_PATH = filePath;
+    if (kind === 'markdown') {
+      process.env.MARKDOWN_FILE_PATH = filePath;
+    } else {
+      process.env.MDRP_ARTIFACT_PATH = filePath;
+    }
     if (!reviewMode) {
       console.log(`File: ${filePath}`);
     }
@@ -165,7 +168,7 @@ if (file) {
 } else {
   // Dev mode - browse all markdown files
   if (reviewMode) {
-    console.error('Error: --review requires a markdown file path');
+    console.error('Error: --review requires a file path');
     process.exit(1);
   }
   process.env.BASE_DIR = process.cwd();
@@ -174,8 +177,8 @@ if (file) {
 
 // Review mode setup
 if (reviewMode) {
-  if (!process.env.MARKDOWN_FILE_PATH) {
-    console.error('Error: --review requires a markdown file, not a directory');
+  if (!process.env.MARKDOWN_FILE_PATH && !process.env.MDRP_ARTIFACT_PATH) {
+    console.error('Error: --review requires a file, not a directory');
     process.exit(1);
   }
   process.env.REVIEW_MODE = 'true';
@@ -192,11 +195,12 @@ if (args.remote) {
     console.error('Error: --remote requires --review');
     process.exit(1);
   }
-  if (!process.env.MARKDOWN_FILE_PATH) {
-    console.error('Error: --remote requires a markdown file');
+  const filePath = process.env.MARKDOWN_FILE_PATH || process.env.MDRP_ARTIFACT_PATH;
+  if (!filePath) {
+    console.error('Error: --remote requires a file');
     process.exit(1);
   }
-  const filePath = process.env.MARKDOWN_FILE_PATH;
+  const kind = detectArtifactKind(filePath);
   const filename = filePath.split(/[\\/]/).pop();
   const relay = args.relay || process.env.MDRP_RELAY || 'https://md-review-plus.ai';
 
@@ -224,6 +228,8 @@ if (args.remote) {
   }
 
   const key = cli.generateKey();
+  // Phase 6 will switch to envelope form: cli.encryptDocument(key, kind, content)
+  void kind;
   const { iv, ct } = cli.encryptDocument(key, content);
 
   let upload;
