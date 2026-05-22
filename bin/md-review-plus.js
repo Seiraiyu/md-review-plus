@@ -269,6 +269,20 @@ if (args.remote) {
   console.log('  Waiting for review submission (Ctrl-C to cancel)...');
   console.log('');
 
+  if (shouldOpen) {
+    try {
+      const openModule = await import('open');
+      openModule.default(reviewUrl).catch(() => {
+        /* best-effort */
+      });
+      if (process.env.MDRP_DEBUG === '1') {
+        console.log('[MDRP_DEBUG] open attempted');
+      }
+    } catch {
+      /* open may fail in headless envs; URL is already printed prominently */
+    }
+  }
+
   const ac = new AbortController();
   const onSigint = async () => {
     try {

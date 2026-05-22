@@ -67,7 +67,7 @@ describe('CLI --remote end-to-end (sans browser)', () => {
     const keyB64 = match![2];
     const key = new Uint8Array(Buffer.from(keyB64, 'base64url'));
 
-    const env = encryptDocument(key, 'All sections approved. No changes needed.');
+    const env = encryptDocument(key, 'markdown', 'All sections approved. No changes needed.');
     const r = await fetch(`http://localhost:${PORT}/api/sessions/${id}/feedback`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
@@ -79,4 +79,73 @@ describe('CLI --remote end-to-end (sans browser)', () => {
     expect(exitCode).toBe(0);
     expect(stdoutChunks.join('')).toContain('All sections approved');
   }, 20_000);
+
+  it('prints Review URL prominently (own line, after blank line)', async () => {
+    const cli = spawn(
+      'node',
+      [BIN, SAMPLE, '--review', '--remote', '--relay', `http://localhost:${PORT}`, '--no-open'],
+      {
+        env: { ...process.env, MDRP_INSECURE: '1' },
+        stdio: ['ignore', 'pipe', 'inherit'],
+      },
+    );
+
+    let stdoutBuf = '';
+    cli.stdout!.on('data', (d) => {
+      stdoutBuf += String(d);
+    });
+
+    await new Promise<void>((res, rej) => {
+      const t = setTimeout(() => rej(new Error('no URL printed')), 5000);
+      cli.stdout!.on('data', () => {
+        if (/Review URL: \S+/.test(stdoutBuf)) {
+          clearTimeout(t);
+          res();
+        }
+      });
+    });
+
+    const lines = stdoutBuf.split('\n');
+    const urlLineIdx = lines.findIndex((l) => /Review URL: \S+/.test(l));
+    expect(urlLineIdx).toBeGreaterThan(-1);
+    // URL line must be within 3 lines of a blank line (prominence heuristic).
+    const start = Math.max(0, urlLineIdx - 3);
+    expect(lines.slice(start, urlLineIdx).some((l) => l.trim() === '')).toBe(true);
+    // --no-open suppresses the debug attempt log.
+    expect(stdoutBuf).not.toContain('[MDRP_DEBUG] open attempted');
+
+    cli.kill();
+    await new Promise((res) => cli.on('exit', res));
+  }, 15_000);
+
+  it('attempts auto-open by default (gated by MDRP_DEBUG log)', async () => {
+    const cli = spawn(
+      'node',
+      [BIN, SAMPLE, '--review', '--remote', '--relay', `http://localhost:${PORT}`],
+      {
+        env: { ...process.env, MDRP_INSECURE: '1', MDRP_DEBUG: '1' },
+        stdio: ['ignore', 'pipe', 'inherit'],
+      },
+    );
+
+    let stdoutBuf = '';
+    cli.stdout!.on('data', (d) => {
+      stdoutBuf += String(d);
+    });
+
+    await new Promise<void>((res, rej) => {
+      const t = setTimeout(() => rej(new Error('no debug log')), 5000);
+      cli.stdout!.on('data', () => {
+        if (stdoutBuf.includes('[MDRP_DEBUG] open attempted')) {
+          clearTimeout(t);
+          res();
+        }
+      });
+    });
+
+    expect(stdoutBuf).toContain('[MDRP_DEBUG] open attempted');
+
+    cli.kill();
+    await new Promise((res) => cli.on('exit', res));
+  }, 15_000);
 });

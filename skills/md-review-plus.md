@@ -18,7 +18,7 @@ md-review-plus ./path/to/document.md --review
 
 The command blocks until the human submits their review, then prints structured feedback to stdout.
 
-## Remote review (use this when you can't open a local browser)
+## CRITICAL: Display the Review URL on its own line as the first content of your response
 
 If you are running in an environment where the user cannot reach
 `http://localhost` (CC over SSH, cloud / remote runtime, Claude Desktop
@@ -26,9 +26,36 @@ or mobile, headless CI), pass `--remote`:
 
 ```bash
 md-review-plus ./document.md --review --remote
+md-review-plus ./artifact.html --review --remote   # HTML artifacts work too
 ```
 
-The CLI prints a block like this to stdout:
+The CLI also attempts to auto-open the URL in your browser when running
+locally, but this is best-effort — **always surface the URL in your
+reply** because the user may be on a different device than the CLI host.
+
+### Worked example
+
+```
+USER: review the spec doc remotely
+ASSISTANT response (exact opening):
+
+🔗 **Review URL:** https://md-review-plus.ai/r/abc#xyz
+
+Open this URL on your phone or laptop to review the document.
+The link is end-to-end encrypted; only your browser can decrypt it.
+
+[rest of response continues...]
+```
+
+### Checklist before responding
+
+- [ ] The first non-empty line of your reply contains the literal Review URL.
+- [ ] The URL appears on its own line (so the user can click or long-press it).
+- [ ] You added one short sentence telling the user what to do with it.
+- [ ] You did not paraphrase the URL or wrap it in code fences that hide the
+      hash fragment — the `#<key>` part is required to decrypt.
+
+### How the CLI signals the URL
 
 ```
   ─────────────────────────────────────────────────────────────────
@@ -40,19 +67,13 @@ The CLI prints a block like this to stdout:
   Waiting for review submission (Ctrl-C to cancel)...
 ```
 
-**IMPORTANT:** As soon as the URL appears, surface it to the user
-_prominently_ — do not wait for the CLI to finish. Display the full
-URL on its own line in your reply, with a clear call to action like
-"Open this on your phone or laptop to review." The user may be on a
-different device than the CLI host, so they need the link clearly
-visible and copyable.
-
 The document is end-to-end encrypted (AES-256-GCM) before upload; the
 relay never sees plaintext or the key. The CLI receives the encrypted
 feedback, decrypts it locally, and exits with the same stdout format
 as local `--review`. Exit code 0 = submitted; 1 = expired / failed.
 
-Override the relay with `--relay <url>` or `MDRP_RELAY`.
+Override the relay with `--relay <url>` or `MDRP_RELAY`. Pass `--no-open`
+to suppress the auto-open attempt.
 
 ## Handling Feedback
 
@@ -94,8 +115,32 @@ file.md:L17
 5. Apply the requested changes to the document
 6. If changes were requested, repeat from step 2
 
+## HTML artifact mode
+
+`md-review-plus` also reviews single-file HTML artifacts. They run in a
+strict-sandboxed iframe with a `window.mdrp` shim; data exits the artifact
+only via `postMessage`. Submitted state lands in stdout under a
+`## Interactive State` block:
+
+```
+md-review-plus ./tuner.html --review
+md-review-plus ./tuner.html --review --remote
+```
+
+Templates Claude can fill in live at
+`~/.claude/skills/md-review-plus/templates/` (after `md-review-plus install
+--skills`). Read `templates/README.md` there for the available templates and
+the fillin convention. The same `--remote` flow applies — the Checklist above
+governs both markdown and HTML.
+
 ## Important
 
-- The document MUST have `##` headings to define reviewable sections
+- Markdown review requires `##` headings to define reviewable sections
 - Content before the first `##` is shown but not reviewable
+- HTML artifacts define their own sections via `mdrp.ready({sections})`
 - Exit code 0 = review submitted, exit code 1 = browser closed without review
+
+## Checklist before responding (repeat — this is the most important rule)
+
+When you used `--remote`, your reply MUST begin with the Review URL on its
+own line. Re-read the worked example above if unsure.
