@@ -6,7 +6,7 @@
 > The reviewer drags, picks, approves, comments, and asks questions. Structured
 > feedback comes back on stdout for the agent to act on.
 
-![md-review-plus demo](./docs/demo.gif)
+![Markdown review demo — section approve + inline text-range comment](./docs/demo.gif)
 
 End-to-end encrypted. Open source. Self-hostable. Works locally or over the
 relay for SSH / mobile / cloud-CC use cases.
@@ -74,6 +74,8 @@ text-range comments. HTML files go through the sandboxed artifact
 runtime described next.
 
 ## HTML artifact mode
+
+![Design-kit template demo — token tuner + reactions + section approve](./docs/demo-design-kit.gif)
 
 Every `.html` artifact renders inside an `<iframe sandbox="allow-scripts">`
 with a strict CSP. The host page injects a tiny `window.mdrp` shim so the
