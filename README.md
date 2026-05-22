@@ -127,6 +127,45 @@ relay, see [relay/README.md](relay/README.md) and
 your browser. The relay holds ciphertext for up to 24h, deletes on
 submit, and does not log request bodies or URL fragments.
 
+## HTML Artifact Mode
+
+md-review-plus is not just for markdown — it's a visual interaction runtime.
+Point it at a `.html` artifact and get the same blocking review loop with
+structured stdout output:
+
+```sh
+md-review-plus ./tuner.html --review            # local
+md-review-plus ./tuner.html --review --remote   # over the relay
+```
+
+The HTML file runs inside a strict-sandboxed iframe with a `window.mdrp`
+shim. Data exits the artifact only via `postMessage`; the shim is the only
+way state lands back in the CLI's stdout (under a `## Interactive State`
+JSON block).
+
+Claude-friendly templates (review cards, inline diffs, design tuners, JSON
+form editors, concept maps) live in [`templates/`](templates/). After
+`md-review-plus install --skills`, they're copied to
+`~/.claude/skills/md-review-plus/templates/` so Claude can grab one, fill
+in the placeholders, and hand the file straight to `--review`.
+
+### Security model
+
+HTML artifacts run with `<iframe sandbox="allow-scripts">` and a Content
+Security Policy of `default-src 'none'; script-src 'unsafe-inline';
+style-src 'unsafe-inline'; img-src data:; font-src data:;`. In plain
+English, the artifact's JS cannot:
+
+- make `fetch` / `XMLHttpRequest` / WebSocket calls
+- load remote scripts, stylesheets, fonts, or images
+- navigate the parent page or submit forms across origins
+- read or write the parent's DOM (no `allow-same-origin`)
+
+The only exit is `parent.postMessage(...)` from the injected shim. This is
+what lets `--remote` extend to HTML artifacts end-to-end: the relay only
+ever sees AES-GCM ciphertext of the file, and the iframe can't phone home
+even if you wanted it to.
+
 ## Comment Management
 
 ### Adding Comments

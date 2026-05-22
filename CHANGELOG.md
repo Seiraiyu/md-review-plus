@@ -1,5 +1,33 @@
 # Changelog
 
+## [1.4.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.3.0...v1.4.0) (2026-05-22)
+
+
+### Features
+
+* **artifact:** HTML artifact mode — review single-file HTML artifacts in a
+  sandboxed iframe with structured stdout output
+* **artifact:** `window.mdrp` shim (ready / update / setSectionStatus /
+  addComment / submit) injected into every artifact; data exits only via
+  `postMessage`
+* **artifact:** 5 Claude-friendly templates shipped under `templates/`
+  (review-doc, diff-review, design-tuner, config-editor, concept-map);
+  `install --skills` copies them alongside SKILL.md
+* **server:** new `/api/artifact` endpoint and `kind` discriminator on
+  `/api/files`; markdown output remains bit-identical
+* **submit:** `## Interactive State` block in stdout when an HTML artifact
+  submits a JSON state via `mdrp.submit({state, summary})`
+* **remote:** `--remote` works with HTML artifacts; ciphertext is a
+  `{kind, content}` envelope, with backward-compat fallback for legacy links
+* **cli:** auto-opens the Review URL in `--remote` mode (suppressed by
+  `--no-open`); URL block remains the primary signal
+
+### Docs
+
+* README "HTML Artifact Mode" section + security-model explainer
+* skill rewritten with a prescriptive "URL on its own line" checklist and a
+  worked-example transcript
+
 ## [1.3.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.2.0...v1.3.0) (2026-05-15)
 
 
