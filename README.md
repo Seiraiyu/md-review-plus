@@ -213,8 +213,8 @@ template would have no way to exfiltrate the document being reviewed.
 - **Bulk Approve/Reject doesn't fit every template** (pr-review, design-
   grid, priority-board own their own semantics). Templates need a way to
   opt out of the host's bulk controls.
-- **`lineComments[].startLine` parser** doesn't handle the
-  `line:<hunkId>:<n>` anchor format — falls back to `0`.
+- ~~**`lineComments[].startLine` parser** doesn't handle the
+  `line:<hunkId>:<n>` anchor format — falls back to `0`.~~ (fixed in 1.4.1)
 
 ## License
 

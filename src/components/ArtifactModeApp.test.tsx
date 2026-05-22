@@ -252,6 +252,59 @@ describe('ArtifactModeApp', () => {
     });
   });
 
+  it('parses line:<sectionId>:<lineNo> anchors into lineComments correctly', async () => {
+    const onSubmit = vi.fn(async (payload: SubmitPayload) => {
+      void payload;
+    });
+    render(<ArtifactModeApp onSubmit={onSubmit} />);
+    await waitFor(() => screen.getByTestId('artifact-iframe'));
+    postFromIframe({
+      type: 'mdrp.ready',
+      v: 1,
+      chrome: 'host',
+      sections: [{ id: 'h1', heading: 'a hunk' }],
+    });
+    // pr-review-style three-segment anchor
+    postFromIframe({
+      type: 'mdrp.comment',
+      v: 1,
+      sectionId: 'h1',
+      anchor: 'line:h1:404',
+      text: 'something',
+    });
+    // single-segment legacy anchor
+    postFromIframe({
+      type: 'mdrp.comment',
+      v: 1,
+      sectionId: 'h1',
+      anchor: 'line:17',
+      text: 'older form',
+    });
+    const submitBtn = await waitFor(() => screen.getByTestId('artifact-host-submit'));
+    await act(async () => {
+      submitBtn.click();
+    });
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const payload = onSubmit.mock.calls[0]?.[0] as SubmitPayload | undefined;
+    expect(payload).toBeDefined();
+    expect(payload!.lineComments).toEqual([
+      {
+        file: 'a.html',
+        startLine: 404,
+        endLine: 404,
+        selectedText: '',
+        comment: 'something',
+      },
+      {
+        file: 'a.html',
+        startLine: 17,
+        endLine: 17,
+        selectedText: '',
+        comment: 'older form',
+      },
+    ]);
+  });
+
   it('ignores messages whose source is not the iframe', async () => {
     const onSubmit = vi.fn();
     render(<ArtifactModeApp onSubmit={onSubmit} />);

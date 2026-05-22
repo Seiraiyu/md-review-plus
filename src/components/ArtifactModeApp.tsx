@@ -251,7 +251,12 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
       const linePayload = comments
         .filter((c) => c.anchor && c.anchor.startsWith('line:'))
         .map((c) => {
-          const line = Number(c.anchor!.slice('line:'.length)) || 0;
+          // Anchor formats we accept:
+          //   line:<n>             — single segment
+          //   line:<sectionId>:<n> — pr-review style; line number is the last segment
+          const parts = c.anchor!.split(':');
+          const last = parts[parts.length - 1] ?? '';
+          const line = Number(last) || 0;
           return {
             file: artifact.filename,
             startLine: line,
