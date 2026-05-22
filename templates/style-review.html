@@ -36,8 +36,11 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         --panel-good: #16a34a;
         --panel-pin: #f59e0b;
       }
-      * { box-sizing: border-box; }
-      html, body {
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
         margin: 0;
         height: 100%;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -58,14 +61,20 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         overflow-y: auto;
         grid-row: 1 / 3;
       }
-      .controls h1 { margin: 0 0 4px; font-size: 17px; letter-spacing: -0.01em; }
+      .controls h1 {
+        margin: 0 0 4px;
+        font-size: 17px;
+        letter-spacing: -0.01em;
+      }
       .controls .preamble {
         font-size: 12.5px;
         color: var(--panel-dim);
         line-height: 1.5;
         margin: 0 0 14px;
       }
-      .group { margin: 12px 0 18px; }
+      .group {
+        margin: 12px 0 18px;
+      }
       .group h2 {
         margin: 0 0 8px;
         font-size: 10.5px;
@@ -84,7 +93,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         font-size: 12.5px;
         color: var(--panel-fg);
       }
-      .control input[type=color] {
+      .control input[type='color'] {
         width: 36px;
         height: 24px;
         padding: 0;
@@ -93,7 +102,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         background: transparent;
         cursor: pointer;
       }
-      .control input[type=range] {
+      .control input[type='range'] {
         width: 110px;
         accent-color: var(--panel-accent);
       }
@@ -131,7 +140,9 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         cursor: pointer;
         font-family: inherit;
       }
-      .seg button:last-child { border-right: 0; }
+      .seg button:last-child {
+        border-right: 0;
+      }
       .seg button.on {
         background: var(--panel-accent);
         color: #fff;
@@ -142,7 +153,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         gap: 8px;
         padding: 5px 0;
       }
-      .toggle input[type=checkbox] {
+      .toggle input[type='checkbox'] {
         accent-color: var(--panel-accent);
       }
       .reactions-row {
@@ -161,15 +172,22 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         user-select: none;
         font-family: inherit;
       }
-      .react-chip:hover { border-color: var(--panel-dim); }
-      .react-chip.on { background: #fef3c7; border-color: #f59e0b; }
+      .react-chip:hover {
+        border-color: var(--panel-dim);
+      }
+      .react-chip.on {
+        background: #fef3c7;
+        border-color: #f59e0b;
+      }
       .react-chip .count {
         margin-left: 3px;
         font-size: 10.5px;
         font-weight: 700;
         color: var(--panel-dim);
       }
-      .react-chip.on .count { color: #92400e; }
+      .react-chip.on .count {
+        color: #92400e;
+      }
 
       .preview-wrap {
         position: relative;
@@ -202,9 +220,14 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         font-size: calc(16px * var(--font-scale));
         line-height: var(--line-height);
         min-height: 100%;
-        transition: background 0.15s, color 0.15s;
+        transition:
+          background 0.15s,
+          color 0.15s;
       }
-      .preview-root.crosshair, .preview-root.crosshair * { cursor: crosshair !important; }
+      .preview-root.crosshair,
+      .preview-root.crosshair * {
+        cursor: crosshair !important;
+      }
       .preview-root .mdrp-pin-marker {
         position: absolute;
         width: 22px;
@@ -219,7 +242,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         justify-content: center;
         transform: translate(-50%, -50%);
         z-index: 1000;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
         cursor: pointer;
         pointer-events: auto;
       }
@@ -289,7 +312,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         background: #fff;
         border: 1px solid var(--panel-border);
         border-radius: 8px;
-        box-shadow: 0 10px 32px rgba(0,0,0,0.15);
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.15);
         padding: 8px;
         width: 280px;
       }
@@ -345,7 +368,10 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         border-radius: 5px;
         font-size: 12px;
       }
-      .pin-toggle.on { background: #fef3c7; color: #92400e; }
+      .pin-toggle.on {
+        background: #fef3c7;
+        color: #92400e;
+      }
       .pin-toggle button {
         padding: 2px 8px;
         font-size: 11px;
@@ -355,7 +381,10 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         border-radius: 4px;
         cursor: pointer;
       }
-      .pin-toggle.on button { border-color: #f59e0b; color: #92400e; }
+      .pin-toggle.on button {
+        border-color: #f59e0b;
+        color: #92400e;
+      }
     </style>
   </head>
   <body>
@@ -389,7 +418,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
           </div>
           <div class="toggle">
             <input type="checkbox" id="dark" />
-            <label for="dark" style="font-size:12.5px">Dark mode (swap bg/fg)</label>
+            <label for="dark" style="font-size: 12.5px">Dark mode (swap bg/fg)</label>
           </div>
         </div>
 
@@ -454,16 +483,24 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
       <div class="footer-bar">
         <div class="field">
           <h3>Reviewer notes</h3>
-          <textarea id="notes" placeholder="Overall impressions, missing pieces, anything cross-cutting…"></textarea>
+          <textarea
+            id="notes"
+            placeholder="Overall impressions, missing pieces, anything cross-cutting…"
+          ></textarea>
         </div>
         <div class="field">
           <h3>Ask a question</h3>
-          <textarea id="question" placeholder="e.g. is the contrast meeting WCAG? what type ramp is this?"></textarea>
+          <textarea
+            id="question"
+            placeholder="e.g. is the contrast meeting WCAG? what type ramp is this?"
+          ></textarea>
         </div>
         <div class="field">
           <h3>Pins</h3>
           <div class="pins-summary" id="pinsSummary">
-            <em style="font-style: italic;">No pinned comments yet. Toggle click-to-pin and tap an element.</em>
+            <em style="font-style: italic"
+              >No pinned comments yet. Toggle click-to-pin and tap an element.</em
+            >
           </div>
         </div>
       </div>
@@ -480,7 +517,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
           accent: '#16a34a',
           bg: '#ffffff',
           fg: '#0f172a',
-          fontFamily: "-apple-system, BlinkMacSystemFont, sans-serif",
+          fontFamily: '-apple-system, BlinkMacSystemFont, sans-serif',
           fontScale: 1,
           lineHeight: 1.5,
           spacing: 1,
@@ -578,11 +615,16 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         root.style.setProperty('--font-family', s.fontFamily);
         root.style.setProperty('--font-scale', String(s.fontScale));
         root.style.setProperty('--line-height', String(s.lineHeight));
-        void bg; void fg; // for future use
+        void bg;
+        void fg; // for future use
       }
 
-      function darken(hex) { return hex; }
-      function lighten(hex) { return hex; }
+      function darken(hex) {
+        return hex;
+      }
+      function lighten(hex) {
+        return hex;
+      }
 
       function pushState() {
         window.mdrp.update({
@@ -688,7 +730,12 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
             break;
           }
           if (cur.classList.length) {
-            part += '.' + Array.from(cur.classList).filter((c) => !c.startsWith('mdrp-')).slice(0, 2).join('.');
+            part +=
+              '.' +
+              Array.from(cur.classList)
+                .filter((c) => !c.startsWith('mdrp-'))
+                .slice(0, 2)
+                .join('.');
           }
           parts.unshift(part);
           cur = cur.parentElement;
@@ -702,8 +749,8 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
         const marker = document.createElement('div');
         marker.className = 'mdrp-pin-marker';
         marker.textContent = String(idx);
-        marker.style.left = (r.left - containerR.left + r.width - 6) + 'px';
-        marker.style.top = (r.top - containerR.top + 6) + 'px';
+        marker.style.left = r.left - containerR.left + r.width - 6 + 'px';
+        marker.style.top = r.top - containerR.top + 6 + 'px';
         marker.dataset.idx = String(idx);
         preview.appendChild(marker);
         el.classList.add('mdrp-pinned-el');
@@ -769,11 +816,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every control change with
       }
 
       document.addEventListener('click', (ev) => {
-        if (
-          openPopover &&
-          !openPopover.contains(ev.target) &&
-          !preview.contains(ev.target)
-        ) {
+        if (openPopover && !openPopover.contains(ev.target) && !preview.contains(ev.target)) {
           openPopover.remove();
           openPopover = null;
         }

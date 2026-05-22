@@ -16,11 +16,13 @@ describe('HTML templates', () => {
       'concept-map.html',
       'config-editor.html',
       'design-grid.html',
+      'design-kit.html',
       'design-tuner.html',
       'diff-review.html',
       'pr-review.html',
       'priority-board.html',
       'review-doc.html',
+      'style-review.html',
     ]);
   });
 });
