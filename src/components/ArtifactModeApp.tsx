@@ -61,7 +61,9 @@ function fnv1a(input: string): string {
 
 export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppProps = {}) {
   const [artifact, setArtifact] = useState<Artifact | null>(injectedArtifact ?? null);
-  const [reviewMode, setReviewMode] = useState(false);
+  // Remote mode (injectedArtifact set) is always a review — the relay does not
+  // expose /api/review-mode, so seed reviewMode=true to avoid hiding Submit.
+  const [reviewMode, setReviewMode] = useState(Boolean(injectedArtifact));
   const [ready, setReady] = useState<ReadyPayload | null>(null);
   const [sectionStatus, setSectionStatus] = useState<Record<string, SectionStatus>>({});
   const [comments, setComments] = useState<
@@ -95,11 +97,12 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
   }, [injectedArtifact]);
 
   useEffect(() => {
+    if (injectedArtifact) return; // remote mode: reviewMode is already true
     fetch('/api/review-mode')
       .then((r) => r.json())
       .then((d) => setReviewMode(Boolean(d.reviewMode)))
       .catch(() => setReviewMode(false));
-  }, []);
+  }, [injectedArtifact]);
 
   // Hot reload: re-fetch on file change. We don't have injected mode hot-reload.
   const handleFileChange = useCallback(() => {
