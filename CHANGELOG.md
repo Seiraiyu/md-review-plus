@@ -5,6 +5,31 @@
 
 ### Features
 
+* **artifact:** rich feedback channels — reactions, questions, design-grid template ([12773f2](https://github.com/Seiraiyu/md-review-plus/commit/12773f2ee8efe3ad4e9cef5d0921e55318b2f7e1))
+* **artifact:** window.mdrp shim and buildSrcdoc helper ([c564842](https://github.com/Seiraiyu/md-review-plus/commit/c5648428e3854f48261e915e4bf08bd35f2b0812))
+* **cli,skill:** auto-open remote URL; prescriptive skill guidance for URL surfacing ([41f8fcc](https://github.com/Seiraiyu/md-review-plus/commit/41f8fcc7324047367c66e84ad360928efd156f0f))
+* **client:** ArtifactModeApp with sandboxed iframe + host chrome + submit pipeline ([a1a60a5](https://github.com/Seiraiyu/md-review-plus/commit/a1a60a530e0703702b2edbec1ffba2362b612d66))
+* **remote:** HTML artifacts over E2E-encrypted relay with backward-compat envelope ([1287059](https://github.com/Seiraiyu/md-review-plus/commit/12870596178b93a06c14b0fdc0e0d4815cdaf66a))
+* **server,cli:** add HTML artifact kind detection and /api/artifact endpoint ([eb23ed8](https://github.com/Seiraiyu/md-review-plus/commit/eb23ed8f7eb66961956195755cece55b4eefdacd))
+* **templates:** design-kit holistic review of tokens + component library ([2a673eb](https://github.com/Seiraiyu/md-review-plus/commit/2a673eb8aef3cba8fa18ec43bc0e502d6e25f731))
+* **templates:** drag-and-drop priority board (Now/Next/Later/Cut) ([39254f3](https://github.com/Seiraiyu/md-review-plus/commit/39254f3ffe659fbe0d02b3b8d3550f3bf796eb1a))
+* **templates:** page-level style review (style-review.html) ([d56b140](https://github.com/Seiraiyu/md-review-plus/commit/d56b140e19a137ce1af45365733d78e8daf5fe1d))
+* **templates:** rich pr-review with per-hunk + per-line affordances ([d86a771](https://github.com/Seiraiyu/md-review-plus/commit/d86a771ed6cb466f8eae17352d936f2b9909eab2))
+* **templates:** ship 5 HTML interaction templates and install copies them ([eee5534](https://github.com/Seiraiyu/md-review-plus/commit/eee553498f9ba89d70d78c9275248a274315fb8f))
+
+
+### Bug Fixes
+
+* **artifact:** restore Approve All / Clear All in host chrome ([da205c8](https://github.com/Seiraiyu/md-review-plus/commit/da205c8cbcdd70a4f76919b11320b18582e1f9dc))
+* **artifact:** show Submit button in remote mode ([a070e01](https://github.com/Seiraiyu/md-review-plus/commit/a070e01456f3559288883d47f1e3e41b362422dc))
+* **relay:** banner ships its own CSS so it styles correctly on the SPA shell ([5cedaf3](https://github.com/Seiraiyu/md-review-plus/commit/5cedaf377beb312963a8c5e0092096a7060f148a))
+* **remote:** keep markdown wire format as plaintext for back-compat ([e6f9bd9](https://github.com/Seiraiyu/md-review-plus/commit/e6f9bd94494ba94e447684d3c866ff19859f4267))
+
+## [1.4.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.3.0...v1.4.0) (2026-05-22)
+
+
+### Features
+
 * **artifact:** HTML artifact mode — review single-file HTML artifacts in a
   sandboxed iframe with structured stdout output
 * **artifact:** `window.mdrp` shim (ready / update / setSectionStatus /
