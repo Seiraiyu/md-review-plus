@@ -1,0 +1,629 @@
+<!--
+mdrp:template name=pr-review
+purpose: Rich code/plan review. A multi-file unified diff with per-hunk
+  approve/reject + severity tag + reactions, per-line comments + suggested
+  inline edits, and an agent Q&A panel. Designed for cases where prose review
+  in markdown would lose the per-line anchoring that real code review needs.
+fillins:
+  - TITLE: short heading
+  - SUMMARY: 1-2 sentences explaining what the change is for
+  - HUNKS: array of {
+      id: string,
+      file: string,
+      header: string  (e.g. "@@ -10,4 +10,5 @@ function foo"),
+      language: 'js' | 'ts' | 'py' | 'md' | 'css' | 'sh' | 'plain',
+      lines: [{ kind: 'ctx'|'add'|'del', noOld?: number, noNew?: number, text: string }]
+    }
+submit-shape: chrome:'host'. Host owns Submit. Per-hunk mdrp.setSectionStatus.
+  Severity dropdown changes per-hunk metadata sent via mdrp.update. Per-line
+  comments go through mdrp.addComment with anchor=line:<hunkId>:<no>. Suggested
+  changes go through mdrp.addComment with anchor=suggest:<hunkId>:<no> and text
+  prefixed "SUGGEST: <new line content>". Reactions are per-hunk.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>pr review</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --card: #ffffff;
+        --fg: #0f172a;
+        --fg-dim: #64748b;
+        --accent: #2563eb;
+        --good: #16a34a;
+        --bad: #dc2626;
+        --warn: #f59e0b;
+        --border: #e2e8f0;
+        --soft: #f1f5f9;
+        --add-bg: #ecfdf5;
+        --add-mark: #16a34a;
+        --del-bg: #fef2f2;
+        --del-mark: #dc2626;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        -webkit-font-smoothing: antialiased;
+      }
+      header.top {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 28px 24px 12px;
+      }
+      header.top h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.01em; }
+      header.top .summary { margin: 0; color: var(--fg-dim); font-size: 14px; line-height: 1.5; max-width: 680px; }
+      main.hunks {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 12px 24px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+      }
+      .hunk {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        overflow: hidden;
+        transition: border-color 0.15s;
+      }
+      .hunk.approved { border-color: var(--good); }
+      .hunk.rejected { border-color: var(--bad); }
+      .hunk-head {
+        padding: 10px 14px;
+        background: var(--soft);
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        font-size: 13px;
+      }
+      .hunk-head .file { font-weight: 700; }
+      .hunk-head .header-range {
+        color: var(--fg-dim);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+      }
+      .hunk-head .spacer { flex: 1; }
+      .hunk-head select {
+        padding: 4px 8px;
+        font: inherit;
+        font-size: 12px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        background: #fff;
+        color: var(--fg);
+      }
+      .severity-nit       { color: #475569; }
+      .severity-suggestion { color: #2563eb; }
+      .severity-blocker    { color: #dc2626; font-weight: 700; }
+      .hunk-actions button {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: #fff;
+        color: var(--fg);
+        cursor: pointer;
+      }
+      .hunk-actions button.active.approve { background: var(--good); color: #fff; border-color: var(--good); }
+      .hunk-actions button.active.reject { background: var(--bad); color: #fff; border-color: var(--bad); }
+      .reactions {
+        display: flex;
+        gap: 4px;
+      }
+      .reactions .chip {
+        padding: 2px 8px;
+        font-size: 14px;
+        line-height: 1;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #fff;
+        cursor: pointer;
+        user-select: none;
+      }
+      .reactions .chip:hover { border-color: var(--fg-dim); }
+      .reactions .chip .count {
+        margin-left: 3px;
+        font-size: 10.5px;
+        font-weight: 700;
+        color: var(--fg-dim);
+        vertical-align: middle;
+      }
+      .reactions .chip.on { background: #fef3c7; border-color: #f59e0b; }
+      .reactions .chip.on .count { color: #92400e; }
+      .diff {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12.5px;
+        line-height: 1.55;
+      }
+      .line {
+        display: grid;
+        grid-template-columns: 46px 46px 18px 1fr;
+        position: relative;
+        cursor: pointer;
+      }
+      .line:hover { background: #f5f5f5; }
+      .line .num { padding: 0 6px; color: #94a3b8; text-align: right; user-select: none; }
+      .line .mark { padding: 0 6px; text-align: center; user-select: none; }
+      .line .text { padding: 0 10px 0 4px; white-space: pre; overflow-x: auto; }
+      .line.add { background: var(--add-bg); }
+      .line.add .mark { color: var(--add-mark); }
+      .line.del { background: var(--del-bg); }
+      .line.del .mark { color: var(--del-mark); }
+      .line.has-comment { box-shadow: inset 3px 0 0 var(--accent); }
+      .line-popover {
+        position: fixed;
+        z-index: 100;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 10px 32px rgba(0, 0, 0, 0.15);
+        padding: 6px;
+        width: 360px;
+      }
+      .tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin: 0 0 6px; }
+      .tab {
+        padding: 5px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #fff;
+        border: 0;
+        border-bottom: 2px solid transparent;
+        cursor: pointer;
+        color: var(--fg-dim);
+      }
+      .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+      .line-popover textarea {
+        width: 100%;
+        min-height: 60px;
+        padding: 6px 8px;
+        font: inherit;
+        font-size: 12.5px;
+        border: 1px solid var(--border);
+        border-radius: 5px;
+        resize: vertical;
+        box-sizing: border-box;
+      }
+      .line-popover .suggest-textarea {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        background: var(--add-bg);
+      }
+      .line-popover .row { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
+      .line-popover button {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        border-radius: 4px;
+        background: #fff;
+        cursor: pointer;
+      }
+      .line-popover button.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+      .anno-list {
+        list-style: none;
+        margin: 0;
+        padding: 8px 14px;
+        background: #fbfcfe;
+        border-top: 1px dashed var(--border);
+        font-size: 12.5px;
+      }
+      .anno-list li { padding: 4px 0; }
+      .anno-list .lref { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--fg-dim); }
+      .anno-list .suggest-pill {
+        display: inline-block;
+        padding: 1px 6px;
+        margin-right: 4px;
+        background: var(--good);
+        color: #fff;
+        border-radius: 3px;
+        font-size: 10.5px;
+        font-weight: 700;
+      }
+      footer.bottom {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px 96px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+      }
+      .panel h2 {
+        margin: 0 0 6px;
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+      }
+      .panel textarea {
+        width: 100%;
+        min-height: 70px;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font: inherit;
+        font-size: 13px;
+        resize: vertical;
+      }
+      .question-row { display: flex; gap: 6px; margin-top: 6px; }
+      .question-row textarea { flex: 1; min-height: 36px; }
+      .question-row button {
+        padding: 6px 12px;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        align-self: flex-end;
+      }
+      .question-list {
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .question-list li {
+        background: var(--soft);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 12.5px;
+        margin-bottom: 6px;
+      }
+      .question-list li::before { content: 'Q: '; font-weight: 700; color: var(--accent); }
+      /* Tiny syntax highlighting */
+      .k { color: #be185d; font-weight: 600; }
+      .s { color: #16a34a; }
+      .c { color: #94a3b8; font-style: italic; }
+      .n { color: #ca8a04; }
+      @media (max-width: 720px) {
+        footer.bottom { grid-template-columns: 1fr; }
+        .line { grid-template-columns: 36px 36px 16px 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <h1 id="title">PR review</h1>
+      <p class="summary" id="summary"></p>
+    </header>
+    <main class="hunks" id="hunks"></main>
+    <footer class="bottom">
+      <div class="panel">
+        <h2>Reviewer notes</h2>
+        <textarea id="notes" placeholder="Anything cross-cutting? Big concerns?"></textarea>
+      </div>
+      <div class="panel">
+        <h2>Questions for the agent</h2>
+        <div class="question-row">
+          <textarea id="globalQ" placeholder="e.g. why this approach over X?"></textarea>
+          <button id="askBtn">Ask</button>
+        </div>
+        <ul class="question-list" id="qList"></ul>
+      </div>
+    </footer>
+
+    <script>
+      // FILLIN
+      const TEMPLATE_DATA = {
+        title: 'Add error handling to file watcher',
+        summary:
+          'Wraps chokidar setup in a try/catch and exposes a recoverable error event. ' +
+          'Two hunks across one file.',
+        hunks: [
+          {
+            id: 'h1',
+            file: 'server/app.ts',
+            header: '@@ -402,7 +402,11 @@ const watchTarget',
+            language: 'ts',
+            lines: [
+              { kind: 'ctx', noOld: 402, noNew: 402, text: '  const watchTarget = artifactPath || markdownFilePath || baseDir;' },
+              { kind: 'ctx', noOld: 403, noNew: 403, text: '  const watchBase = artifactPath' },
+              { kind: 'del', noOld: 404,             text: '  const watcher = watch(watchTarget, {' },
+              { kind: 'add',             noNew: 404, text: '  let watcher;' },
+              { kind: 'add',             noNew: 405, text: '  try {' },
+              { kind: 'add',             noNew: 406, text: '    watcher = watch(watchTarget, {' },
+              { kind: 'ctx', noOld: 405, noNew: 407, text: '    ignored: isSingleFile ? undefined : /(^|[\\/\\\\])\\..|(node_modules|dist)/,' },
+              { kind: 'ctx', noOld: 406, noNew: 408, text: '    persistent: true,' },
+              { kind: 'ctx', noOld: 407, noNew: 409, text: '    ignoreInitial: true,' },
+              { kind: 'ctx', noOld: 408, noNew: 410, text: '  });' },
+              { kind: 'add',             noNew: 411, text: '  } catch (err) {' },
+              { kind: 'add',             noNew: 412, text: "    console.error('watcher failed:', err);" },
+              { kind: 'add',             noNew: 413, text: '    return { app, watcher: null, watchTarget, sseClients };' },
+              { kind: 'add',             noNew: 414, text: '  }' },
+            ],
+          },
+          {
+            id: 'h2',
+            file: 'server/app.ts',
+            header: '@@ -416,6 +422,7 @@ watcher.on',
+            language: 'ts',
+            lines: [
+              { kind: 'ctx', noOld: 416, noNew: 422, text: "  watcher.on('change', (path) => {" },
+              { kind: 'ctx', noOld: 417, noNew: 423, text: '    if (isWatchableArtifact(path)) {' },
+              { kind: 'add',             noNew: 424, text: '      // TODO: should we debounce per file?' },
+              { kind: 'ctx', noOld: 418, noNew: 425, text: '      const relativePath = relative(watchBase, path);' },
+              { kind: 'ctx', noOld: 419, noNew: 426, text: '      console.log(`File changed: ${relativePath}`);' },
+              { kind: 'ctx', noOld: 420, noNew: 427, text: '    }' },
+            ],
+          },
+        ],
+      };
+
+      const REACTIONS = ['👍', '👎', '🤔', '🔥', '✨'];
+      const SEVERITIES = [
+        { value: 'nit', label: 'nit' },
+        { value: 'suggestion', label: 'suggestion' },
+        { value: 'blocker', label: 'blocker' },
+      ];
+
+      function esc(s) {
+        return s.replace(/[&<>]/g, (m) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[m]);
+      }
+      function hi(text) {
+        // Keep it simple: just HTML-escape. The +/- row coloring carries the
+        // visual signal; doing language highlighting safely while also
+        // injecting <span>s is too fiddly inside a single regex pass.
+        return esc(text);
+      }
+
+      document.getElementById('title').textContent = TEMPLATE_DATA.title;
+      document.getElementById('summary').textContent = TEMPLATE_DATA.summary;
+
+      const state = {
+        status: {}, // hunkId -> 'approved'|'rejected'|'pending'
+        severity: {}, // hunkId -> string
+        reactions: {}, // hunkId -> {emoji: count}
+        comments: {}, // hunkId -> [{lineNo, kind: 'comment'|'suggest', text}]
+        notes: '',
+      };
+
+      let openPopover = null;
+      const hunksEl = document.getElementById('hunks');
+
+      TEMPLATE_DATA.hunks.forEach((h) => {
+        state.status[h.id] = 'pending';
+        state.severity[h.id] = 'suggestion';
+        state.reactions[h.id] = {};
+        state.comments[h.id] = [];
+
+        const el = document.createElement('section');
+        el.className = 'hunk';
+        el.dataset.id = h.id;
+
+        const linesHtml = h.lines
+          .map((l, i) => {
+            const oldNum = l.kind === 'add' ? '' : (l.noOld ?? '');
+            const newNum = l.kind === 'del' ? '' : (l.noNew ?? '');
+            const mark = l.kind === 'add' ? '+' : l.kind === 'del' ? '-' : ' ';
+            const lineKey = l.kind === 'del' ? l.noOld : l.noNew;
+            return (
+              '<div class="line ' + l.kind + '" data-line="' + (lineKey || ('idx-' + i)) + '">' +
+              '  <span class="num">' + oldNum + '</span>' +
+              '  <span class="num">' + newNum + '</span>' +
+              '  <span class="mark">' + mark + '</span>' +
+              '  <span class="text">' + hi(l.text) + '</span>' +
+              '</div>'
+            );
+          })
+          .join('');
+
+        el.innerHTML =
+          '<div class="hunk-head">' +
+          '  <span class="file"></span>' +
+          '  <span class="header-range"></span>' +
+          '  <div class="spacer"></div>' +
+          '  <div class="reactions"></div>' +
+          '  <select class="severity"></select>' +
+          '  <div class="hunk-actions">' +
+          '    <button class="approve">Approve</button>' +
+          '    <button class="reject">Reject</button>' +
+          '  </div>' +
+          '</div>' +
+          '<div class="diff">' + linesHtml + '</div>' +
+          '<ul class="anno-list" hidden></ul>';
+
+        el.querySelector('.file').textContent = h.file;
+        el.querySelector('.header-range').textContent = h.header;
+
+        const sev = el.querySelector('.severity');
+        SEVERITIES.forEach((s) => {
+          const opt = document.createElement('option');
+          opt.value = s.value;
+          opt.textContent = s.label;
+          sev.appendChild(opt);
+        });
+        sev.value = state.severity[h.id];
+        sev.className = 'severity severity-' + state.severity[h.id];
+        sev.addEventListener('change', () => {
+          state.severity[h.id] = sev.value;
+          sev.className = 'severity severity-' + sev.value;
+          pushState();
+        });
+
+        const reactEl = el.querySelector('.reactions');
+        REACTIONS.forEach((emoji) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'chip';
+          chip.dataset.emoji = emoji;
+          chip.innerHTML = '<span class="emoji">' + emoji + '</span><span class="count"></span>';
+          chip.addEventListener('click', () => {
+            const cur = state.reactions[h.id][emoji] || 0;
+            state.reactions[h.id][emoji] = cur + 1;
+            chip.classList.add('on');
+            chip.querySelector('.count').textContent = state.reactions[h.id][emoji];
+            window.mdrp.addReaction({ targetId: h.id, emoji });
+            pushState();
+          });
+          reactEl.appendChild(chip);
+        });
+
+        const approve = el.querySelector('.approve');
+        const reject = el.querySelector('.reject');
+        function setStatus(next) {
+          state.status[h.id] = next;
+          el.classList.toggle('approved', next === 'approved');
+          el.classList.toggle('rejected', next === 'rejected');
+          approve.classList.toggle('active', next === 'approved');
+          reject.classList.toggle('active', next === 'rejected');
+          window.mdrp.setSectionStatus(h.id, next);
+          pushState();
+        }
+        approve.addEventListener('click', () => setStatus('approved'));
+        reject.addEventListener('click', () => setStatus('rejected'));
+
+        el.querySelectorAll('.line').forEach((line) => {
+          line.addEventListener('click', (ev) => {
+            const lineKey = line.dataset.line;
+            const text = line.querySelector('.text').textContent;
+            openLinePopover(ev, h.id, lineKey, text);
+          });
+        });
+
+        hunksEl.appendChild(el);
+      });
+
+      function pushState() {
+        window.mdrp.update({
+          status: state.status,
+          severity: state.severity,
+          reactions: state.reactions,
+          comments: state.comments,
+          notes: document.getElementById('notes').value || '',
+        });
+      }
+
+      function openLinePopover(ev, hunkId, lineKey, sourceText) {
+        if (openPopover) openPopover.remove();
+        const pop = document.createElement('div');
+        pop.className = 'line-popover';
+        pop.style.left = Math.min(ev.clientX, window.innerWidth - 380) + 'px';
+        pop.style.top = Math.min(ev.clientY + 8, window.innerHeight - 200) + 'px';
+        pop.innerHTML =
+          '<div class="tabs">' +
+          '  <button class="tab active" data-tab="comment">Comment</button>' +
+          '  <button class="tab" data-tab="suggest">Suggest change</button>' +
+          '</div>' +
+          '<div class="pane-comment">' +
+          '  <textarea placeholder="Comment on line ' + lineKey + '"></textarea>' +
+          '</div>' +
+          '<div class="pane-suggest" hidden>' +
+          '  <textarea class="suggest-textarea" placeholder="Type the replacement line(s)"></textarea>' +
+          '</div>' +
+          '<div class="row">' +
+          '  <button data-act="cancel">Cancel</button>' +
+          '  <button class="primary" data-act="ok">Add</button>' +
+          '</div>';
+        document.body.appendChild(pop);
+        openPopover = pop;
+        const tabs = pop.querySelectorAll('.tab');
+        const paneC = pop.querySelector('.pane-comment');
+        const paneS = pop.querySelector('.pane-suggest');
+        tabs.forEach((t) => {
+          t.addEventListener('click', () => {
+            tabs.forEach((x) => x.classList.remove('active'));
+            t.classList.add('active');
+            paneC.hidden = t.dataset.tab !== 'comment';
+            paneS.hidden = t.dataset.tab !== 'suggest';
+            const ta = (t.dataset.tab === 'comment' ? paneC : paneS).querySelector('textarea');
+            ta.focus();
+            if (t.dataset.tab === 'suggest' && !ta.value) ta.value = sourceText;
+          });
+        });
+        paneC.querySelector('textarea').focus();
+        pop.querySelector('[data-act=cancel]').addEventListener('click', () => {
+          pop.remove();
+          openPopover = null;
+        });
+        pop.querySelector('[data-act=ok]').addEventListener('click', () => {
+          const which = pop.querySelector('.tab.active').dataset.tab;
+          const ta = (which === 'comment' ? paneC : paneS).querySelector('textarea');
+          const text = ta.value.trim();
+          if (!text) {
+            pop.remove();
+            openPopover = null;
+            return;
+          }
+          const entry = { lineNo: lineKey, kind: which, text };
+          state.comments[hunkId].push(entry);
+          const anno = pop.closest('body').querySelector('[data-id="' + hunkId + '"] .anno-list');
+          anno.hidden = false;
+          const li = document.createElement('li');
+          if (which === 'suggest') {
+            li.innerHTML =
+              '<span class="suggest-pill">SUGGEST</span>' +
+              '<span class="lref">line ' + lineKey + '</span> · ' +
+              '<code></code>';
+            li.querySelector('code').textContent = text;
+          } else {
+            li.innerHTML = '<span class="lref">line ' + lineKey + '</span> · <span class="ptext"></span>';
+            li.querySelector('.ptext').textContent = text;
+          }
+          anno.appendChild(li);
+          const lineEl = hunksEl.querySelector(
+            '[data-id="' + hunkId + '"] .line[data-line="' + lineKey + '"]',
+          );
+          if (lineEl) lineEl.classList.add('has-comment');
+          window.mdrp.addComment({
+            sectionId: hunkId,
+            anchor: (which === 'suggest' ? 'suggest:' : 'line:') + hunkId + ':' + lineKey,
+            text: (which === 'suggest' ? 'SUGGEST: ' : '') + text,
+          });
+          pushState();
+          pop.remove();
+          openPopover = null;
+        });
+      }
+
+      document.addEventListener('click', (ev) => {
+        if (openPopover && !openPopover.contains(ev.target) && !ev.target.closest('.line')) {
+          openPopover.remove();
+          openPopover = null;
+        }
+      });
+
+      // Reviewer notes
+      const notes = document.getElementById('notes');
+      notes.addEventListener('blur', () => {
+        state.notes = notes.value;
+        pushState();
+      });
+
+      // Global Q&A
+      const askBtn = document.getElementById('askBtn');
+      const globalQ = document.getElementById('globalQ');
+      const qList = document.getElementById('qList');
+      askBtn.addEventListener('click', () => {
+        const text = globalQ.value.trim();
+        if (!text) return;
+        window.mdrp.askQuestion({ text });
+        const li = document.createElement('li');
+        li.textContent = text;
+        qList.appendChild(li);
+        globalQ.value = '';
+      });
+
+      window.mdrp.ready({
+        title: TEMPLATE_DATA.title,
+        chrome: 'host',
+        sections: TEMPLATE_DATA.hunks.map((h) => ({
+          id: h.id,
+          heading: h.file + ' ' + h.header,
+        })),
+      });
+    </script>
+  </body>
+</html>
