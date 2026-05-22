@@ -22,7 +22,7 @@ describe('CLI crypto', () => {
     expect(back).toEqual(k);
   });
 
-  it('encrypts a document so WebCrypto can decrypt it (new envelope form)', async () => {
+  it('encrypts markdown as raw plaintext (back-compat with deployed v1.3 SPA)', async () => {
     const k = generateKey();
     const { iv, ct } = encryptDocument(k, 'markdown', '# hello\n');
 
@@ -34,13 +34,10 @@ describe('CLI crypto', () => {
       cryptoKey,
       Buffer.from(ct, 'base64'),
     );
-    expect(JSON.parse(new TextDecoder().decode(plain))).toEqual({
-      kind: 'markdown',
-      content: '# hello\n',
-    });
+    expect(new TextDecoder().decode(plain)).toBe('# hello\n');
   });
 
-  it('legacy 2-arg call still works (treated as markdown)', async () => {
+  it('legacy 2-arg call still works (treated as markdown plaintext)', async () => {
     const k = generateKey();
     const { iv, ct } = encryptDocument(k, '# old');
 
@@ -52,13 +49,10 @@ describe('CLI crypto', () => {
       cryptoKey,
       Buffer.from(ct, 'base64'),
     );
-    expect(JSON.parse(new TextDecoder().decode(plain))).toEqual({
-      kind: 'markdown',
-      content: '# old',
-    });
+    expect(new TextDecoder().decode(plain)).toBe('# old');
   });
 
-  it('encrypts html artifacts in the envelope', async () => {
+  it('encrypts html artifacts in a {kind,content} envelope (requires 1.4+ SPA)', async () => {
     const k = generateKey();
     const { iv, ct } = encryptDocument(k, 'html', '<p>x</p>');
     const cryptoKey = await webcrypto.subtle.importKey('raw', k, { name: 'AES-GCM' }, false, [

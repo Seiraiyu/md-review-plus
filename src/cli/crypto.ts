@@ -23,11 +23,15 @@ export function encryptDocument(
   kindOrContent: ArtifactKind | string,
   maybeContent?: string,
 ): { iv: string; ct: string } {
-  // Backward-compat overload: (key, plaintext) → assume markdown.
-  // New form: (key, kind, content) → encrypts {kind, content} envelope.
+  // Wire format:
+  //   markdown → encrypt plaintext (backward-compat with v1.2-1.3 relay SPA)
+  //   html     → encrypt {kind:'html', content} JSON envelope (requires 1.4+ SPA)
+  // Backward-compat overload: (key, plaintext) → markdown plaintext.
   let payload: string;
   if (maybeContent === undefined) {
-    payload = JSON.stringify({ kind: 'markdown', content: kindOrContent });
+    payload = kindOrContent;
+  } else if (kindOrContent === 'markdown') {
+    payload = maybeContent;
   } else {
     payload = JSON.stringify({ kind: kindOrContent, content: maybeContent });
   }
