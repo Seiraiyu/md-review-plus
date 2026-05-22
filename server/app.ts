@@ -61,15 +61,10 @@ function isMarkdownFile(filename: string): boolean {
 }
 
 function isWatchableArtifact(filename: string): boolean {
-  return (
-    filename.endsWith('.md') || filename.endsWith('.markdown') || filename.endsWith('.html')
-  );
+  return filename.endsWith('.md') || filename.endsWith('.markdown') || filename.endsWith('.html');
 }
 
-async function scanMarkdownFiles(
-  dir: string,
-  baseDir: string = dir,
-): Promise<MarkdownFileEntry[]> {
+async function scanMarkdownFiles(dir: string, baseDir: string = dir): Promise<MarkdownFileEntry[]> {
   const files: MarkdownFileEntry[] = [];
   const entries: Dirent[] = await readdir(dir, { withFileTypes: true });
 

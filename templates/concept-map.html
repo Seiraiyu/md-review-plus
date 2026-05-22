@@ -14,25 +14,76 @@ submit-shape: host chrome owns Submit. Per-node addComment.
     <meta charset="utf-8" />
     <title>concept-map</title>
     <style>
-      html, body { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafafa; color: #111; }
-      .wrap { display: grid; grid-template-columns: 1fr 280px; height: 100vh; }
-      svg { background: #fff; border-right: 1px solid #e5e5e5; }
-      .node { cursor: pointer; }
-      .node circle { fill: #fff; stroke: #2563eb; stroke-width: 2; transition: fill 0.15s; }
-      .node.active circle { fill: #dbeafe; }
-      .node text { font-size: 13px; pointer-events: none; }
-      .side { padding: 20px; overflow: auto; }
-      .side h1 { font-size: 18px; margin: 0 0 12px; }
-      .side h2 { font-size: 14px; margin: 16px 0 8px; }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        background: #fafafa;
+        color: #111;
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: 1fr 280px;
+        height: 100vh;
+      }
+      svg {
+        background: #fff;
+        border-right: 1px solid #e5e5e5;
+      }
+      .node {
+        cursor: pointer;
+      }
+      .node circle {
+        fill: #fff;
+        stroke: #2563eb;
+        stroke-width: 2;
+        transition: fill 0.15s;
+      }
+      .node.active circle {
+        fill: #dbeafe;
+      }
+      .node text {
+        font-size: 13px;
+        pointer-events: none;
+      }
+      .side {
+        padding: 20px;
+        overflow: auto;
+      }
+      .side h1 {
+        font-size: 18px;
+        margin: 0 0 12px;
+      }
+      .side h2 {
+        font-size: 14px;
+        margin: 16px 0 8px;
+      }
       .side textarea {
-        width: 100%; min-height: 80px; padding: 8px; border: 1px solid #d4d4d8;
-        border-radius: 5px; font: inherit; box-sizing: border-box; resize: vertical;
+        width: 100%;
+        min-height: 80px;
+        padding: 8px;
+        border: 1px solid #d4d4d8;
+        border-radius: 5px;
+        font: inherit;
+        box-sizing: border-box;
+        resize: vertical;
       }
       .side .save {
-        margin-top: 6px; padding: 6px 12px; border-radius: 5px; background: #2563eb;
-        color: #fff; border: none; font-weight: 600; cursor: pointer; font-size: 12.5px;
+        margin-top: 6px;
+        padding: 6px 12px;
+        border-radius: 5px;
+        background: #2563eb;
+        color: #fff;
+        border: none;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 12.5px;
       }
-      .empty { color: #999; font-size: 13px; }
+      .empty {
+        color: #999;
+        font-size: 13px;
+      }
     </style>
   </head>
   <body>
@@ -115,10 +166,12 @@ submit-shape: host chrome owns Submit. Per-node addComment.
           if (!text) return;
           window.mdrp.addComment({ sectionId: id, text });
           ta.value = '';
-          detail.querySelector('h2').insertAdjacentHTML(
-            'afterend',
-            '<p style="font-size:12px;color:#16a34a;margin:4px 0">Note added.</p>',
-          );
+          detail
+            .querySelector('h2')
+            .insertAdjacentHTML(
+              'afterend',
+              '<p style="font-size:12px;color:#16a34a;margin:4px 0">Note added.</p>',
+            );
         });
       }
 

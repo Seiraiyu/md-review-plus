@@ -11,13 +11,13 @@ for project-local install).
 
 ## Templates
 
-| Template            | Chrome | What it's for                                                      |
-| ------------------- | ------ | ------------------------------------------------------------------ |
-| `review-doc.html`   | host   | Section-card markdown-style review with approve/reject + comments  |
-| `diff-review.html`  | host   | Inline diff review; per-hunk approve/reject and per-line comments  |
-| `design-tuner.html` | none   | Two-pane playground: controls left, live preview right             |
-| `config-editor.html`| none   | Structured form rendered from a small schema                       |
-| `concept-map.html`  | host   | SVG concept map; each node is a section, click to add a note       |
+| Template             | Chrome | What it's for                                                     |
+| -------------------- | ------ | ----------------------------------------------------------------- |
+| `review-doc.html`    | host   | Section-card markdown-style review with approve/reject + comments |
+| `diff-review.html`   | host   | Inline diff review; per-hunk approve/reject and per-line comments |
+| `design-tuner.html`  | none   | Two-pane playground: controls left, live preview right            |
+| `config-editor.html` | none   | Structured form rendered from a small schema                      |
+| `concept-map.html`   | host   | SVG concept map; each node is a section, click to add a note      |
 
 ## Filling a template
 

@@ -45,9 +45,7 @@ describe('RemoteModeApp envelope dispatch', () => {
     );
     render(<RemoteModeApp id="abc" keyBase64Url={keyB64} />);
 
-    const frame = (await waitFor(() =>
-      screen.getByTestId('artifact-iframe'),
-    )) as HTMLIFrameElement;
+    const frame = (await waitFor(() => screen.getByTestId('artifact-iframe'))) as HTMLIFrameElement;
     expect(frame.getAttribute('sandbox')).toBe('allow-scripts');
     expect(frame.srcdoc).toContain('<p>remote-html</p>');
     expect(frame.srcdoc).toContain('Content-Security-Policy');

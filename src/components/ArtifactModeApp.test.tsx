@@ -72,9 +72,7 @@ function postFromIframe(detail: Record<string, unknown>): void {
 describe('ArtifactModeApp', () => {
   it('mounts iframe with sandboxed srcdoc containing the artifact body', async () => {
     render(<ArtifactModeApp />);
-    const frame = (await waitFor(() =>
-      screen.getByTestId('artifact-iframe'),
-    )) as HTMLIFrameElement;
+    const frame = (await waitFor(() => screen.getByTestId('artifact-iframe'))) as HTMLIFrameElement;
     expect(frame.getAttribute('sandbox')).toBe('allow-scripts');
     expect(frame.srcdoc).toContain('<p>hi</p>');
     expect(frame.srcdoc).toContain('Content-Security-Policy');
@@ -142,7 +140,9 @@ describe('ArtifactModeApp', () => {
   });
 
   it('submits via host chrome with interactiveState when mdrp.update has fired', async () => {
-    const onSubmit = vi.fn(async (_payload: SubmitPayload) => {});
+    const onSubmit = vi.fn(async (payload: SubmitPayload) => {
+      void payload;
+    });
     render(<ArtifactModeApp onSubmit={onSubmit} />);
     await waitFor(() => screen.getByTestId('artifact-iframe'));
 

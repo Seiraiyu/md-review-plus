@@ -25,7 +25,7 @@ The frame: "you show me, I give you feedback." HTML is the new canvas.
 
 ## Non-Goals
 
-- A general HTML hosting platform. The tool serves *one* artifact per invocation, blocks until submit, exits.
+- A general HTML hosting platform. The tool serves _one_ artifact per invocation, blocks until submit, exits.
 - Persistent state across runs (other than the reviewer's localStorage for in-progress comments, which today's tool already does).
 - Editing the HTML inside the browser. The artifact is read-only; only the user's interactions are captured.
 - Multiple simultaneous reviewers (today's tool is single-user; that stays).
@@ -95,7 +95,7 @@ no metadata / /api/files      → DevModeApp (today)
 - The host page enforces the same policy out-of-band: the only `postMessage` channel it listens on is `window.message` from the specific iframe element it mounted; messages from any other source are dropped.
 - Because the iframe origin is opaque, `window.parent.postMessage(payload, '*')` works for the artifact to talk out; the host validates `event.source === iframeEl.contentWindow` before accepting.
 
-This is the same security model in local and remote modes — the only thing that changes in `--remote` is *who serves the host page* (the relay) and that the artifact bytes are AES-256-GCM encrypted in transit (key in URL fragment, never on the wire to the relay). The sandbox protects the reviewer's browser regardless.
+This is the same security model in local and remote modes — the only thing that changes in `--remote` is _who serves the host page_ (the relay) and that the artifact bytes are AES-256-GCM encrypted in transit (key in URL fragment, never on the wire to the relay). The sandbox protects the reviewer's browser regardless.
 
 ### The `window.mdrp` shim
 
@@ -131,16 +131,17 @@ window.mdrp = {
 
 Wire format (postMessage envelopes — all `{ type, v: 1, ... }`):
 
-| type | direction | payload |
-|------|-----------|---------|
-| `mdrp.ready` | iframe → host | `{ title, chrome, sections, schema }` |
-| `mdrp.update` | iframe → host | `{ state }` |
-| `mdrp.section` | iframe → host | `{ sectionId, status }` |
-| `mdrp.comment` | iframe → host | `{ sectionId?, anchor?, text }` |
-| `mdrp.submit` | iframe → host | `{ state }` |
-| `mdrp.host` | host → iframe | `{ event: 'sectionToggled' \| 'submitClicked' \| 'reset', ... }` |
+| type           | direction     | payload                                                          |
+| -------------- | ------------- | ---------------------------------------------------------------- |
+| `mdrp.ready`   | iframe → host | `{ title, chrome, sections, schema }`                            |
+| `mdrp.update`  | iframe → host | `{ state }`                                                      |
+| `mdrp.section` | iframe → host | `{ sectionId, status }`                                          |
+| `mdrp.comment` | iframe → host | `{ sectionId?, anchor?, text }`                                  |
+| `mdrp.submit`  | iframe → host | `{ state }`                                                      |
+| `mdrp.host`    | host → iframe | `{ event: 'sectionToggled' \| 'submitClicked' \| 'reset', ... }` |
 
 `chrome` values:
+
 - `'host'` (default) — host shows top bar + progress + comment sidebar; sections list comes from `sections`. This is the today-like UX.
 - `'none'` — host hides chrome except a single floating Submit button. Artifact owns the entire viewport. For design tuners, playgrounds.
 
@@ -152,13 +153,13 @@ Each template is a single self-contained HTML file that calls `window.mdrp` and 
 
 Initial set:
 
-| File | Purpose | Chrome | Submit shape |
-|------|---------|--------|--------------|
-| `review-doc.html` | Mirror today's section-card review for converted markdown / rich docs | `host` | Section approvals + comments |
-| `diff-review.html` | Annotated code diff (file headers, hunks, per-line comments, approve/reject per hunk) | `host` | Section (=hunk) approvals + line comments |
-| `design-tuner.html` | Sliders/toggles + live preview pane | `none` | `Interactive State` JSON (natural-language summary + raw values) |
-| `config-editor.html` | Structured form (text/number/select/checkbox) producing a config object | `none` | `Interactive State` JSON |
-| `concept-map.html` | Exploratory artifact: clickable map, user marks regions, adds notes | `host` (with sections=regions) | Section comments |
+| File                 | Purpose                                                                               | Chrome                         | Submit shape                                                     |
+| -------------------- | ------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------------------- |
+| `review-doc.html`    | Mirror today's section-card review for converted markdown / rich docs                 | `host`                         | Section approvals + comments                                     |
+| `diff-review.html`   | Annotated code diff (file headers, hunks, per-line comments, approve/reject per hunk) | `host`                         | Section (=hunk) approvals + line comments                        |
+| `design-tuner.html`  | Sliders/toggles + live preview pane                                                   | `none`                         | `Interactive State` JSON (natural-language summary + raw values) |
+| `config-editor.html` | Structured form (text/number/select/checkbox) producing a config object               | `none`                         | `Interactive State` JSON                                         |
+| `concept-map.html`   | Exploratory artifact: clickable map, user marks regions, adds notes                   | `host` (with sections=regions) | Section comments                                                 |
 
 Each template has a `<!-- mdrp:template -->` HTML comment at the top with: name, intended use, params Claude must fill in, suggested submit-prompt phrasing. Claude reads the file, copies it, edits the marked sections, hands the result to md-review-plus.
 
@@ -208,7 +209,7 @@ The relay never sees plaintext artifact or feedback. The iframe sandbox guarante
 
 The CLI's stdout format gains one optional section, `## Interactive State`. Everything else is identical to today.
 
-```
+````
 Please update the document with the following changes:
 
 ## Needs Changes
@@ -235,13 +236,15 @@ artifact.html:#hunk-3
   "shadowBlur": 24,
   "preset": "soft"
 }
-```
+````
 
 > Natural-language summary: Update the card to use a border-radius of 12px and a pronounced shadow.
 
 ## Approved
+
 - Section 1
 - Section 2
+
 ```
 
 - The fenced JSON is the raw `mdrp.submit` payload.
@@ -300,3 +303,4 @@ This phase ships as part of the same release but is independently shippable; it 
 | 7 | Skill polish: rewrite `skills/md-review-plus.md` remote-URL section with prescriptive template + example; CLI auto-opens browser in `--remote` (unless `--no-open`); prominent boxed URL block in stdout | pending | no | no |
 | 8 | Docs: README section on HTML mode, template authoring guide, security model explainer; CHANGELOG; bump to 1.4.0 | pending | no | no |
 | 9 | Release: build, test, publish to npm, tag | pending | no | no |
+```

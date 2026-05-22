@@ -121,14 +121,8 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
   }, [injectedArtifact]);
   useFileWatch(handleFileChange);
 
-  const srcdoc = useMemo(
-    () => (artifact ? buildSrcdoc(artifact.content) : null),
-    [artifact],
-  );
-  const iframeKey = useMemo(
-    () => (artifact ? fnv1a(artifact.content) : 'empty'),
-    [artifact],
-  );
+  const srcdoc = useMemo(() => (artifact ? buildSrcdoc(artifact.content) : null), [artifact]);
+  const iframeKey = useMemo(() => (artifact ? fnv1a(artifact.content) : 'empty'), [artifact]);
 
   // Ready timeout
   useEffect(() => {
@@ -156,11 +150,9 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
           });
           // Seed section status as pending.
           const seed: Record<string, SectionStatus> = {};
-          (Array.isArray(data.sections) ? data.sections : []).forEach(
-            (s: SectionDescriptor) => {
-              seed[s.id] = 'pending';
-            },
-          );
+          (Array.isArray(data.sections) ? data.sections : []).forEach((s: SectionDescriptor) => {
+            seed[s.id] = 'pending';
+          });
           setSectionStatus(seed);
           break;
         }
@@ -168,11 +160,12 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
           if (typeof data.sectionId === 'string') {
             setSectionStatus((prev) => ({
               ...prev,
-              [data.sectionId]: data.status === 'approved'
-                ? 'approved'
-                : data.status === 'rejected'
-                  ? 'rejected'
-                  : 'pending',
+              [data.sectionId]:
+                data.status === 'approved'
+                  ? 'approved'
+                  : data.status === 'rejected'
+                    ? 'rejected'
+                    : 'pending',
             }));
           }
           break;

@@ -77,11 +77,7 @@ async function installSkills(global, force) {
   fs.copyFileSync(skillSource, dest);
   console.log(`Installed skill to ${dest}`);
 
-  const templateSrcDir = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    '..',
-    'templates',
-  );
+  const templateSrcDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'templates');
   if (fs.existsSync(templateSrcDir)) {
     const templateDestDir = path.join(baseDir, 'templates');
     fs.mkdirSync(templateDestDir, { recursive: true });
