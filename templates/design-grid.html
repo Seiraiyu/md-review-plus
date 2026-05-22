@@ -341,18 +341,27 @@ submit-shape: chrome:'none'. Apply calls mdrp.submit({winnerId, variants:{...},
   <body>
     <header class="top">
       <h1 id="title">Compare design variants</h1>
-      <p id="preamble">Pick the variant you want to ship. Leave reactions, comments, questions, and click any element inside a variant to pin a note to it.</p>
+      <p id="preamble">
+        Pick the variant you want to ship. Leave reactions, comments, questions, and click any
+        element inside a variant to pin a note to it.
+      </p>
     </header>
     <main class="grid" id="grid"></main>
     <footer class="bottom">
       <div class="panel">
         <h2>Overall summary</h2>
-        <textarea id="summary" placeholder="Why did you pick this variant? Any cross-cutting changes?"></textarea>
+        <textarea
+          id="summary"
+          placeholder="Why did you pick this variant? Any cross-cutting changes?"
+        ></textarea>
       </div>
       <div class="panel">
         <h2>Questions for the agent</h2>
         <div class="question-row">
-          <textarea id="globalQ" placeholder="Anything you want me to answer before iterating?"></textarea>
+          <textarea
+            id="globalQ"
+            placeholder="Anything you want me to answer before iterating?"
+          ></textarea>
           <button id="askBtn">Ask</button>
         </div>
         <ul class="question-list" id="qList"></ul>
@@ -366,7 +375,7 @@ submit-shape: chrome:'none'. Apply calls mdrp.submit({winnerId, variants:{...},
       const TEMPLATE_DATA = {
         title: 'Compare design variants',
         preamble:
-          "Pick the variant you want to ship. Leave reactions, comments, questions, and click any element inside a variant to pin a note to it.",
+          'Pick the variant you want to ship. Leave reactions, comments, questions, and click any element inside a variant to pin a note to it.',
         variants: [
           {
             id: 'v1',
@@ -437,7 +446,9 @@ submit-shape: chrome:'none'. Apply calls mdrp.submit({winnerId, variants:{...},
         el.innerHTML =
           '<div class="variant-head">' +
           '  <span class="name"></span>' +
-          '  <label class="winner-radio"><input type="radio" name="winner" value="' + v.id + '"> Pick winner</label>' +
+          '  <label class="winner-radio"><input type="radio" name="winner" value="' +
+          v.id +
+          '"> Pick winner</label>' +
           '</div>' +
           '<div class="tradeoff"></div>' +
           '<div class="preview"></div>' +
@@ -556,8 +567,8 @@ submit-shape: chrome:'none'. Apply calls mdrp.submit({winnerId, variants:{...},
           const r = preview.getBoundingClientRect();
           const pin = document.createElement('span');
           pin.className = 'pin';
-          pin.style.left = (x - r.left) + 'px';
-          pin.style.top = (y - r.top) + 'px';
+          pin.style.left = x - r.left + 'px';
+          pin.style.top = y - r.top + 'px';
           pin.textContent = String(idx);
           preview.appendChild(pin);
           // Add to pin list inside the variant.

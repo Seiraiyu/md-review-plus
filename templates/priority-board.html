@@ -37,8 +37,11 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         --cut-bg: #fee2e2;
         --cut-bd: #dc2626;
       }
-      * { box-sizing: border-box; }
-      html, body {
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         background: var(--bg);
@@ -50,8 +53,18 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         max-width: 1400px;
         margin: 0 auto;
       }
-      header.top h1 { margin: 0 0 6px; font-size: 22px; letter-spacing: -0.01em; }
-      header.top p { margin: 0; color: var(--fg-dim); font-size: 14px; line-height: 1.5; max-width: 720px; }
+      header.top h1 {
+        margin: 0 0 6px;
+        font-size: 22px;
+        letter-spacing: -0.01em;
+      }
+      header.top p {
+        margin: 0;
+        color: var(--fg-dim);
+        font-size: 14px;
+        line-height: 1.5;
+        max-width: 720px;
+      }
       .board {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -70,7 +83,9 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         min-height: 320px;
         position: relative;
       }
-      .column.dropping { border-color: var(--accent); }
+      .column.dropping {
+        border-color: var(--accent);
+      }
       .column-head {
         padding: 12px 14px 8px;
         display: flex;
@@ -83,10 +98,18 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         height: 10px;
         border-radius: 50%;
       }
-      .column.now .pip { background: var(--now-bd); }
-      .column.next .pip { background: var(--next-bd); }
-      .column.later .pip { background: var(--later-bd); }
-      .column.cut .pip { background: var(--cut-bd); }
+      .column.now .pip {
+        background: var(--now-bd);
+      }
+      .column.next .pip {
+        background: var(--next-bd);
+      }
+      .column.later .pip {
+        background: var(--later-bd);
+      }
+      .column.cut .pip {
+        background: var(--cut-bd);
+      }
       .column-head h2 {
         margin: 0;
         font-size: 14px;
@@ -114,17 +137,24 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         cursor: grab;
         position: relative;
         font-size: 13px;
-        transition: transform 0.08s, box-shadow 0.08s;
+        transition:
+          transform 0.08s,
+          box-shadow 0.08s;
       }
-      .card:active { cursor: grabbing; }
-      .card.dragging { opacity: 0.5; transform: rotate(-1deg); }
+      .card:active {
+        cursor: grabbing;
+      }
+      .card.dragging {
+        opacity: 0.5;
+        transform: rotate(-1deg);
+      }
       .card .title {
         font-weight: 700;
         font-size: 13.5px;
         margin-bottom: 4px;
         outline: none;
       }
-      .card .title[contenteditable=true]:focus {
+      .card .title[contenteditable='true']:focus {
         background: #fffbe6;
         border-radius: 3px;
       }
@@ -158,8 +188,13 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         color: var(--fg-dim);
         font-family: inherit;
       }
-      .chip-group button:last-child { border-right: 0; }
-      .chip-group button.on { background: var(--accent); color: #fff; }
+      .chip-group button:last-child {
+        border-right: 0;
+      }
+      .chip-group button.on {
+        background: var(--accent);
+        color: #fff;
+      }
       .chip-label {
         font-size: 10px;
         color: var(--fg-dim);
@@ -184,8 +219,13 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         color: var(--fg-dim);
         font-family: inherit;
       }
-      .card .toggles button:hover { background: var(--border); }
-      .card .toggles button.on { background: var(--fg); color: #fff; }
+      .card .toggles button:hover {
+        background: var(--border);
+      }
+      .card .toggles button.on {
+        background: var(--fg);
+        color: #fff;
+      }
       .card .field {
         margin-top: 6px;
       }
@@ -202,7 +242,9 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         box-sizing: border-box;
         display: none;
       }
-      .card.expanded textarea { display: block; }
+      .card.expanded textarea {
+        display: block;
+      }
       footer.bottom {
         max-width: 1400px;
         margin: 0 auto;
@@ -235,8 +277,15 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         resize: vertical;
         box-sizing: border-box;
       }
-      .question-row { display: flex; gap: 6px; margin-top: 6px; }
-      .question-row textarea { flex: 1; min-height: 36px; }
+      .question-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .question-row textarea {
+        flex: 1;
+        min-height: 36px;
+      }
       .question-row button {
         padding: 6px 12px;
         background: var(--accent);
@@ -247,7 +296,11 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         cursor: pointer;
         align-self: flex-end;
       }
-      .question-list { margin: 8px 0 0; padding: 0; list-style: none; }
+      .question-list {
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+      }
       .question-list li {
         background: var(--soft);
         padding: 6px 10px;
@@ -268,11 +321,17 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         font-style: italic;
       }
       @media (max-width: 980px) {
-        .board { grid-template-columns: repeat(2, 1fr); }
+        .board {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
       @media (max-width: 600px) {
-        .board { grid-template-columns: 1fr; }
-        footer.bottom { grid-template-columns: 1fr; }
+        .board {
+          grid-template-columns: 1fr;
+        }
+        footer.bottom {
+          grid-template-columns: 1fr;
+        }
       }
     </style>
   </head>
@@ -283,31 +342,53 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
     </header>
     <section class="board" id="board">
       <div class="column now" data-col="now">
-        <div class="column-head"><span class="pip"></span><h2>Now</h2><span class="count">0</span></div>
+        <div class="column-head">
+          <span class="pip"></span>
+          <h2>Now</h2>
+          <span class="count">0</span>
+        </div>
         <div class="cards" data-col="now"></div>
       </div>
       <div class="column next" data-col="next">
-        <div class="column-head"><span class="pip"></span><h2>Next</h2><span class="count">0</span></div>
+        <div class="column-head">
+          <span class="pip"></span>
+          <h2>Next</h2>
+          <span class="count">0</span>
+        </div>
         <div class="cards" data-col="next"></div>
       </div>
       <div class="column later" data-col="later">
-        <div class="column-head"><span class="pip"></span><h2>Later</h2><span class="count">0</span></div>
+        <div class="column-head">
+          <span class="pip"></span>
+          <h2>Later</h2>
+          <span class="count">0</span>
+        </div>
         <div class="cards" data-col="later"></div>
       </div>
       <div class="column cut" data-col="cut">
-        <div class="column-head"><span class="pip"></span><h2>Cut</h2><span class="count">0</span></div>
+        <div class="column-head">
+          <span class="pip"></span>
+          <h2>Cut</h2>
+          <span class="count">0</span>
+        </div>
         <div class="cards" data-col="cut"></div>
       </div>
     </section>
     <footer class="bottom">
       <div class="panel">
         <h2>Rationale</h2>
-        <textarea id="rationale" placeholder="Why this ranking? Constraints to consider?"></textarea>
+        <textarea
+          id="rationale"
+          placeholder="Why this ranking? Constraints to consider?"
+        ></textarea>
       </div>
       <div class="panel">
         <h2>Questions for the agent</h2>
         <div class="question-row">
-          <textarea id="globalQ" placeholder="Want me to dig into any of these before next iteration?"></textarea>
+          <textarea
+            id="globalQ"
+            placeholder="Want me to dig into any of these before next iteration?"
+          ></textarea>
           <button id="askBtn">Ask</button>
         </div>
         <ul class="question-list" id="qList"></ul>
@@ -321,12 +402,54 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         preamble:
           'Drag items between columns to set ranking. Tap a card to expand its comment box; click the title to edit it. Anything in Cut is gone for this round.',
         cards: [
-          { id: 'c1', title: 'HTML artifact mode',                       blurb: 'New review surface for non-markdown content.', initialColumn: 'now',   effort: 'l', impact: 'high' },
-          { id: 'c2', title: 'Skill polish (URL surfacing)',             blurb: 'Make Claude reliably surface the Review URL.', initialColumn: 'now',   effort: 's', impact: 'med' },
-          { id: 'c3', title: 'Inline comments on HTML artifacts',        blurb: 'Cross-iframe selection popover via shim.',     initialColumn: 'next',  effort: 'l', impact: 'high' },
-          { id: 'c4', title: 'Voice notes',                              blurb: 'Record audio comments per section.',           initialColumn: 'later', effort: 'l', impact: 'med' },
-          { id: 'c5', title: 'Realtime co-review',                       blurb: 'Two browsers, same session, live cursors.',    initialColumn: 'later', effort: 'l', impact: 'med' },
-          { id: 'c6', title: 'Auto-attach screenshots to comments',      blurb: 'Drag-drop image into comment textarea.',       initialColumn: 'cut',   effort: 'm', impact: 'low' },
+          {
+            id: 'c1',
+            title: 'HTML artifact mode',
+            blurb: 'New review surface for non-markdown content.',
+            initialColumn: 'now',
+            effort: 'l',
+            impact: 'high',
+          },
+          {
+            id: 'c2',
+            title: 'Skill polish (URL surfacing)',
+            blurb: 'Make Claude reliably surface the Review URL.',
+            initialColumn: 'now',
+            effort: 's',
+            impact: 'med',
+          },
+          {
+            id: 'c3',
+            title: 'Inline comments on HTML artifacts',
+            blurb: 'Cross-iframe selection popover via shim.',
+            initialColumn: 'next',
+            effort: 'l',
+            impact: 'high',
+          },
+          {
+            id: 'c4',
+            title: 'Voice notes',
+            blurb: 'Record audio comments per section.',
+            initialColumn: 'later',
+            effort: 'l',
+            impact: 'med',
+          },
+          {
+            id: 'c5',
+            title: 'Realtime co-review',
+            blurb: 'Two browsers, same session, live cursors.',
+            initialColumn: 'later',
+            effort: 'l',
+            impact: 'med',
+          },
+          {
+            id: 'c6',
+            title: 'Auto-attach screenshots to comments',
+            blurb: 'Drag-drop image into comment textarea.',
+            initialColumn: 'cut',
+            effort: 'm',
+            impact: 'low',
+          },
         ],
       };
 
@@ -355,8 +478,7 @@ submit-shape: chrome:'none'. mdrp.update fires on every change with
         // next/later=pending.
         for (const col of ['now', 'next', 'later', 'cut']) {
           for (const cid of state.columns[col]) {
-            const status =
-              col === 'now' ? 'approved' : col === 'cut' ? 'rejected' : 'pending';
+            const status = col === 'now' ? 'approved' : col === 'cut' ? 'rejected' : 'pending';
             window.mdrp.setSectionStatus(cid, status);
           }
         }

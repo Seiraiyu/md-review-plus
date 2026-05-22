@@ -45,14 +45,14 @@ attempt.
 
 ## When to use HTML mode vs markdown
 
-| Task                                                              | Use                                |
-| ----------------------------------------------------------------- | ---------------------------------- |
-| Prose, spec, plan, single-linear narrative                        | **markdown** (`*.md`)              |
-| Code / patch / diff review with per-line feedback                 | **HTML** — `pr-review.html`        |
-| "Which of these do you prefer?" (variants, copy, layouts)         | **HTML** — `design-grid.html`      |
-| Prioritization / ranking / what-ships-first                       | **HTML** — `priority-board.html`   |
-| Tuning sliders/knobs against a live preview                       | **HTML** — `design-tuner.html`     |
-| Structured config / form-style input                              | **HTML** — `config-editor.html`    |
+| Task                                                      | Use                              |
+| --------------------------------------------------------- | -------------------------------- |
+| Prose, spec, plan, single-linear narrative                | **markdown** (`*.md`)            |
+| Code / patch / diff review with per-line feedback         | **HTML** — `pr-review.html`      |
+| "Which of these do you prefer?" (variants, copy, layouts) | **HTML** — `design-grid.html`    |
+| Prioritization / ranking / what-ships-first               | **HTML** — `priority-board.html` |
+| Tuning sliders/knobs against a live preview               | **HTML** — `design-tuner.html`   |
+| Structured config / form-style input                      | **HTML** — `config-editor.html`  |
 
 Default to HTML whenever the review involves **choosing among
 options**, **anchoring feedback to a specific line/element**, or
@@ -67,6 +67,7 @@ Templates live at `~/.claude/skills/md-review-plus/templates/` after
 `mdrp:template` HTML comment listing its fillins.
 
 ### `design-grid.html` — compare N variants
+
 - Side-by-side rendered variants with tradeoff captions
 - Per-variant: 👍 👎 🤔 ❤️ 🎉 reactions, comment textarea, ask-question textarea
 - Click any element inside a variant's preview to pin a location-anchored note
@@ -74,6 +75,7 @@ Templates live at `~/.claude/skills/md-review-plus/templates/` after
 - Bottom: overall summary + global Q&A panel
 
 ### `pr-review.html` — diff with rich annotations
+
 - Multi-file unified diff, line-numbered, +/- coloured
 - Per-hunk: approve/reject, severity tag (nit / suggestion / blocker), emoji reactions
 - Per-line click → popover with two tabs:
@@ -82,16 +84,19 @@ Templates live at `~/.claude/skills/md-review-plus/templates/` after
 - Bottom panels for cross-cutting reviewer notes and global agent Q&A
 
 ### `priority-board.html` — drag-rank into Now/Next/Later/Cut
+
 - HTML5 drag-and-drop cards between four columns
 - Per-card: inline-editable title, effort chips (S/M/L), impact chips (low/med/high), expandable comment, expandable ask-question
 - Column placement drives section status: Now → approved, Cut → rejected, Next/Later → pending
 - Bottom: global rationale textarea + Q&A panel
 
 ### `design-tuner.html` — controls + live preview
+
 - Two-pane: sliders/colors/toggles on the left, live preview on the right
 - `mdrp.update(state)` fires on every control change so the host catches the latest state on Submit
 
 ### `config-editor.html` — schema-driven form
+
 - Renders typed fields (string / number / bool / enum) with inline validation
 - Submit blocks if validation fails
 

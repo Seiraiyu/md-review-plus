@@ -11,12 +11,15 @@ const TEMPLATE_DIR = join(__dirname, '..', '..', 'templates');
 const TEMPLATES = readdirSync(TEMPLATE_DIR).filter((f) => f.endsWith('.html'));
 
 describe('HTML templates', () => {
-  it('has all 5 expected templates', () => {
+  it('has all expected templates (original 5 + rich set)', () => {
     expect(TEMPLATES.sort()).toEqual([
       'concept-map.html',
       'config-editor.html',
+      'design-grid.html',
       'design-tuner.html',
       'diff-review.html',
+      'pr-review.html',
+      'priority-board.html',
       'review-doc.html',
     ]);
   });
