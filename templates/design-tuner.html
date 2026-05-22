@@ -1,0 +1,161 @@
+<!--
+mdrp:template name=design-tuner
+purpose: Two-pane "design playground" — controls on the left, live preview on
+  the right. Every control change calls mdrp.update(state); Apply submits.
+fillins:
+  - TITLE: short title (not visible in chrome:none, but reported in ready envelope)
+  - CONTROLS: array of { id, label, kind: 'range'|'toggle'|'color'|'select',
+    min?, max?, step?, options?, default }
+  - RENDER: JS function source as a string returning innerHTML for the preview
+    pane given the current state object.
+submit-shape: chrome:none. Apply button calls mdrp.submit({ state, summary }).
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>design-tuner</title>
+    <style>
+      html, body { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
+      body { display: grid; grid-template-columns: 320px 1fr; background: #fafafa; color: #111; }
+      .panel { padding: 24px; overflow: auto; }
+      .panel.left { border-right: 1px solid #e5e5e5; background: #fff; }
+      .panel h1 { margin: 0 0 16px; font-size: 18px; }
+      .control { margin: 0 0 14px; }
+      .control label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+      .control input[type=range] { width: 100%; }
+      .control input[type=color] { width: 56px; height: 28px; padding: 0; border: 1px solid #d4d4d8; border-radius: 4px; }
+      .control select { width: 100%; padding: 6px; border: 1px solid #d4d4d8; border-radius: 5px; font: inherit; }
+      .control.toggle { display: flex; align-items: center; gap: 8px; }
+      .value { font-size: 12px; color: #666; }
+      .apply {
+        position: fixed; right: 24px; bottom: 24px; z-index: 30;
+        padding: 10px 18px; border-radius: 999px; background: #2563eb; color: #fff;
+        font-weight: 600; border: none; cursor: pointer; font-size: 13px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      .preview { padding: 24px; }
+    </style>
+  </head>
+  <body>
+    <div class="panel left">
+      <h1 id="title">Design tuner</h1>
+      <div id="controls"></div>
+    </div>
+    <div class="panel preview" id="preview"></div>
+    <button class="apply" id="apply">Apply</button>
+    <script>
+      // FILLIN
+      const TEMPLATE_DATA = {
+        title: 'Design tuner',
+        controls: [
+          { id: 'radius', label: 'Corner radius', kind: 'range', min: 0, max: 32, step: 1, default: 8 },
+          { id: 'accent', label: 'Accent color', kind: 'color', default: '#2563eb' },
+          { id: 'dark', label: 'Dark mode', kind: 'toggle', default: false },
+        ],
+        // RENDER is a function body string; it receives `state` and returns HTML.
+        render:
+          'const bg = state.dark ? "#0a0a0a" : "#fff";' +
+          'const fg = state.dark ? "#fafafa" : "#111";' +
+          'return `<div style="background:${bg};color:${fg};border:1px solid #ddd;` +' +
+          '       `border-radius:${state.radius}px;padding:32px;text-align:center">` +' +
+          '       `<button style="background:${state.accent};color:#fff;` +' +
+          '       `border:none;border-radius:${state.radius / 2}px;` +' +
+          '       `padding:10px 20px;font-weight:600">Preview button</button></div>`;',
+      };
+
+      document.getElementById('title').textContent = TEMPLATE_DATA.title;
+
+      const state = {};
+      TEMPLATE_DATA.controls.forEach((c) => (state[c.id] = c.default));
+      const renderFn = new Function('state', TEMPLATE_DATA.render);
+
+      const controlsEl = document.getElementById('controls');
+      const preview = document.getElementById('preview');
+
+      function repaint() {
+        try {
+          preview.innerHTML = renderFn(state);
+        } catch (e) {
+          preview.textContent = 'Render error: ' + e.message;
+        }
+        window.mdrp.update(state);
+      }
+
+      TEMPLATE_DATA.controls.forEach((c) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'control' + (c.kind === 'toggle' ? ' toggle' : '');
+        if (c.kind === 'range') {
+          wrap.innerHTML =
+            '<label></label><input type="range">' + '<span class="value"></span>';
+          const label = wrap.querySelector('label');
+          const input = wrap.querySelector('input');
+          const val = wrap.querySelector('.value');
+          label.textContent = c.label;
+          input.min = c.min ?? 0;
+          input.max = c.max ?? 100;
+          input.step = c.step ?? 1;
+          input.value = state[c.id];
+          val.textContent = state[c.id];
+          input.addEventListener('input', () => {
+            state[c.id] = Number(input.value);
+            val.textContent = state[c.id];
+            repaint();
+          });
+        } else if (c.kind === 'color') {
+          wrap.innerHTML = '<label></label><input type="color">';
+          wrap.querySelector('label').textContent = c.label;
+          const input = wrap.querySelector('input');
+          input.value = state[c.id];
+          input.addEventListener('input', () => {
+            state[c.id] = input.value;
+            repaint();
+          });
+        } else if (c.kind === 'toggle') {
+          wrap.innerHTML = '<input type="checkbox"><label></label>';
+          const input = wrap.querySelector('input');
+          input.checked = Boolean(state[c.id]);
+          wrap.querySelector('label').textContent = c.label;
+          input.addEventListener('change', () => {
+            state[c.id] = input.checked;
+            repaint();
+          });
+        } else if (c.kind === 'select') {
+          wrap.innerHTML = '<label></label><select></select>';
+          wrap.querySelector('label').textContent = c.label;
+          const sel = wrap.querySelector('select');
+          (c.options || []).forEach((o) => {
+            const opt = document.createElement('option');
+            opt.value = o;
+            opt.textContent = o;
+            sel.appendChild(opt);
+          });
+          sel.value = state[c.id];
+          sel.addEventListener('change', () => {
+            state[c.id] = sel.value;
+            repaint();
+          });
+        }
+        controlsEl.appendChild(wrap);
+      });
+
+      function summary() {
+        return Object.entries(state)
+          .map(([k, v]) => k + '=' + v)
+          .join(', ');
+      }
+
+      document.getElementById('apply').addEventListener('click', () => {
+        window.mdrp.submit({ state, summary: summary() });
+      });
+
+      window.mdrp.ready({
+        title: TEMPLATE_DATA.title,
+        chrome: 'none',
+        sections: [],
+        schema: { summary: summary() },
+      });
+      repaint();
+    </script>
+  </body>
+</html>

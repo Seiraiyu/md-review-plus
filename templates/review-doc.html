@@ -1,0 +1,132 @@
+<!--
+mdrp:template name=review-doc
+purpose: Section-card markdown-style review. Mirrors the default CliModeApp UX
+  but lets Claude pre-author each section as HTML (so embedded diagrams, tables,
+  or code blocks render exactly how Claude wants them).
+fillins:
+  - TITLE: short document title shown in host top bar
+  - SECTIONS: array of { id, heading, html } — each becomes a card with
+    approve/reject buttons and a comment textarea
+submit-shape: host chrome owns Submit; per-card calls go through
+  mdrp.setSectionStatus and mdrp.addComment.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>review-doc</title>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #fafafa;
+        color: #111;
+      }
+      h1 { margin: 0 0 24px; font-size: 22px; letter-spacing: -0.01em; }
+      .card {
+        background: #fff;
+        border: 1px solid #e5e5e5;
+        border-radius: 8px;
+        padding: 20px 24px;
+        margin: 0 0 16px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+      .card h2 { margin: 0 0 12px; font-size: 17px; }
+      .card-actions { display: flex; gap: 8px; margin-top: 16px; align-items: center; }
+      button {
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        border-radius: 5px;
+        cursor: pointer;
+        background: #f0f0f0;
+        color: #111;
+      }
+      button.approve.active { background: #16a34a; color: #fff; }
+      button.reject.active { background: #dc2626; color: #fff; }
+      textarea {
+        width: 100%;
+        min-height: 60px;
+        margin-top: 8px;
+        padding: 8px 10px;
+        border: 1px solid #d4d4d8;
+        border-radius: 5px;
+        font: inherit;
+        box-sizing: border-box;
+        resize: vertical;
+      }
+      .status {
+        margin-left: auto;
+        font-size: 12px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1 id="title">Review document</h1>
+    <div id="cards"></div>
+    <script>
+      // FILLIN — Claude replaces this object literal verbatim.
+      const TEMPLATE_DATA = {
+        title: 'Review document',
+        sections: [
+          {
+            id: 's1',
+            heading: 'Example section',
+            html: '<p>Replace this with the section body. Inline HTML is fine.</p>',
+          },
+        ],
+      };
+
+      document.getElementById('title').textContent = TEMPLATE_DATA.title;
+      const cards = document.getElementById('cards');
+      const statusByCard = {};
+      const commentByCard = {};
+
+      TEMPLATE_DATA.sections.forEach((s) => {
+        const el = document.createElement('section');
+        el.className = 'card';
+        el.dataset.id = s.id;
+        el.innerHTML =
+          '<h2></h2>' +
+          '<div class="body"></div>' +
+          '<textarea placeholder="Optional comment…"></textarea>' +
+          '<div class="card-actions">' +
+          '  <button class="approve">Approve</button>' +
+          '  <button class="reject">Reject</button>' +
+          '  <span class="status"></span>' +
+          '</div>';
+        el.querySelector('h2').textContent = s.heading;
+        el.querySelector('.body').innerHTML = s.html;
+        const status = el.querySelector('.status');
+        const approve = el.querySelector('.approve');
+        const reject = el.querySelector('.reject');
+        const textarea = el.querySelector('textarea');
+        function setStatus(next) {
+          statusByCard[s.id] = next;
+          approve.classList.toggle('active', next === 'approved');
+          reject.classList.toggle('active', next === 'rejected');
+          status.textContent = next === 'pending' ? '' : next;
+          window.mdrp.setSectionStatus(s.id, next);
+        }
+        approve.addEventListener('click', () => setStatus('approved'));
+        reject.addEventListener('click', () => setStatus('rejected'));
+        textarea.addEventListener('blur', () => {
+          const text = textarea.value.trim();
+          if (!text || commentByCard[s.id] === text) return;
+          commentByCard[s.id] = text;
+          window.mdrp.addComment({ sectionId: s.id, text });
+        });
+        cards.appendChild(el);
+      });
+
+      window.mdrp.ready({
+        title: TEMPLATE_DATA.title,
+        chrome: 'host',
+        sections: TEMPLATE_DATA.sections.map((s) => ({ id: s.id, heading: s.heading })),
+      });
+    </script>
+  </body>
+</html>

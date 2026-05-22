@@ -10,7 +10,8 @@
     "bin",
     "dist",
     "server",
-    "skills"
+    "skills",
+    "templates"
   ],
   "repository": {
     "type": "git",

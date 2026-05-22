@@ -76,6 +76,25 @@ async function installSkills(global, force) {
   }
   fs.copyFileSync(skillSource, dest);
   console.log(`Installed skill to ${dest}`);
+
+  const templateSrcDir = path.join(
+    path.dirname(fileURLToPath(import.meta.url)),
+    '..',
+    'templates',
+  );
+  if (fs.existsSync(templateSrcDir)) {
+    const templateDestDir = path.join(baseDir, 'templates');
+    fs.mkdirSync(templateDestDir, { recursive: true });
+    const entries = fs.readdirSync(templateSrcDir);
+    let copied = 0;
+    for (const f of entries) {
+      if (f.endsWith('.html') || f === 'README.md') {
+        fs.copyFileSync(path.join(templateSrcDir, f), path.join(templateDestDir, f));
+        if (f.endsWith('.html')) copied++;
+      }
+    }
+    console.log(`Installed ${copied} HTML templates to ${templateDestDir}`);
+  }
 }
 
 // Help message

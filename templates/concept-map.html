@@ -1,0 +1,132 @@
+<!--
+mdrp:template name=concept-map
+purpose: SVG / HTML concept map. Each labeled node is a section; clicking a
+  node opens a per-node note input that goes to mdrp.addComment.
+fillins:
+  - TITLE: short title shown in host top bar
+  - NODES: array of { id, label, x, y } — positions in the 800×500 SVG canvas
+  - EDGES: array of { from, to }
+submit-shape: host chrome owns Submit. Per-node addComment.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>concept-map</title>
+    <style>
+      html, body { margin: 0; height: 100%; font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #fafafa; color: #111; }
+      .wrap { display: grid; grid-template-columns: 1fr 280px; height: 100vh; }
+      svg { background: #fff; border-right: 1px solid #e5e5e5; }
+      .node { cursor: pointer; }
+      .node circle { fill: #fff; stroke: #2563eb; stroke-width: 2; transition: fill 0.15s; }
+      .node.active circle { fill: #dbeafe; }
+      .node text { font-size: 13px; pointer-events: none; }
+      .side { padding: 20px; overflow: auto; }
+      .side h1 { font-size: 18px; margin: 0 0 12px; }
+      .side h2 { font-size: 14px; margin: 16px 0 8px; }
+      .side textarea {
+        width: 100%; min-height: 80px; padding: 8px; border: 1px solid #d4d4d8;
+        border-radius: 5px; font: inherit; box-sizing: border-box; resize: vertical;
+      }
+      .side .save {
+        margin-top: 6px; padding: 6px 12px; border-radius: 5px; background: #2563eb;
+        color: #fff; border: none; font-weight: 600; cursor: pointer; font-size: 12.5px;
+      }
+      .empty { color: #999; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <svg viewBox="0 0 800 500" preserveAspectRatio="xMidYMid meet" id="canvas"></svg>
+      <aside class="side">
+        <h1 id="title">Concept map</h1>
+        <div id="detail" class="empty">Click a node to add a note.</div>
+      </aside>
+    </div>
+    <script>
+      // FILLIN
+      const TEMPLATE_DATA = {
+        title: 'Concept map',
+        nodes: [
+          { id: 'a', label: 'Origin', x: 200, y: 250 },
+          { id: 'b', label: 'Pathway', x: 400, y: 150 },
+          { id: 'c', label: 'Outcome', x: 600, y: 250 },
+        ],
+        edges: [
+          { from: 'a', to: 'b' },
+          { from: 'b', to: 'c' },
+        ],
+      };
+
+      document.getElementById('title').textContent = TEMPLATE_DATA.title;
+      const svg = document.getElementById('canvas');
+      const detail = document.getElementById('detail');
+      const NS = 'http://www.w3.org/2000/svg';
+
+      const byId = {};
+      TEMPLATE_DATA.nodes.forEach((n) => (byId[n.id] = n));
+
+      // Draw edges first so nodes overlay them.
+      TEMPLATE_DATA.edges.forEach((e) => {
+        const a = byId[e.from];
+        const b = byId[e.to];
+        if (!a || !b) return;
+        const line = document.createElementNS(NS, 'line');
+        line.setAttribute('x1', a.x);
+        line.setAttribute('y1', a.y);
+        line.setAttribute('x2', b.x);
+        line.setAttribute('y2', b.y);
+        line.setAttribute('stroke', '#94a3b8');
+        line.setAttribute('stroke-width', 1.5);
+        svg.appendChild(line);
+      });
+
+      let activeNode = null;
+      TEMPLATE_DATA.nodes.forEach((n) => {
+        const g = document.createElementNS(NS, 'g');
+        g.setAttribute('class', 'node');
+        g.setAttribute('transform', 'translate(' + n.x + ',' + n.y + ')');
+        const c = document.createElementNS(NS, 'circle');
+        c.setAttribute('r', 36);
+        g.appendChild(c);
+        const t = document.createElementNS(NS, 'text');
+        t.setAttribute('text-anchor', 'middle');
+        t.setAttribute('dy', '0.35em');
+        t.textContent = n.label;
+        g.appendChild(t);
+        g.addEventListener('click', () => selectNode(n.id, g));
+        svg.appendChild(g);
+      });
+
+      function selectNode(id, g) {
+        if (activeNode) activeNode.classList.remove('active');
+        activeNode = g;
+        g.classList.add('active');
+        const n = byId[id];
+        detail.classList.remove('empty');
+        detail.innerHTML =
+          '<h2></h2>' +
+          '<textarea placeholder="Notes on this node…"></textarea>' +
+          '<button class="save">Add note</button>';
+        detail.querySelector('h2').textContent = n.label;
+        const ta = detail.querySelector('textarea');
+        detail.querySelector('.save').addEventListener('click', () => {
+          const text = ta.value.trim();
+          if (!text) return;
+          window.mdrp.addComment({ sectionId: id, text });
+          ta.value = '';
+          detail.querySelector('h2').insertAdjacentHTML(
+            'afterend',
+            '<p style="font-size:12px;color:#16a34a;margin:4px 0">Note added.</p>',
+          );
+        });
+      }
+
+      window.mdrp.ready({
+        title: TEMPLATE_DATA.title,
+        chrome: 'host',
+        sections: TEMPLATE_DATA.nodes.map((n) => ({ id: n.id, heading: n.label })),
+      });
+    </script>
+  </body>
+</html>
