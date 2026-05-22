@@ -1,6 +1,6 @@
 {
   "name": "md-review-plus",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Review markdown files in the browser with section-level approval, structured feedback, and Claude Code integration",
   "type": "module",
   "bin": {
