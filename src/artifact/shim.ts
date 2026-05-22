@@ -33,6 +33,21 @@ export const MDRP_SHIM_SOURCE = `
         text: c.text
       });
     },
+    addReaction: function (r) {
+      r = r || {};
+      post('mdrp.reaction', {
+        targetId: r.targetId || null,
+        emoji: r.emoji
+      });
+    },
+    askQuestion: function (q) {
+      q = q || {};
+      post('mdrp.question', {
+        sectionId: q.sectionId || null,
+        anchor: q.anchor || null,
+        text: q.text
+      });
+    },
     submit: function (state) {
       if (finalized) return;
       finalized = true;

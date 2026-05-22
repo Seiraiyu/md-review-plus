@@ -93,6 +93,28 @@ describe('MDRP_SHIM_SOURCE', () => {
     );
   });
 
+  it('mdrp.askQuestion posts mdrp.question envelope', () => {
+    const win = installShim();
+    (win.mdrp as MdrpShim & {
+      askQuestion: (q: { sectionId?: string; anchor?: string; text: string }) => void;
+    }).askQuestion({ sectionId: 's1', text: 'why?' });
+    expect(win.parent.postMessage).toHaveBeenCalledWith(
+      { type: 'mdrp.question', v: 1, sectionId: 's1', anchor: null, text: 'why?' },
+      '*',
+    );
+  });
+
+  it('mdrp.addReaction posts mdrp.reaction envelope', () => {
+    const win = installShim();
+    (win.mdrp as MdrpShim & {
+      addReaction: (r: { targetId?: string; emoji: string }) => void;
+    }).addReaction({ targetId: 's1', emoji: '👍' });
+    expect(win.parent.postMessage).toHaveBeenCalledWith(
+      { type: 'mdrp.reaction', v: 1, targetId: 's1', emoji: '👍' },
+      '*',
+    );
+  });
+
   it('mdrp.submit is no-op on second call', () => {
     const win = installShim();
     (win.mdrp as MdrpShim).submit({ a: 1 });

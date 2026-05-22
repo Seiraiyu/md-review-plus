@@ -1,0 +1,613 @@
+<!--
+mdrp:template name=design-grid
+purpose: Compare N design variants side-by-side. Reviewer picks a winner, leaves
+  per-variant reactions/comments/questions, can click any element inside a
+  variant to pin an element-level note. Submits a structured choice with all
+  the qualitative feedback aggregated.
+fillins:
+  - TITLE: short heading shown at the top
+  - PREAMBLE: 1-2 sentence explanation of what's being compared
+  - VARIANTS: array of { id, name, tradeoff, html } — `html` is rendered as the
+    variant body inside a sandboxed style scope
+submit-shape: chrome:'none'. Apply calls mdrp.submit({winnerId, variants:{...},
+  summary}). Reactions, comments, and questions flow through their own
+  envelopes (mdrp.addReaction / addComment / askQuestion) so they appear in
+  the formatted stdout under ## Reactions / Open Questions blocks.
+-->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>design grid</title>
+    <style>
+      :root {
+        --bg: #f7f8fa;
+        --card: #ffffff;
+        --fg: #0f172a;
+        --fg-dim: #64748b;
+        --accent: #2563eb;
+        --good: #16a34a;
+        --bad: #dc2626;
+        --border: #e2e8f0;
+        --soft: #f1f5f9;
+        --pin: #f59e0b;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg);
+        color: var(--fg);
+        -webkit-font-smoothing: antialiased;
+      }
+      header.top {
+        padding: 28px 32px 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      header.top h1 {
+        margin: 0 0 6px;
+        font-size: 24px;
+        letter-spacing: -0.01em;
+      }
+      header.top p {
+        margin: 0;
+        color: var(--fg-dim);
+        font-size: 14px;
+        line-height: 1.5;
+        max-width: 720px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 16px;
+        padding: 12px 32px 24px;
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+      .variant {
+        background: var(--card);
+        border: 2px solid var(--border);
+        border-radius: 12px;
+        padding: 18px 18px 14px;
+        position: relative;
+        transition: border-color 0.15s;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .variant.winner {
+        border-color: var(--good);
+        box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.1);
+      }
+      .variant-head {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+      }
+      .variant-head .name {
+        font-weight: 700;
+        font-size: 15px;
+      }
+      .variant-head .winner-radio {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 12px;
+        color: var(--fg-dim);
+        cursor: pointer;
+        user-select: none;
+      }
+      .variant-head .winner-radio input {
+        accent-color: var(--good);
+      }
+      .tradeoff {
+        font-size: 12.5px;
+        color: var(--fg-dim);
+        line-height: 1.5;
+        padding: 8px 10px;
+        background: var(--soft);
+        border-radius: 6px;
+      }
+      .preview {
+        background: #fff;
+        border: 1px dashed var(--border);
+        border-radius: 8px;
+        padding: 16px;
+        min-height: 120px;
+        position: relative;
+        cursor: crosshair;
+      }
+      .preview > * {
+        cursor: pointer;
+      }
+      .preview .pin {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--pin);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transform: translate(-50%, -50%);
+        cursor: pointer;
+        z-index: 2;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      .reactions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+      .reaction-chip {
+        padding: 4px 10px;
+        font-size: 14px;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: #fff;
+        cursor: pointer;
+        user-select: none;
+        font-family: inherit;
+        transition: all 0.1s;
+      }
+      .reaction-chip:hover {
+        border-color: var(--fg-dim);
+      }
+      .reaction-chip.on {
+        background: #fef3c7;
+        border-color: #f59e0b;
+      }
+      .reaction-chip .count {
+        margin-left: 4px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--fg-dim);
+      }
+      .reaction-chip.on .count {
+        color: #92400e;
+      }
+      textarea {
+        width: 100%;
+        padding: 8px 10px;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font: inherit;
+        font-size: 13px;
+        resize: vertical;
+        background: #fbfcfe;
+        line-height: 1.45;
+        min-height: 36px;
+      }
+      textarea:focus {
+        outline: 2px solid rgba(37, 99, 235, 0.15);
+        border-color: var(--accent);
+      }
+      .field-label {
+        display: block;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--fg-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin: 4px 0 4px;
+      }
+      .pin-list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        font-size: 12.5px;
+        color: var(--fg-dim);
+      }
+      .pin-list li {
+        display: flex;
+        gap: 6px;
+        align-items: baseline;
+        padding: 2px 0;
+      }
+      .pin-list .badge {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--pin);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .pin-popover {
+        position: fixed;
+        z-index: 200;
+        background: #fff;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        padding: 8px;
+        width: 260px;
+      }
+      .pin-popover textarea {
+        min-height: 56px;
+      }
+      .pin-popover .row {
+        display: flex;
+        justify-content: flex-end;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .pin-popover button {
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 600;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: #fff;
+        cursor: pointer;
+      }
+      .pin-popover button.primary {
+        background: var(--accent);
+        color: #fff;
+        border-color: var(--accent);
+      }
+      footer.bottom {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 16px 32px 96px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .panel {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 16px;
+      }
+      .panel h2 {
+        margin: 0 0 8px;
+        font-size: 14px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--fg-dim);
+      }
+      .question-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .question-row textarea {
+        flex: 1;
+      }
+      .question-row button {
+        padding: 6px 12px;
+        background: var(--accent);
+        color: #fff;
+        border: 0;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        align-self: flex-end;
+      }
+      .question-list {
+        margin: 8px 0 0;
+        padding: 0;
+        list-style: none;
+      }
+      .question-list li {
+        background: var(--soft);
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 13px;
+        margin-bottom: 6px;
+      }
+      .question-list li::before {
+        content: 'Q: ';
+        font-weight: 700;
+        color: var(--accent);
+      }
+      .pick-banner {
+        position: fixed;
+        right: 24px;
+        bottom: 80px;
+        z-index: 25;
+        background: #0f172a;
+        color: #fff;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 12.5px;
+        font-weight: 600;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
+      .pick-banner.picked {
+        background: var(--good);
+      }
+      @media (max-width: 720px) {
+        footer.bottom {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="top">
+      <h1 id="title">Compare design variants</h1>
+      <p id="preamble">Pick the variant you want to ship. Leave reactions, comments, questions, and click any element inside a variant to pin a note to it.</p>
+    </header>
+    <main class="grid" id="grid"></main>
+    <footer class="bottom">
+      <div class="panel">
+        <h2>Overall summary</h2>
+        <textarea id="summary" placeholder="Why did you pick this variant? Any cross-cutting changes?"></textarea>
+      </div>
+      <div class="panel">
+        <h2>Questions for the agent</h2>
+        <div class="question-row">
+          <textarea id="globalQ" placeholder="Anything you want me to answer before iterating?"></textarea>
+          <button id="askBtn">Ask</button>
+        </div>
+        <ul class="question-list" id="qList"></ul>
+      </div>
+    </footer>
+
+    <div class="pick-banner" id="pickBanner">No variant picked — hit Submit when ready</div>
+
+    <script>
+      // FILLIN — Claude replaces this verbatim.
+      const TEMPLATE_DATA = {
+        title: 'Compare design variants',
+        preamble:
+          "Pick the variant you want to ship. Leave reactions, comments, questions, and click any element inside a variant to pin a note to it.",
+        variants: [
+          {
+            id: 'v1',
+            name: 'A · Minimal card',
+            tradeoff: 'Cleanest, least information density. Best for first-time users.',
+            html:
+              '<div style="text-align:center"><h3 style="margin:0 0 8px">Buy it</h3>' +
+              '<p style="margin:0;color:#64748b">A pithy line.</p>' +
+              '<button style="margin-top:12px;padding:8px 16px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-weight:600">Get started</button></div>',
+          },
+          {
+            id: 'v2',
+            name: 'B · Feature list',
+            tradeoff: 'Higher density. Better for buyers comparing alternatives.',
+            html:
+              '<h3 style="margin:0 0 8px">Buy it</h3>' +
+              '<ul style="margin:0;padding-left:18px;color:#0f172a"><li>Open source</li><li>Self-hostable</li><li>End-to-end encrypted</li></ul>' +
+              '<button style="margin-top:12px;padding:8px 16px;background:#2563eb;color:#fff;border:0;border-radius:6px;font-weight:600">Get started</button>',
+          },
+          {
+            id: 'v3',
+            name: 'C · Social proof',
+            tradeoff: 'Trust-led. Best for cold traffic that needs validation.',
+            html:
+              '<h3 style="margin:0 0 6px">Buy it</h3>' +
+              '<p style="margin:0 0 8px;font-size:13px;color:#64748b"><b style="color:#0f172a">★★★★★</b> &ldquo;Replaced our review tool.&rdquo; — @org</p>' +
+              '<button style="padding:8px 16px;background:#16a34a;color:#fff;border:0;border-radius:6px;font-weight:600">Try it free</button>',
+          },
+        ],
+      };
+
+      const REACTION_EMOJIS = ['👍', '👎', '🤔', '❤️', '🎉'];
+
+      document.getElementById('title').textContent = TEMPLATE_DATA.title;
+      document.getElementById('preamble').textContent = TEMPLATE_DATA.preamble;
+
+      const state = {
+        winner: null,
+        reactions: {},
+        comments: {},
+        questions: {},
+        pins: {},
+      };
+
+      let pinCounter = 0;
+      let openPopover = null;
+
+      const grid = document.getElementById('grid');
+      const pickBanner = document.getElementById('pickBanner');
+
+      function pushState() {
+        window.mdrp.update({
+          winnerId: state.winner,
+          comments: state.comments,
+          pins: state.pins,
+          reactions: state.reactions,
+          summary: (document.getElementById('summary') || {}).value || null,
+        });
+      }
+
+      TEMPLATE_DATA.variants.forEach((v) => {
+        state.reactions[v.id] = {};
+        state.pins[v.id] = [];
+
+        const el = document.createElement('article');
+        el.className = 'variant';
+        el.dataset.id = v.id;
+        el.innerHTML =
+          '<div class="variant-head">' +
+          '  <span class="name"></span>' +
+          '  <label class="winner-radio"><input type="radio" name="winner" value="' + v.id + '"> Pick winner</label>' +
+          '</div>' +
+          '<div class="tradeoff"></div>' +
+          '<div class="preview"></div>' +
+          '<ul class="pin-list"></ul>' +
+          '<div>' +
+          '  <span class="field-label">Reactions</span>' +
+          '  <div class="reactions"></div>' +
+          '</div>' +
+          '<div>' +
+          '  <span class="field-label">Comment</span>' +
+          '  <textarea class="comment" placeholder="What works, what doesn\'t…"></textarea>' +
+          '</div>' +
+          '<div>' +
+          '  <span class="field-label">Ask a question about this variant</span>' +
+          '  <textarea class="ask" placeholder="e.g. could we lose the subtitle and keep the button?"></textarea>' +
+          '</div>';
+
+        el.querySelector('.name').textContent = v.name;
+        el.querySelector('.tradeoff').textContent = v.tradeoff;
+        const preview = el.querySelector('.preview');
+        preview.innerHTML = v.html;
+
+        const reactionsEl = el.querySelector('.reactions');
+        REACTION_EMOJIS.forEach((emoji) => {
+          const chip = document.createElement('button');
+          chip.type = 'button';
+          chip.className = 'reaction-chip';
+          chip.dataset.emoji = emoji;
+          chip.innerHTML = '<span class="emoji">' + emoji + '</span><span class="count"></span>';
+          chip.addEventListener('click', () => {
+            const cur = state.reactions[v.id][emoji] || 0;
+            state.reactions[v.id][emoji] = cur + 1;
+            chip.classList.add('on');
+            chip.querySelector('.count').textContent = state.reactions[v.id][emoji];
+            window.mdrp.addReaction({ targetId: v.id, emoji });
+            pushState();
+          });
+          reactionsEl.appendChild(chip);
+        });
+
+        const radio = el.querySelector('input[name=winner]');
+        radio.addEventListener('change', () => {
+          if (!radio.checked) return;
+          state.winner = v.id;
+          document.querySelectorAll('.variant').forEach((n) => n.classList.remove('winner'));
+          el.classList.add('winner');
+          pickBanner.textContent = 'Winner: ' + v.name + ' — hit Submit to confirm';
+          pickBanner.classList.add('picked');
+          // Track section status: winner is approved, others are rejected.
+          TEMPLATE_DATA.variants.forEach((vv) => {
+            window.mdrp.setSectionStatus(vv.id, vv.id === v.id ? 'approved' : 'rejected');
+          });
+          pushState();
+        });
+
+        const commentEl = el.querySelector('.comment');
+        commentEl.addEventListener('blur', () => {
+          const text = commentEl.value.trim();
+          if (!text || state.comments[v.id] === text) return;
+          state.comments[v.id] = text;
+          window.mdrp.addComment({ sectionId: v.id, text });
+          pushState();
+        });
+
+        const askEl = el.querySelector('.ask');
+        askEl.addEventListener('blur', () => {
+          const text = askEl.value.trim();
+          if (!text || state.questions[v.id] === text) return;
+          state.questions[v.id] = text;
+          window.mdrp.askQuestion({ sectionId: v.id, text });
+        });
+
+        preview.addEventListener('click', (ev) => {
+          if (ev.target === preview) return;
+          ev.stopPropagation();
+          const rect = preview.getBoundingClientRect();
+          openPinPopover(ev.clientX, ev.clientY, v.id, ev.target);
+        });
+
+        grid.appendChild(el);
+      });
+
+      function openPinPopover(x, y, variantId, target) {
+        if (openPopover) openPopover.remove();
+        const pop = document.createElement('div');
+        pop.className = 'pin-popover';
+        pop.style.left = Math.min(x, window.innerWidth - 280) + 'px';
+        pop.style.top = Math.min(y, window.innerHeight - 140) + 'px';
+        pop.innerHTML =
+          '<textarea placeholder="Comment on this element"></textarea>' +
+          '<div class="row">' +
+          '  <button data-act="cancel">Cancel</button>' +
+          '  <button class="primary" data-act="ok">Pin</button>' +
+          '</div>';
+        document.body.appendChild(pop);
+        openPopover = pop;
+        const ta = pop.querySelector('textarea');
+        ta.focus();
+        pop.querySelector('[data-act=cancel]').addEventListener('click', () => {
+          pop.remove();
+          openPopover = null;
+        });
+        pop.querySelector('[data-act=ok]').addEventListener('click', () => {
+          const text = ta.value.trim();
+          if (!text) {
+            pop.remove();
+            openPopover = null;
+            return;
+          }
+          pinCounter += 1;
+          const idx = pinCounter;
+          const tag = target.tagName.toLowerCase();
+          const variantEl = grid.querySelector('[data-id="' + variantId + '"]');
+          const preview = variantEl.querySelector('.preview');
+          // Place visual pin at click location relative to preview.
+          const r = preview.getBoundingClientRect();
+          const pin = document.createElement('span');
+          pin.className = 'pin';
+          pin.style.left = (x - r.left) + 'px';
+          pin.style.top = (y - r.top) + 'px';
+          pin.textContent = String(idx);
+          preview.appendChild(pin);
+          // Add to pin list inside the variant.
+          const li = document.createElement('li');
+          li.innerHTML = '<span class="badge"></span><span class="ptext"></span>';
+          li.querySelector('.badge').textContent = String(idx);
+          li.querySelector('.ptext').textContent = text;
+          variantEl.querySelector('.pin-list').appendChild(li);
+          state.pins[variantId].push({ idx, tag, text });
+          window.mdrp.addComment({
+            sectionId: variantId,
+            anchor: 'element:' + tag + ':pin-' + idx,
+            text,
+          });
+          pop.remove();
+          openPopover = null;
+        });
+      }
+
+      document.addEventListener('click', (ev) => {
+        if (openPopover && !openPopover.contains(ev.target) && !ev.target.closest('.preview')) {
+          openPopover.remove();
+          openPopover = null;
+        }
+      });
+
+      // Global Q&A
+      const askBtn = document.getElementById('askBtn');
+      const globalQ = document.getElementById('globalQ');
+      const qList = document.getElementById('qList');
+      askBtn.addEventListener('click', () => {
+        const text = globalQ.value.trim();
+        if (!text) return;
+        window.mdrp.askQuestion({ text });
+        const li = document.createElement('li');
+        li.textContent = text;
+        qList.appendChild(li);
+        globalQ.value = '';
+      });
+
+      // Summary changes update state too (host Submit will capture latest).
+      const summary = document.getElementById('summary');
+      summary.addEventListener('blur', () => pushState());
+
+      // Seed sections so the host has metadata (even though chrome:'none').
+      window.mdrp.ready({
+        title: TEMPLATE_DATA.title,
+        chrome: 'none',
+        sections: TEMPLATE_DATA.variants.map((v) => ({ id: v.id, heading: v.name })),
+      });
+    </script>
+  </body>
+</html>

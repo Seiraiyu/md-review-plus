@@ -30,6 +30,17 @@ type SubmitState =
   | { state: 'submitted' }
   | { state: 'error'; message: string };
 
+interface OpenQuestion {
+  sectionId: string | null;
+  anchor: string | null;
+  text: string;
+}
+
+interface Reaction {
+  targetId: string | null;
+  emoji: string;
+}
+
 interface SubmitPayload {
   sections: Array<{ heading: string; status: SectionStatus; comment: string }>;
   lineComments: Array<{
@@ -41,6 +52,8 @@ interface SubmitPayload {
   }>;
   filename: string;
   interactiveState?: { state: unknown; summary?: string };
+  openQuestions?: OpenQuestion[];
+  reactions?: Reaction[];
 }
 
 interface ArtifactModeAppProps {
@@ -69,6 +82,8 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
   const [comments, setComments] = useState<
     Array<{ sectionId: string | null; anchor: string | null; text: string }>
   >([]);
+  const [questions, setQuestions] = useState<OpenQuestion[]>([]);
+  const [reactions, setReactions] = useState<Reaction[]>([]);
   const [lastUpdate, setLastUpdate] = useState<unknown>(null);
   const [readyTimedOut, setReadyTimedOut] = useState(false);
   const [submit, setSubmit] = useState<SubmitState>({ state: 'idle' });
@@ -115,6 +130,8 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
           setReady(null);
           setSectionStatus({});
           setComments([]);
+          setQuestions([]);
+          setReactions([]);
           setLastUpdate(null);
           setReadyTimedOut(false);
           finalizedRef.current = false;
@@ -170,6 +187,26 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
                     ? 'rejected'
                     : 'pending',
             }));
+          }
+          break;
+        case 'mdrp.question':
+          if (typeof data.text === 'string') {
+            setQuestions((prev) => [
+              ...prev,
+              {
+                sectionId: data.sectionId ?? null,
+                anchor: data.anchor ?? null,
+                text: data.text,
+              },
+            ]);
+          }
+          break;
+        case 'mdrp.reaction':
+          if (typeof data.emoji === 'string') {
+            setReactions((prev) => [
+              ...prev,
+              { targetId: data.targetId ?? null, emoji: data.emoji },
+            ]);
           }
           break;
         case 'mdrp.comment':
@@ -235,6 +272,8 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
                 summary: ready?.schema?.summary,
               }
             : undefined,
+        openQuestions: questions.length > 0 ? questions : undefined,
+        reactions: reactions.length > 0 ? reactions : undefined,
       };
       lastPayloadRef.current = payload;
       setSubmit({ state: 'submitting' });
@@ -256,7 +295,7 @@ export function ArtifactModeApp({ injectedArtifact, onSubmit }: ArtifactModeAppP
         setSubmit({ state: 'error', message });
       }
     },
-    [artifact, ready, sectionStatus, comments, lastUpdate, onSubmit],
+    [artifact, ready, sectionStatus, comments, questions, reactions, lastUpdate, onSubmit],
   );
 
   const handleHostSubmit = useCallback(() => {

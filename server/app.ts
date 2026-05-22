@@ -40,6 +40,15 @@ export interface SubmitBody {
   }>;
   filename: string;
   interactiveState?: { state: unknown; summary?: string };
+  openQuestions?: Array<{
+    sectionId: string | null;
+    anchor: string | null;
+    text: string;
+  }>;
+  reactions?: Array<{
+    targetId: string | null;
+    emoji: string;
+  }>;
 }
 
 export interface AppEnv {
@@ -97,17 +106,21 @@ async function scanMarkdownFiles(dir: string, baseDir: string = dir): Promise<Ma
 }
 
 export function formatFeedback(body: SubmitBody): string {
-  const { sections, lineComments, filename, interactiveState } = body;
+  const { sections, lineComments, filename, interactiveState, openQuestions, reactions } = body;
   const rejected = sections.filter((s) => s.status === 'rejected');
   const approved = sections.filter((s) => s.status === 'approved');
   const hasAnyComment = sections.some((s) => s.comment && s.comment.trim() !== '');
+  const hasQuestions = Array.isArray(openQuestions) && openQuestions.length > 0;
+  const hasReactions = Array.isArray(reactions) && reactions.length > 0;
 
   const isAllApproved =
     sections.length > 0 &&
     approved.length === sections.length &&
     lineComments.length === 0 &&
     !hasAnyComment &&
-    interactiveState === undefined;
+    interactiveState === undefined &&
+    !hasQuestions &&
+    !hasReactions;
 
   if (isAllApproved) {
     return 'All sections approved. No changes needed.';
@@ -161,6 +174,41 @@ export function formatFeedback(body: SubmitBody): string {
     parts.push('## Approved');
     for (const section of approved) {
       parts.push(`- ${section.heading}`);
+    }
+  }
+
+  if (hasQuestions) {
+    parts.push('');
+    parts.push('## Open Questions');
+    for (const q of openQuestions!) {
+      parts.push('');
+      const where =
+        q.sectionId && q.anchor
+          ? ` (${q.sectionId} · ${q.anchor})`
+          : q.sectionId
+            ? ` (${q.sectionId})`
+            : '';
+      parts.push(`- ${q.text}${where}`);
+    }
+  }
+
+  if (hasReactions) {
+    // Bucket reactions by target+emoji and render counts.
+    const tally = new Map<string, Map<string, number>>();
+    for (const r of reactions!) {
+      const key = r.targetId ?? '__global__';
+      if (!tally.has(key)) tally.set(key, new Map());
+      const inner = tally.get(key)!;
+      inner.set(r.emoji, (inner.get(r.emoji) ?? 0) + 1);
+    }
+    parts.push('');
+    parts.push('## Reactions');
+    for (const [target, byEmoji] of tally) {
+      const label = target === '__global__' ? '(overall)' : target;
+      const summary = [...byEmoji.entries()]
+        .map(([emoji, count]) => (count > 1 ? `${emoji}×${count}` : emoji))
+        .join(' ');
+      parts.push(`- **${label}**: ${summary}`);
     }
   }
 

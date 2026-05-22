@@ -160,6 +160,38 @@ describe('formatFeedback', () => {
     expect(out).toContain('> Natural-language summary: set foo to 1');
   });
 
+  it('emits ## Open Questions when questions are present', () => {
+    const out = formatFeedback({
+      sections: [{ heading: 'A', status: 'approved', comment: '' }],
+      lineComments: [],
+      filename: 'x.html',
+      openQuestions: [
+        { sectionId: 's1', anchor: null, text: 'why this approach?' },
+        { sectionId: null, anchor: null, text: 'overall, did I get the goal right?' },
+      ],
+    });
+    expect(out).toContain('## Open Questions');
+    expect(out).toContain('- why this approach? (s1)');
+    expect(out).toContain('- overall, did I get the goal right?');
+  });
+
+  it('emits ## Reactions with bucketed counts', () => {
+    const out = formatFeedback({
+      sections: [{ heading: 'A', status: 'approved', comment: '' }],
+      lineComments: [],
+      filename: 'x.html',
+      reactions: [
+        { targetId: 'card-1', emoji: '👍' },
+        { targetId: 'card-1', emoji: '👍' },
+        { targetId: 'card-1', emoji: '🎉' },
+        { targetId: null, emoji: '🤔' },
+      ],
+    });
+    expect(out).toContain('## Reactions');
+    expect(out).toContain('**card-1**: 👍×2 🎉');
+    expect(out).toContain('**(overall)**: 🤔');
+  });
+
   it('does not short-circuit when interactiveState present even if all sections approved', () => {
     const out = formatFeedback({
       sections: [{ heading: 'A', status: 'approved', comment: '' }],
