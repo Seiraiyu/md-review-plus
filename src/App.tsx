@@ -2,12 +2,13 @@ import { useEffect, useState } from 'react';
 import { DevModeApp } from './components/DevModeApp';
 import { CliModeApp } from './components/CliModeApp';
 import { RemoteModeApp } from './components/RemoteModeApp';
+import { ArtifactModeApp } from './components/ArtifactModeApp';
 
 type Mode =
   | { kind: 'loading' }
   | { kind: 'remote'; id: string; key: string }
   | { kind: 'dev' }
-  | { kind: 'cli' };
+  | { kind: 'cli'; contentKind: 'markdown' | 'html' };
 
 function detectRemoteMode(): { id: string; key: string } | null {
   const m = window.location.pathname.match(/^\/r\/([^/]+)\/?$/);
@@ -30,12 +31,19 @@ function App() {
         const response = await fetch('/api/files');
         if (response.ok) {
           const data = await response.json();
-          setMode({ kind: data.mode === 'cli' ? 'cli' : 'dev' });
+          if (data.mode === 'dev') {
+            setMode({ kind: 'dev' });
+          } else {
+            setMode({
+              kind: 'cli',
+              contentKind: data.kind === 'html' ? 'html' : 'markdown',
+            });
+          }
         } else {
-          setMode({ kind: 'cli' });
+          setMode({ kind: 'cli', contentKind: 'markdown' });
         }
       } catch {
-        setMode({ kind: 'cli' });
+        setMode({ kind: 'cli', contentKind: 'markdown' });
       }
     };
     detectMode();
@@ -59,6 +67,7 @@ function App() {
     return <RemoteModeApp id={mode.id} keyBase64Url={mode.key} />;
   }
   if (mode.kind === 'dev') return <DevModeApp />;
+  if (mode.contentKind === 'html') return <ArtifactModeApp />;
   return <CliModeApp />;
 }
 
