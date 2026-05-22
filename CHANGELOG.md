@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.1](https://github.com/Seiraiyu/md-review-plus/compare/v1.4.0...v1.4.1) (2026-05-22)
+
+
+### Bug Fixes
+
+* **artifact:** re-trigger release-please after parser fix landed ([c7d60e3](https://github.com/Seiraiyu/md-review-plus/commit/c7d60e3a3317a0cca47897673a25dad2b7769ffa))
+
 ## [1.4.0](https://github.com/Seiraiyu/md-review-plus/compare/v1.3.0...v1.4.0) (2026-05-22)
 
 
