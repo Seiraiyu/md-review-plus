@@ -35,10 +35,9 @@ const args = mri(process.argv.slice(2), {
   },
   default: {
     port: '3030',
-    open: true,
     host: '127.0.0.1',
   },
-  boolean: ['help', 'version', 'open', 'review', 'skills', 'global', 'remote', 'force'],
+  boolean: ['help', 'version', 'review', 'skills', 'global', 'remote', 'force'],
   string: ['relay', 'host'],
 });
 
@@ -115,7 +114,6 @@ Options:
   --review               Enable review mode (blocks until submit)
   --remote               Use remote relay for review (works over SSH, mobile, cloud CC)
   --relay <url>          Override relay URL (env: MDRP_RELAY)
-  --no-open              Do not open browser automatically
   --global               Install skills globally (~/.claude/skills/)
   --force                Overwrite existing skill file (use with install --skills)
   -h, --help             Show this help message
@@ -145,7 +143,6 @@ if (hostError) {
   process.exit(1);
 }
 process.env.API_HOST = args.host;
-const shouldOpen = args.open;
 const reviewMode = args.review;
 
 // If file is specified, validate it
@@ -265,18 +262,18 @@ if (args.remote) {
   console.log('  Waiting for review submission (Ctrl-C to cancel)...');
   console.log('');
 
-  if (shouldOpen) {
-    try {
-      const openModule = await import('open');
-      openModule.default(reviewUrl).catch(() => {
-        /* best-effort */
-      });
-      if (process.env.MDRP_DEBUG === '1') {
-        console.log('[MDRP_DEBUG] open attempted');
-      }
-    } catch {
-      /* open may fail in headless envs; URL is already printed prominently */
+  // Best-effort auto-open. The URL above is the source of truth; opening the
+  // browser is a convenience that no-ops in headless envs (SSH, cloud CC).
+  try {
+    const openModule = await import('open');
+    openModule.default(reviewUrl).catch(() => {
+      /* best-effort */
+    });
+    if (process.env.MDRP_DEBUG === '1') {
+      console.log('[MDRP_DEBUG] open attempted');
     }
+  } catch {
+    /* open may fail in headless envs; URL is already printed prominently */
   }
 
   const ac = new AbortController();
@@ -369,10 +366,8 @@ serverProcess.stdout.on('data', async (data) => {
   if (!serverReady && output.includes(SERVER_READY_MESSAGE)) {
     serverReady = true;
 
-    if (shouldOpen) {
-      const openModule = await import('open');
-      openModule.default(`http://localhost:${actualPort}`);
-    }
+    const openModule = await import('open');
+    openModule.default(`http://localhost:${actualPort}`);
   }
 });
 

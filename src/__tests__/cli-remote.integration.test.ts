@@ -83,7 +83,7 @@ describe('CLI --remote end-to-end (sans browser)', () => {
   it('prints Review URL prominently (own line, after blank line)', async () => {
     const cli = spawn(
       'node',
-      [BIN, SAMPLE, '--review', '--remote', '--relay', `http://localhost:${PORT}`, '--no-open'],
+      [BIN, SAMPLE, '--review', '--remote', '--relay', `http://localhost:${PORT}`],
       {
         env: { ...process.env, MDRP_INSECURE: '1' },
         stdio: ['ignore', 'pipe', 'inherit'],
@@ -111,7 +111,7 @@ describe('CLI --remote end-to-end (sans browser)', () => {
     // URL line must be within 3 lines of a blank line (prominence heuristic).
     const start = Math.max(0, urlLineIdx - 3);
     expect(lines.slice(start, urlLineIdx).some((l) => l.trim() === '')).toBe(true);
-    // --no-open suppresses the debug attempt log.
+    // Without MDRP_DEBUG, the auto-open attempt log stays silent.
     expect(stdoutBuf).not.toContain('[MDRP_DEBUG] open attempted');
 
     cli.kill();

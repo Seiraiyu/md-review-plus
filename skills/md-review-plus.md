@@ -14,13 +14,25 @@ It is **not just for markdown**. The richest payoff comes from HTML
 artifacts that let the reviewer compare options, drag items, click
 elements, leave reactions, and ask you questions — all in one pass.
 
+## Always use `--remote` (the default review mode)
+
+Run every review with `--remote`. It ships the artifact over an
+end-to-end-encrypted relay and gives you a clickable URL that works no
+matter where the user is — another machine, a phone, a cloud Claude
+Code session with no local browser. Plain `--review` only works when
+the user is sitting at the same machine that's running the CLI, which
+you usually can't assume. Drop `--remote` only if the user explicitly
+says they're local and wants the in-browser flow.
+
 ## CRITICAL: Display the Review URL on its own line as the first content of your response
 
-When you run with `--remote`, the CLI prints a URL. As soon as you have
-it, surface it to the user **before any other prose**:
+`--remote` makes the CLI print a Review URL and then **block** waiting
+for the submission. Blocking alone is useless to the user — they can't
+review what they can't see. The moment you have the URL, surface it
+**before any other prose**:
 
 ```
-USER: please review this remotely
+USER: please review this
 ASSISTANT response (exact opening):
 
 🔗 **Review URL:** https://md-review-plus.ai/r/abc#xyz
@@ -31,10 +43,10 @@ The link is end-to-end encrypted; only your browser can decrypt it.
 [rest of response continues...]
 ```
 
-The CLI also tries to auto-open the URL locally, but that is
-best-effort — always surface it in your reply because the user may be
-on a different device. Pass `--no-open` to suppress the auto-open
-attempt.
+The CLI also tries to auto-open the URL on the local machine, but that
+is best-effort and silently no-ops in headless/remote environments —
+**never rely on it**. Surfacing the URL in your reply is the only thing
+guaranteed to reach the user.
 
 ### Checklist before responding (must pass)
 
@@ -112,8 +124,8 @@ Templates live at `~/.claude/skills/md-review-plus/templates/` after
 3. Replace its fields per the `mdrp:template` header comment at the top of the file. Don't rename `TEMPLATE_DATA` — keeping the constant stable helps debugging.
 4. Run:
    ```sh
-   md-review-plus ./review-X.html --review            # local
-   md-review-plus ./review-X.html --review --remote   # over the relay (recommended)
+   md-review-plus ./review-X.html --review --remote   # default — clickable URL, works anywhere
+   md-review-plus ./review-X.html --review            # only if the user is local and wants the in-browser flow
    ```
 
 ## What the reviewer can give you (the structured stdout)
@@ -146,9 +158,9 @@ Do not skip questions. Treat them as blocking review comments.
 
 1. Decide markdown vs HTML (see table above)
 2. Author the artifact (a `.md` file, or fill in a template `.html`)
-3. Run `md-review-plus <file> --review [--remote]`
-4. If `--remote`: surface the URL per the checklist above
-5. Read the structured stdout
+3. Run `md-review-plus <file> --review --remote`
+4. Surface the printed Review URL per the checklist above — before any other prose
+5. Read the structured stdout once the reviewer submits
 6. Apply changes, answer questions, iterate
 
 ## Exit codes
@@ -158,5 +170,7 @@ Do not skip questions. Treat them as blocking review comments.
 
 ## Checklist before responding (repeat — this is the most important rule)
 
-When you used `--remote`, your reply MUST begin with the Review URL on
-its own line. Re-read the worked example at the top if unsure.
+Because you run with `--remote`, your reply MUST begin with the Review
+URL on its own line. The CLI is blocked waiting for the reviewer — if
+you don't show the URL, the user has nothing to act on. Re-read the
+worked example at the top if unsure.
