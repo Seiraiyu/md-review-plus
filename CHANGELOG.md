@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.2](https://github.com/Seiraiyu/md-review-plus/compare/v1.4.1...v1.4.2) (2026-06-19)
+
+
+### Bug Fixes
+
+* **cli:** remove --no-open flag and default skill to --remote ([6ba24fd](https://github.com/Seiraiyu/md-review-plus/commit/6ba24fd05d8c4133dc5580ec5da9ab5bf1d883dc))
+
 ## [1.4.1](https://github.com/Seiraiyu/md-review-plus/compare/v1.4.0...v1.4.1) (2026-05-22)
 
 
